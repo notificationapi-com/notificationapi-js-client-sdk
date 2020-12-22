@@ -1,0 +1,12 @@
+#notificationapi-button {
+  all: unset;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  background: #dddddd;
+  border-radius: 50%;
+}
+
+#notificationapi-button > span {
+  margin-left: 25%;
+}
