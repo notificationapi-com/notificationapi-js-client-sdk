@@ -1,0 +1,171 @@
+#notificationapi-button {
+  all: initial;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  background: #dddddd;
+  border-radius: 50%;
+}
+
+#notificationapi-button::before,
+#notificationapi-button::after {
+  all: unset;
+}
+
+#notificationapi-button * {
+  all: unset;
+}
+
+#notificationapi-button > span {
+  margin-left: 25%;
+}
+
+#notificationapi-popup {
+  all: initial;
+  display: block;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 1px solid #dddddd;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 8px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  background: #fff;
+  padding-bottom: 8px;
+}
+
+#notificationapi-popup * {
+  all: unset;
+}
+
+#notificationapi-popup div,
+#notificationapi-popup p,
+#notificationapi-popup h1,
+#notificationapi-popup h2,
+#notificationapi-popup h3 {
+  display: block;
+  display: block;
+}
+
+#notificationapi-popup #notificationapi-zero-notifications {
+  padding: 20px;
+  text-align: center;
+}
+
+#notificationapi-popup #notificationapi-header {
+  margin: 20px 16px 12px 16px;
+  padding: 0;
+  font-size: 24px;
+}
+
+#notificationapi-popup .notificationapi-notification {
+  display: flex;
+  align-self: baseline;
+  margin-left: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: default;
+}
+
+#notificationapi-popup .notificationapi-notification[href] {
+  cursor: pointer;
+}
+
+#notificationapi-popup .notificationapi-notification,
+#notificationapi-popup .notificationapi-notification:hover,
+#notificationapi-popup .notificationapi-notification:visited {
+  text-decoration: none;
+  color: #111;
+}
+
+#notificationapi-popup .notificationapi-notification:hover {
+  background: #f5f5f5;
+}
+
+#notificationapi-popup .notificationapi-notification-title {
+  margin: 0;
+  padding: 0;
+}
+
+#notificationapi-popup .notificationapi-notification-title b {
+  font-weight: 600;
+}
+
+#notificationapi-popup .notificationapi-notification-imageContainer {
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  margin-right: 12px;
+  border: 1px #eee solid;
+  text-align: center;
+}
+
+#notificationapi-popup .notificationapi-notification-image {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
+#notificationapi-popup .notificationapi-notification-defaultIcon {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5em;
+  color: #444;
+}
+
+#notificationapi-popup .notificationapi-notification-date {
+  color: rgb(9, 75, 255);
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+/* fonts */
+@font-face {
+  font-family: 'icomoon';
+  src: url('fonts/icomoon.eot?iw5q1o');
+  src: url('fonts/icomoon.eot?iw5q1o#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?iw5q1o') format('truetype'),
+    url('fonts/icomoon.woff?iw5q1o') format('woff'),
+    url('fonts/icomoon.svg?iw5q1o#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^='icon-'],
+[class*=' icon-'] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-bell-o:before {
+  content: '\f0a2';
+}
+.icon-bell:before {
+  content: '\f0f3';
+}
+.icon-commenting-o:before {
+  content: '\f27b';
+}
