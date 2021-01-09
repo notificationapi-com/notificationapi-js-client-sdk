@@ -2,6 +2,25 @@ import notificationapi from '../index';
 import * as $ from 'jquery';
 import { InappNotification } from '../interfaces';
 
+const testNotification: InappNotification = {
+  title: 'You have a new comment',
+  redirectURL: 'https://www.notificationapi.com',
+  imageURL: 'https://via.placeholder.com/350x150',
+  date: new Date()
+};
+
+const testNotificationWithoutImage: InappNotification = {
+  title: 'You have a new comment',
+  redirectURL: 'https://www.notificationapi.com',
+  date: new Date()
+};
+
+const testNotificationWithoutURL: InappNotification = {
+  title: 'You have a new comment',
+  imageURL: 'https://via.placeholder.com/350x150',
+  date: new Date()
+};
+
 beforeEach(() => {
   document.body.innerHTML =
     '<div id="buttonRoot"></div><div id="popupRoot"></div>';
@@ -34,20 +53,10 @@ describe('notificationapi', () => {
       notificationapi.mock({
         buttonRoot: 'buttonRoot'
       });
-      expect($('#buttonRoot').children()).toHaveLength(1);
-      expect($('#buttonRoot').children()[0].id).toEqual(
+      expect($('[id="buttonRoot"]').children()).toHaveLength(1);
+      expect($('[id="buttonRoot"]').children()[0].id).toEqual(
         'notificationapi-button'
       );
-    });
-
-    test('given popup already exists, it removes and re-adds', () => {
-      document.body.innerHTML =
-        '<div id="buttonRoot"></div><div id="notificationapi-popup">needle</div>';
-      notificationapi.mock({
-        buttonRoot: 'buttonRoot'
-      });
-      expect(document.body.innerHTML).not.toContain('needle');
-      expect($('#notificationapi-popup').length).toEqual(1);
     });
 
     describe('inline popup', () => {
@@ -90,25 +99,6 @@ describe('notificationapi', () => {
     });
 
     describe('notifications', () => {
-      const testNotification: InappNotification = {
-        title: 'You have a new comment',
-        redirectURL: 'https://www.notificationapi.com',
-        imageURL: 'https://via.placeholder.com/350x150',
-        date: new Date()
-      };
-
-      const testNotificationWithoutImage: InappNotification = {
-        title: 'You have a new comment',
-        redirectURL: 'https://www.notificationapi.com',
-        date: new Date()
-      };
-
-      const testNotificationWithoutURL: InappNotification = {
-        title: 'You have a new comment',
-        imageURL: 'https://via.placeholder.com/350x150',
-        date: new Date()
-      };
-
       test('given none, adds no notifications', () => {
         notificationapi.mock({
           buttonRoot: 'notifications',
@@ -160,6 +150,58 @@ describe('notificationapi', () => {
           notifications: [testNotificationWithoutImage]
         });
         expect($('.notificationapi-notification-image')).toHaveLength(0);
+      });
+    });
+
+    describe('recreation', () => {
+      test('does not create two inline popups', () => {
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot'
+        });
+
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot'
+        });
+
+        expect($('[id="notificationapi-button"]').length).toEqual(1);
+        expect($('[id="notificationapi-popup"]').length).toEqual(1);
+      });
+
+      test('replaces button', () => {
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot'
+        });
+
+        $('#notificationapi-button').addClass('to-be-found');
+
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot'
+        });
+
+        expect($('.to-be-found').length).toEqual(0);
+      });
+
+      test('replaces existing inline popup', () => {
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot',
+          notifications: [testNotificationWithoutURL]
+        });
+
+        notificationapi.mock({
+          buttonRoot: 'buttonRoot',
+          popupRoot: 'popupRoot',
+          notifications: [testNotification]
+        });
+
+        expect($('.notificationapi-notification')).toHaveLength(1);
+        expect($('.notificationapi-notification').attr('href')).toEqual(
+          testNotification.redirectURL
+        );
       });
     });
   });

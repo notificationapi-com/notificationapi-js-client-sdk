@@ -17,6 +17,11 @@ interface MockOptions {
 }
 
 function mock(options: MockOptions) {
+  const existingButton = document.getElementById('notificationapi-button');
+  if (existingButton) {
+    existingButton.remove();
+  }
+
   const buttonRoot = document.getElementById(options.buttonRoot);
   if (!buttonRoot) {
     console.error(
@@ -28,13 +33,14 @@ function mock(options: MockOptions) {
   button.innerHTML = `<span class="icon-bell-o"></span>`;
   buttonRoot?.appendChild(button);
 
+  const existingPopup = document.getElementById('notificationapi-popup');
+  if (existingPopup) {
+    existingPopup.remove();
+  }
+
   const popup = document.createElement('div');
   popup.id = 'notificationapi-popup';
   if (!options.popupRoot) {
-    const existingPopup = document.getElementById(popup.id);
-    if (existingPopup) {
-      existingPopup.remove();
-    }
     popup.classList.add('popup');
     popup.classList.add('closed');
     document.body.appendChild(popup);
