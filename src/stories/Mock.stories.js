@@ -14,12 +14,11 @@ export default {
 };
 
 const Template = ({ ...args }) => {
-  return `<div id="button"></div>
+  return `<div id="our-root"></div>
           <BR><BR>
-          <div id="popup" style="width: 360px;"></div>
 
           <script>
-            notificationapi.mock(${JSON.stringify(args.options)});
+            notificationapi.init(${JSON.stringify(args.options)});
           </script>
 
           <br><br><br><br>
@@ -30,14 +29,10 @@ const Template = ({ ...args }) => {
           <h3>heading 1</h3>
           <a href="something">link</a>
           <button>button</button>
-          <style>
-          * { background: lightgrey; color: blue; }
-          </style>
-
 `;
 };
 
-const notifications = [
+let notifications = [
   {
     title: '<b>Moe</b> posted an update.',
     redirectURL: '#',
@@ -59,25 +54,27 @@ const notifications = [
   }
 ];
 
+notifications = notifications.concat(notifications).concat(notifications);
+
 export const PopupEmpty = Template.bind({});
 PopupEmpty.args = {
   options: {
-    buttonRoot: 'button'
+    root: 'our-root'
   }
 };
 
 export const FixedEmpty = Template.bind({});
 FixedEmpty.args = {
   options: {
-    buttonRoot: 'button',
-    popupRoot: 'popup'
+    root: 'our-root',
+    inline: true
   }
 };
 
 export const Popup = Template.bind({});
 Popup.args = {
   options: {
-    buttonRoot: 'button',
+    root: 'our-root',
     notifications
   }
 };
@@ -85,8 +82,8 @@ Popup.args = {
 export const Fixed = Template.bind({});
 Fixed.args = {
   options: {
-    buttonRoot: 'button',
-    popupRoot: 'popup',
+    root: 'our-root',
+    inline: true,
     notifications
   }
 };
