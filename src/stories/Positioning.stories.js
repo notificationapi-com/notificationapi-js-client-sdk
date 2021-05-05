@@ -29,7 +29,7 @@ const Template2 = ({ ...args }) => {
             notificationapi.init({
               root: "our-root",
               notifications:${JSON.stringify(notifications)},
-              popupPosition: "${args.position}"
+              popupPosition: "${args.position ?? 'topLeft'}"
             });
           </script>
 
@@ -59,6 +59,3 @@ const notifications = [
 ];
 
 export const TopLeft = Template2.bind({});
-TopLeft.args = {
-  popupPosition: 'topLeft'
-};

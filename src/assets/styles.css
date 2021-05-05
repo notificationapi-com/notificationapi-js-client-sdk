@@ -3,8 +3,11 @@
   cursor: pointer;
   width: 32px;
   height: 32px;
-  background: #dddddd;
-  border-radius: 50%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  position: relative;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 #notificationapi-button::before,
@@ -17,7 +20,26 @@
 }
 
 #notificationapi-button > span {
-  margin-left: 25%;
+  font-size: 1.25em;
+}
+
+#notificationapi-unread {
+  background: #cc1016;
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+  display: inline-block;
+  position: absolute;
+  top: -4px;
+  right: -7px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 16px;
+  color: white;
+}
+
+#notificationapi-unread.hidden {
+  display: none;
 }
 
 #notificationapi-popup {
@@ -62,7 +84,6 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0) #f8f8f8;
-  padding-bottom: 8px;
 }
 
 #notificationapi-popup #notificationapi-popup-inner {
@@ -106,8 +127,8 @@
   font-size: 24px;
 }
 
-#notificationapi-popup #notificationapi-zero-notifications {
-  padding: 20px;
+#notificationapi-popup #notificationapi-empty {
+  padding: 40px 20px;
   text-align: center;
 }
 
@@ -118,6 +139,10 @@
   padding: 8px;
   border-radius: 8px;
   cursor: default;
+}
+
+#notificationapi-popup .notificationapi-notification.unseen {
+  /* background: #eef7ff; */
 }
 
 #notificationapi-popup .notificationapi-notification[href] {

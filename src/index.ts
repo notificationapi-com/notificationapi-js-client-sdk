@@ -1,15 +1,22 @@
 import {
   InappNotification,
   Options,
+  WS_ClearUnreadRequest,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountRequest,
   WS_UnreadCountResponse
 } from './interfaces';
 
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
+TimeAgo.addDefaultLocale(en);
+const timeAgo = new TimeAgo('en-US');
+
 require('./assets/styles.css');
 
-const defaultWebSocket = 'ws://default';
+const defaultWebSocket =
+  'wss://fp7umb7q2c.execute-api.us-east-1.amazonaws.com/dev';
 
 declare global {
   interface Window {
@@ -75,11 +82,63 @@ function position(
 }
 
 class NotificationAPI {
-  private notifications: InappNotification[] = [];
-  private unread?: HTMLDivElement;
-  private popupInner: HTMLDivElement = document.createElement('div');
+  private state: {
+    notifications: InappNotification[];
+    unread: number;
+    lastNotificationsRequestAt: number;
+    options: Options | null;
+    oldestNotificationsDate: string;
+  } = {
+    lastNotificationsRequestAt: 0,
+    notifications: [],
+    options: null,
+    unread: 0,
+    oldestNotificationsDate: ''
+  };
+
+  private elements: {
+    unread: HTMLDivElement | null;
+    popup: HTMLDivElement | null;
+    popupInner: HTMLDivElement | null;
+    button: HTMLButtonElement | null;
+    websocket: WebSocket | null;
+    root: HTMLElement | null;
+    empty: HTMLDivElement | null;
+  } = {
+    unread: null,
+    popup: null,
+    popupInner: null,
+    button: null,
+    websocket: null,
+    root: null,
+    empty: null
+  };
+
+  destroy() {
+    this.state = {
+      lastNotificationsRequestAt: 0,
+      notifications: [],
+      options: null,
+      unread: 0,
+      oldestNotificationsDate: ''
+    };
+    this.elements.button?.remove();
+    this.elements.button = null;
+    this.elements.popup?.remove();
+    this.elements.popup = null;
+    this.elements.popupInner?.remove();
+    this.elements.popupInner = null;
+    this.elements.unread?.remove();
+    this.elements.unread = null;
+    this.elements.websocket?.close();
+    this.elements.websocket = null;
+    this.elements.empty?.remove();
+    this.elements.empty = null;
+  }
 
   init(options: Options) {
+    this.state.options = options;
+
     // validation
     const root = document.getElementById(options.root);
     if (!root) {
@@ -88,6 +147,7 @@ class NotificationAPI {
       );
       return;
     }
+    this.elements.root = root;
 
     if (
       options.popupPosition &&
@@ -103,7 +163,7 @@ class NotificationAPI {
       return;
     }
 
-    // empty existing
+    // clean existing
     if (root.hasChildNodes()) {
       root.innerHTML = '';
     }
@@ -119,7 +179,6 @@ class NotificationAPI {
     popup.id = 'notificationapi-popup';
     if (options.inline) {
       popup.classList.add('inline');
-      this.unread = undefined;
     } else {
       popup.classList.add('popup');
       popup.classList.add('hovering');
@@ -132,10 +191,13 @@ class NotificationAPI {
       container.appendChild(button);
       button.onclick = () => {
         if (popup.classList.contains('closed')) {
-          position(popup, button, options.popupPosition ?? 'rightBottom');
-          popup.classList.remove('closed');
-        } else popup.classList.add('closed');
+          this.openPopup();
+        } else {
+          this.closePopup();
+        }
       };
+      this.elements.button = button;
+
       window.addEventListener('click', (e) => {
         const clickedPopup =
           (e.target as Element).closest('#notificationapi-popup') ?? false;
@@ -147,123 +209,176 @@ class NotificationAPI {
       });
 
       // unread badge
-      this.unread = document.createElement('div');
-      this.unread.id = 'notificationapi-unread';
-      this.unread.innerHTML = '';
-      this.unread.classList.add('hidden');
-      button.appendChild(this.unread);
+      const unread = document.createElement('div');
+      unread.id = 'notificationapi-unread';
+      unread.innerHTML = '';
+      unread.classList.add('hidden');
+      button.appendChild(unread);
+      this.elements.unread = unread;
     }
     container.appendChild(popup);
+    this.elements.popup = popup;
 
     // render popup inner container
-    this.popupInner = document.createElement('div');
-    this.popupInner.id = 'notificationapi-popup-inner';
-    popup.appendChild(this.popupInner);
+    const popupInner = document.createElement('div');
+    popupInner.id = 'notificationapi-popup-inner';
+    popup.appendChild(popupInner);
+    this.elements.popupInner = popupInner;
 
     // render header
     const header = document.createElement('h1');
     header.innerHTML = 'Notifications';
     header.id = 'notificationapi-header';
-    this.popupInner.appendChild(header);
+    popupInner.appendChild(header);
 
-    // render default state
-    const zeroNotifications = document.createElement('div');
-    zeroNotifications.id = 'notificationapi-zero-notifications';
-    zeroNotifications.innerHTML =
-      "<div>You don't have any notifications!</div>";
-    this.popupInner.appendChild(zeroNotifications);
+    // render default empty state
+    const empty = document.createElement('div');
+    empty.id = 'notificationapi-empty';
+    empty.innerHTML = "You don't have any notifications!";
+    popupInner.appendChild(empty);
+    this.elements.empty = empty;
 
-    // load fake notifications
-    if (options.notifications) {
-      this.processNotifications(options.notifications);
-    }
+    popupInner.onscroll = () => {
+      if (
+        popupInner.scrollTop + popupInner.clientHeight >=
+          popupInner.scrollHeight - 100 && // 100px before the end
+        new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
+        this.elements.websocket
+      ) {
+        this.state.lastNotificationsRequestAt = new Date().getTime();
+        const moreNotificationsRequest: WS_NotificationsRequest = {
+          route: 'inapp_web/notifications',
+          payload: {
+            before: this.state.oldestNotificationsDate,
+            count: 50
+          }
+        };
+        this.elements.websocket.send(JSON.stringify(moreNotificationsRequest));
+      }
+    };
 
     // connect to WS
-    let client: WebSocket;
-    if (!options.notifications) {
-      client = new WebSocket(options.websocket ?? defaultWebSocket);
-      client.onopen = () => {
+    if (!options.mock) {
+      const websocketAddress = `${
+        options.websocket ?? defaultWebSocket
+      }?envId=${options.clientId}&userId=${options.userId}`;
+      const ws: WebSocket = new WebSocket(websocketAddress);
+      ws.onopen = () => {
         const unreadReq: WS_UnreadCountRequest = {
-          type: 'inapp_web/unread_count',
-          payload: {
-            envId: 'envId',
-            userId: 'userId'
-          }
+          route: 'inapp_web/unread_count'
         };
-        client.send(JSON.stringify(unreadReq));
+        ws.send(JSON.stringify(unreadReq));
 
         const notificationsReq: WS_NotificationsRequest = {
-          type: 'inapp_web/notifications',
+          route: 'inapp_web/notifications',
           payload: {
-            count: 50,
-            envId: 'envId',
-            userId: 'userId'
+            count: 50
           }
         };
-        client.send(JSON.stringify(notificationsReq));
+        ws.send(JSON.stringify(notificationsReq));
       };
-      client.onmessage = (m: MessageEvent) => {
+      ws.onmessage = (m: MessageEvent) => {
         const body = JSON.parse(m.data);
 
-        if (!body || !body.type) {
+        if (!body || !body.route) {
           return;
         }
 
-        if (body.type === 'inapp_web/unread') {
+        if (body.route === 'inapp_web/unread_count') {
           const message = body as WS_UnreadCountResponse;
           this.setUnread(message.payload.count);
         }
 
-        if (body.type === 'inapp_web/notifications') {
+        if (body.route === 'inapp_web/notifications') {
           const message = body as WS_NotificationsResponse;
           this.processNotifications(message.payload.notifications);
         }
       };
+      this.elements.websocket = ws;
+    }
+  }
+
+  openPopup() {
+    if (
+      this.elements.popup &&
+      this.elements.button &&
+      this.state.options &&
+      !this.state.options.inline
+    ) {
+      position(
+        this.elements.popup,
+        this.elements.button,
+        this.state.options.popupPosition ?? 'rightBottom'
+      );
+      this.setUnread(0);
+      this.elements.popup.classList.remove('closed');
     }
 
-    this.popupInner.onscroll = () => {
-      if (
-        window.scrollY >=
-        this.popupInner.offsetTop +
-          this.popupInner.clientHeight -
-          window.innerHeight
-      ) {
-        const moreNotificationsRequest: WS_NotificationsRequest = {
-          type: 'inapp_web/notifications',
-          payload: {
-            before: 'test',
-            count: 50,
-            envId: 'envId',
-            userId: 'userId'
-          }
-        };
-        client?.send(JSON.stringify(moreNotificationsRequest));
-        console.log('requesting more');
-      }
-    };
+    if (this.elements.websocket && this.elements.websocket.readyState === 1) {
+      const clearReq: WS_ClearUnreadRequest = {
+        route: 'inapp_web/unread_clear'
+      };
+      this.elements.websocket.send(JSON.stringify(clearReq));
+    }
+  }
+
+  closePopup() {
+    if (
+      this.elements.popup &&
+      this.state.options &&
+      !this.state.options.inline
+    ) {
+      this.elements.popup.classList.add('closed');
+    }
   }
 
   setUnread(count: number) {
-    if (this.unread) {
+    this.state.unread = count;
+    if (
+      this.elements.unread &&
+      this.state.options &&
+      !this.state.options.inline
+    ) {
       if (count === 0) {
-        this.unread.classList.add('hidden');
+        this.elements.unread.classList.add('hidden');
       } else {
-        this.unread.classList.remove('hidden');
+        this.elements.unread.classList.remove('hidden');
       }
 
       if (count < 100) {
-        this.unread.innerHTML = count + '';
+        this.elements.unread.innerHTML = count + '';
       } else {
-        this.unread.innerHTML = '+99';
+        this.elements.unread.innerHTML = '+99';
       }
     }
   }
 
   processNotifications(notifications: InappNotification[]) {
-    this.notifications.concat(notifications);
-    notifications.map((n) => {
+    // filter existing
+    const newNotifications = notifications.filter((n) => {
+      const found = this.state.notifications.find((existingN) => {
+        return existingN.id === n.id;
+      });
+      return found ? false : true;
+    });
+
+    this.state.notifications = this.state.notifications.concat(
+      newNotifications
+    );
+
+    newNotifications.map((n) => {
+      if (
+        !this.state.oldestNotificationsDate ||
+        n.date < this.state.oldestNotificationsDate
+      ) {
+        this.state.oldestNotificationsDate = n.date;
+      }
       const notification = document.createElement('a');
       notification.classList.add('notificationapi-notification');
+
+      if (!n.seen) {
+        notification.classList.add('unseen');
+      }
 
       if (n.redirectURL) {
         notification.href = n.redirectURL;
@@ -300,12 +415,18 @@ class NotificationAPI {
 
       const date = document.createElement('p');
       date.classList.add('notificationapi-notification-date');
-      date.innerHTML = 'now';
+      date.innerHTML = timeAgo.format(new Date(n.date), 'round-minute');
       notificationMetaContainer.appendChild(date);
 
       notification.appendChild(notificationMetaContainer);
-      this.popupInner.appendChild(notification);
+      // processNotifications always happens after init(), ensuring popupInner is there
+      /* istanbul ignore next */
+      this.elements.popupInner?.appendChild(notification);
     });
+    if (newNotifications.length > 0 && this.elements.empty) {
+      this.elements.empty.remove();
+      this.elements.empty = null;
+    }
   }
 }
 

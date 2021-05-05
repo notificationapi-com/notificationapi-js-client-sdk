@@ -1,16 +1,7 @@
 import notificationapi from '../index';
 
 export default {
-  title: 'Mock',
-  argTypes: {
-    label: { control: 'text' },
-    primary: { control: 'boolean' },
-    backgroundColor: { control: 'color' },
-    size: {
-      control: { type: 'select', options: ['small', 'medium', 'large'] }
-    },
-    onClick: { action: 'onClick' }
-  }
+  title: 'Mock'
 };
 
 const Template = ({ ...args }) => {
@@ -18,7 +9,11 @@ const Template = ({ ...args }) => {
           <BR><BR>
 
           <script>
+            notificationapi.destroy();
             notificationapi.init(${JSON.stringify(args.options)});
+            notificationapi.processNotifications(${JSON.stringify(
+              args.notifications
+            )});
           </script>
 
           <br><br><br><br>
@@ -34,6 +29,8 @@ const Template = ({ ...args }) => {
 
 let notifications = [
   {
+    id: 1,
+    seen: false,
     title: '<b>Moe</b> posted an update.',
     redirectURL: '#',
     imageURL:
@@ -41,11 +38,15 @@ let notifications = [
     date: new Date()
   },
   {
+    id: 2,
+    seen: false,
     title: '<b>Maddie</b> added you to a <b>Startups</b> group.',
     redirectURL: '#',
     date: new Date()
   },
   {
+    id: 3,
+    seen: false,
     title:
       '<b>Shannon</b> sent you a friend request. If you do not wish to receive more friends requests from this person, you can safely ignore this.',
     imageURL:
@@ -59,24 +60,29 @@ notifications = notifications.concat(notifications).concat(notifications);
 export const PopupEmpty = Template.bind({});
 PopupEmpty.args = {
   options: {
-    root: 'our-root'
-  }
+    root: 'our-root',
+    mock: true
+  },
+  notifications: []
 };
 
 export const FixedEmpty = Template.bind({});
 FixedEmpty.args = {
   options: {
     root: 'our-root',
-    inline: true
-  }
+    inline: true,
+    mock: true
+  },
+  notifications: []
 };
 
 export const Popup = Template.bind({});
 Popup.args = {
   options: {
     root: 'our-root',
-    notifications
-  }
+    mock: true
+  },
+  notifications: notifications
 };
 
 export const Fixed = Template.bind({});
@@ -84,6 +90,7 @@ Fixed.args = {
   options: {
     root: 'our-root',
     inline: true,
-    notifications
-  }
+    mock: true
+  },
+  notifications: notifications
 };

@@ -6,47 +6,49 @@ export interface User {
 
 export interface Options {
   root: string;
+  clientId: string;
+  userId: string;
   inline?: boolean;
   popupPosition?: string;
   websocket?: string;
-  notifications?: InappNotification[];
+  mock?: boolean;
 }
 
 export interface InappNotification {
+  id: string;
+  seen: boolean;
   title: string;
   redirectURL?: string;
   imageURL?: string;
-  date: Date;
+  date: string; // ISO date
 }
 
 export interface WS_NotificationsRequest {
-  type: 'inapp_web/notifications';
+  route: 'inapp_web/notifications';
   payload: {
     before?: string; // ISO date
     count: number;
-    envId: string;
-    userId: string;
   };
 }
 
 export interface WS_NotificationsResponse {
-  type: 'inapp_web/notifications';
+  route: 'inapp_web/notifications';
   payload: {
     notifications: InappNotification[];
   };
 }
 
 export interface WS_UnreadCountResponse {
-  type: 'inapp_web/unread_count';
+  route: 'inapp_web/unread_count';
   payload: {
     count: number;
   };
 }
 
 export interface WS_UnreadCountRequest {
-  type: 'inapp_web/unread_count';
-  payload: {
-    envId: string;
-    userId: string;
-  };
+  route: 'inapp_web/unread_count';
+}
+
+export interface WS_ClearUnreadRequest {
+  route: 'inapp_web/unread_clear';
 }
