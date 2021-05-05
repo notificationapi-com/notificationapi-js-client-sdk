@@ -211,10 +211,9 @@ class NotificationAPI {
       // unread badge
       const unread = document.createElement('div');
       unread.id = 'notificationapi-unread';
-      unread.innerHTML = '';
-      unread.classList.add('hidden');
       button.appendChild(unread);
       this.elements.unread = unread;
+      this.setUnread(this.state.unread);
     }
     container.appendChild(popup);
     this.elements.popup = popup;
@@ -232,11 +231,15 @@ class NotificationAPI {
     popupInner.appendChild(header);
 
     // render default empty state
-    const empty = document.createElement('div');
-    empty.id = 'notificationapi-empty';
-    empty.innerHTML = "You don't have any notifications!";
-    popupInner.appendChild(empty);
-    this.elements.empty = empty;
+    if (this.state.notifications.length === 0) {
+      const empty = document.createElement('div');
+      empty.id = 'notificationapi-empty';
+      empty.innerHTML = "You don't have any notifications!";
+      popupInner.appendChild(empty);
+      this.elements.empty = empty;
+    }
+
+    this.processNotifications(this.state.notifications);
 
     popupInner.onscroll = () => {
       if (
@@ -259,42 +262,44 @@ class NotificationAPI {
 
     // connect to WS
     if (!options.mock) {
-      const websocketAddress = `${
-        options.websocket ?? defaultWebSocket
-      }?envId=${options.clientId}&userId=${options.userId}`;
-      const ws: WebSocket = new WebSocket(websocketAddress);
-      ws.onopen = () => {
-        const unreadReq: WS_UnreadCountRequest = {
-          route: 'inapp_web/unread_count'
-        };
-        ws.send(JSON.stringify(unreadReq));
+      if (!this.elements.websocket) {
+        const websocketAddress = `${
+          options.websocket ?? defaultWebSocket
+        }?envId=${options.clientId}&userId=${options.userId}`;
+        const ws: WebSocket = new WebSocket(websocketAddress);
+        ws.onopen = () => {
+          const unreadReq: WS_UnreadCountRequest = {
+            route: 'inapp_web/unread_count'
+          };
+          ws.send(JSON.stringify(unreadReq));
 
-        const notificationsReq: WS_NotificationsRequest = {
-          route: 'inapp_web/notifications',
-          payload: {
-            count: 50
+          const notificationsReq: WS_NotificationsRequest = {
+            route: 'inapp_web/notifications',
+            payload: {
+              count: 50
+            }
+          };
+          ws.send(JSON.stringify(notificationsReq));
+        };
+        ws.onmessage = (m: MessageEvent) => {
+          const body = JSON.parse(m.data);
+
+          if (!body || !body.route) {
+            return;
+          }
+
+          if (body.route === 'inapp_web/unread_count') {
+            const message = body as WS_UnreadCountResponse;
+            this.setUnread(message.payload.count);
+          }
+
+          if (body.route === 'inapp_web/notifications') {
+            const message = body as WS_NotificationsResponse;
+            this.processNotifications(message.payload.notifications);
           }
         };
-        ws.send(JSON.stringify(notificationsReq));
-      };
-      ws.onmessage = (m: MessageEvent) => {
-        const body = JSON.parse(m.data);
-
-        if (!body || !body.route) {
-          return;
-        }
-
-        if (body.route === 'inapp_web/unread_count') {
-          const message = body as WS_UnreadCountResponse;
-          this.setUnread(message.payload.count);
-        }
-
-        if (body.route === 'inapp_web/notifications') {
-          const message = body as WS_NotificationsResponse;
-          this.processNotifications(message.payload.notifications);
-        }
-      };
-      this.elements.websocket = ws;
+        this.elements.websocket = ws;
+      }
     }
   }
 
@@ -366,7 +371,10 @@ class NotificationAPI {
       newNotifications
     );
 
-    newNotifications.map((n) => {
+    this.state.notifications.map((n) => {
+      if (document.getElementById(`notificationapi-notification-${n.id}`)) {
+        return;
+      }
       if (
         !this.state.oldestNotificationsDate ||
         n.date < this.state.oldestNotificationsDate
@@ -374,6 +382,7 @@ class NotificationAPI {
         this.state.oldestNotificationsDate = n.date;
       }
       const notification = document.createElement('a');
+      notification.id = `notificationapi-notification-${n.id}`;
       notification.classList.add('notificationapi-notification');
 
       if (!n.seen) {

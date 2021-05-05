@@ -181,66 +181,6 @@ describe('notificationapi', () => {
       });
     });
 
-    describe('recreation', () => {
-      test('does not create two inline popups', () => {
-        notificationapi.init({
-          root: 'root',
-          clientId,
-          userId
-        });
-
-        notificationapi.init({
-          root: 'root',
-          clientId,
-          userId
-        });
-
-        expect($('[id="notificationapi-button"]').length).toEqual(1);
-        expect($('[id="notificationapi-popup"]').length).toEqual(1);
-      });
-
-      test('replaces button', () => {
-        notificationapi.init({
-          root: 'root',
-          clientId,
-          userId
-        });
-
-        $('#notificationapi-button').addClass('to-be-found');
-
-        notificationapi.init({
-          root: 'root',
-          clientId,
-          userId
-        });
-
-        expect($('.to-be-found').length).toEqual(0);
-      });
-
-      test('replaces existing inline popup', () => {
-        notificationapi.init({
-          root: 'root',
-          inline: true,
-          clientId,
-          userId
-        });
-        notificationapi.processNotifications([testNotificationWithoutURL]);
-
-        notificationapi.init({
-          root: 'root',
-          inline: true,
-          clientId,
-          userId
-        });
-        notificationapi.processNotifications([testNotification]);
-
-        expect($('.notificationapi-notification')).toHaveLength(1);
-        expect($('.notificationapi-notification').attr('href')).toEqual(
-          testNotification.redirectURL
-        );
-      });
-    });
-
     describe('mock', () => {
       test('given mock option, websocket is not used', async () => {
         const server = new WS('ws://localhost:1234', { jsonProtocol: true });
@@ -272,6 +212,73 @@ describe('notificationapi', () => {
         });
         notificationapi.processNotifications([testNotification]);
         expect($('.notificationapi-notification')).toHaveLength(1);
+      });
+    });
+
+    describe('re-initilizing (React)', () => {
+      test('reuses existing websocket connection', async () => {
+        const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+        let connections = 0;
+        server.on('connection', () => {
+          connections++;
+        });
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId,
+          websocket: 'ws://localhost:1234'
+        });
+
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId,
+          websocket: 'ws://localhost:1234'
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        expect(connections).toEqual(1);
+      });
+
+      test('does not lose unread count', async () => {
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId
+        });
+
+        notificationapi.setUnread(3);
+
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId
+        });
+
+        expect($('#notificationapi-unread')[0].innerHTML).toEqual('3');
+        expect($('#notificationapi-unread').hasClass('.hidden')).toBeFalsy();
+      });
+
+      test('does not lose notifications in popup', async () => {
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId
+        });
+
+        notificationapi.processNotifications([
+          testNotification,
+          testNotificationUnseen
+        ]);
+
+        notificationapi.init({
+          root: 'root',
+          clientId,
+          userId
+        });
+
+        expect($('.notificationapi-notification')).toHaveLength(2);
+        expect($('#notificationapi-empty')).toHaveLength(0);
       });
     });
   });
@@ -320,7 +327,7 @@ describe('notificationapi', () => {
       await server.connected;
       const message: WS_NotificationsResponse = {
         route: 'inapp_web/notifications',
-        payload: { notifications: [testNotification, testNotification] }
+        payload: { notifications: [testNotification, testNotificationUnseen] }
       };
       server.send(message);
       expect($('.notificationapi-notification')).toHaveLength(2);
@@ -446,8 +453,11 @@ describe('notificationapi', () => {
         payload: {
           notifications: [
             testNotification,
-            { ...testNotification, date: '1989-09-28T10:00:00.000Z' },
-            testNotification
+            {
+              ...testNotificationWithoutImage,
+              date: '1989-09-28T10:00:00.000Z'
+            },
+            testNotificationWithoutURL
           ]
         }
       };
@@ -571,7 +581,7 @@ describe('notificationapi', () => {
       });
       notificationapi.processNotifications([
         testNotification,
-        testNotification
+        testNotificationUnseen
       ]);
       expect($('.notificationapi-notification')).toHaveLength(2);
     });

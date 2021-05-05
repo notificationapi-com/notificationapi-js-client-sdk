@@ -1,5 +1,4 @@
 import notificationapi from '../index';
-import React from 'react';
 
 export default {
   title: 'Real'
