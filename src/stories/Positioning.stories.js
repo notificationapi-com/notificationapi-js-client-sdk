@@ -22,15 +22,15 @@ export default {
 };
 
 const Template2 = ({ ...args }) => {
-  return `<div id="our-root" style="position: absolute; left: 50%; top: 40vh;"></div>
+  return `<div id="our-root" style="position: absolute; left: 50%; top: 40vh; width: 400px; height: 400px;"></div>
           <BR><BR>
 
           <script>
             notificationapi.init({
               root: "our-root",
-              notifications:${JSON.stringify(notifications)},
               popupPosition: "${args.position ?? 'topLeft'}"
             });
+            notificationapi.openPopup();
           </script>
 
 `;

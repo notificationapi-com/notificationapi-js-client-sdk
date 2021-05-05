@@ -171,7 +171,6 @@ class NotificationAPI {
     // render top level container
     const container = document.createElement('div');
     container.id = 'notificationapi-container';
-    container.style.position = 'relative';
     root.appendChild(container);
 
     // render popup & button & unread badge

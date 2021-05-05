@@ -1,10 +1,15 @@
+#notificationapi-container {
+  display: inline-block;
+  position: relative;
+}
+
 #notificationapi-button {
   all: initial;
   cursor: pointer;
   width: 32px;
   height: 32px;
   border: 1px solid #ddd;
-  border-radius: 12px;
+  border-radius: 8px;
   position: relative;
   box-sizing: border-box;
   text-align: center;
