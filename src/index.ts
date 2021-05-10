@@ -2,6 +2,7 @@ import {
   InappNotification,
   Options,
   WS_ClearUnreadRequest,
+  WS_NewNotificationsResponse,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountRequest,
@@ -295,6 +296,15 @@ class NotificationAPI {
           if (body.route === 'inapp_web/notifications') {
             const message = body as WS_NotificationsResponse;
             this.processNotifications(message.payload.notifications);
+          }
+
+          if (body.route === 'inapp_web/new_notifications') {
+            const message = body as WS_NewNotificationsResponse;
+            const beforeCount = this.state.notifications.length;
+            this.processNotifications(message.payload.notifications);
+            const afterCount = this.state.notifications.length;
+            this.state.unread = this.state.unread + afterCount - beforeCount;
+            this.setUnread(this.state.unread);
           }
         };
         this.elements.websocket = ws;

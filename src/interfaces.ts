@@ -52,3 +52,10 @@ export interface WS_UnreadCountRequest {
 export interface WS_ClearUnreadRequest {
   route: 'inapp_web/unread_clear';
 }
+
+export interface WS_NewNotificationsResponse {
+  route: 'inapp_web/new_notifications';
+  payload: {
+    notifications: InappNotification[];
+  };
+}

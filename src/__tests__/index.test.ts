@@ -2,6 +2,7 @@ import $ from 'jquery';
 import {
   InappNotification,
   WS_ClearUnreadRequest,
+  WS_NewNotificationsResponse,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountRequest,
@@ -349,6 +350,42 @@ describe('notificationapi', () => {
       server.send(message);
       expect($('.notificationapi-notification')).toHaveLength(0);
       expect($('.notificationapi-notification')).toHaveLength(0);
+    });
+
+    test('given new notifications (actual new and repeats), updates actual unread count on popup and shows actual new notificaitons in popup', async () => {
+      const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+      notificationapi.init({
+        root: 'root',
+        websocket: 'ws://localhost:1234',
+        clientId,
+        userId
+      });
+      await server.connected;
+      await server.nextMessage;
+      await server.nextMessage;
+      const message1: WS_NotificationsResponse = {
+        route: 'inapp_web/notifications',
+        payload: { notifications: [testNotification] }
+      };
+      server.send(message1);
+      const message2: WS_UnreadCountResponse = {
+        route: 'inapp_web/unread_count',
+        payload: { count: 1 }
+      };
+      server.send(message2);
+      const message3: WS_NewNotificationsResponse = {
+        route: 'inapp_web/new_notifications',
+        payload: {
+          notifications: [
+            testNotification,
+            testNotificationUnseen,
+            testNotificationWithoutImage
+          ]
+        }
+      };
+      server.send(message3);
+      expect($('.notificationapi-notification')).toHaveLength(3);
+      expect($('#notificationapi-unread').text()).toEqual('3');
     });
   });
 
