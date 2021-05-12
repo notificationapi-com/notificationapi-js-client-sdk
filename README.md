@@ -11,21 +11,21 @@ Warning: this package is only intended for client-side (front-end) applications.
 #### 1. Import or require
 
 ```
-import notificationapi from 'notificationapi-js-client-sdk'
+import NotificationAPI from 'notificationapi-js-client-sdk'
 ```
 
 or
 
 ```
-const notificationapi = require('notificationapi-js-client-sdk').default
+const NotificationAPI = require('notificationapi-js-client-sdk').default
 ```
 
-#### 2. Initialize
+#### 2. Initialization
 
-The init function will set up and render the NotificationAPI popup notifications in your front-end. This command should only run once after the page loads.
+The constructor will set up and render the NotificationAPI popup notifications in your front-end. Each instantiation will create a new instance of the NotificationAPI popup, thus for performance reason it is recommended to only run it once, e.g. after page load.
 
 ```
-notificationapi.init({
+const notificationapi = new NotificationAPI({
       root: "PARENT_ELEMENT_ID",
       clientId: CLIENT_ID,
       userId: USER_ID,
@@ -39,18 +39,18 @@ Parameters:
 - userId: The ID of the user in your system.
 - inline: whether to render a notification button that opens a popup, or to directly render the notifications as a list. Default: false.
 
-#### Considerations for React
+#### React Example
 
 React's state management and re-rendering causes this widget to be destroyed and re-initialized with every state change. It is recommended to place this widget in a "memo"-ized component to avoid this issue. Example:
 
 ```
-// NotificationAPI.jsx:
-import notificationapi from "notificationapi-js-client-sdk";
+// NotificationAPIComponent.jsx:
+import NotificationAPI from "notificationapi-js-client-sdk";
 import { memo, useEffect } from "react";
 
-const NotificationAPI = memo((props) => {
+const NotificationAPIComponent = memo((props) => {
   useEffect(() => {
-    notificationapi.init({
+    const notificationapi = new NotificationAPI({
       root: "notificationApiRoot",
       clientId: "CLIENT_ID",
       userId: props.userId,
@@ -59,18 +59,18 @@ const NotificationAPI = memo((props) => {
 
   return <div id="notificationApiRoot"></div>;
 });
-export default NotificationAPI;
+export default NotificationAPIComponent;
 
 ```
 
 ```
 // Parent.jsx:
-import NotificationAPI from "./NotificationAPI";
+import NotificationAPIComponent from "./NotificationAPIComponent";
 
 function Parent() {
   return (
     <div>
-      <NotificationAPI userId="USER_ID" />
+      <NotificationAPIComponent userId="USER_ID" />
       <div> ... </div>
     </div>
   );
