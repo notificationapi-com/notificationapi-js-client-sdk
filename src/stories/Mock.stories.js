@@ -1,4 +1,7 @@
-import notificationapi from '../index';
+import NotificationAPI from '../index';
+// eslint-disable-next-line no-undef
+window.NotificationAPI = NotificationAPI;
+let notificationapi;
 
 export default {
   title: 'Mock'
@@ -7,10 +10,10 @@ export default {
 const Template = ({ ...args }) => {
   return `<div id="our-root"></div>
           <BR><BR>
-
           <script>
-            notificationapi.destroy();
-            notificationapi.init(${JSON.stringify(args.options)});
+            notificationapi = new NotificationAPI(${JSON.stringify(
+              args.options
+            )});
             notificationapi.processNotifications(${JSON.stringify(
               args.notifications
             )});

@@ -1,4 +1,7 @@
-import notificationapi from '../index';
+import NotificationAPI from '../index';
+// eslint-disable-next-line no-undef
+window.NotificationAPI = NotificationAPI;
+let notificationapi;
 
 export default {
   title: 'Positioning',
@@ -26,10 +29,13 @@ const Template2 = ({ ...args }) => {
           <BR><BR>
 
           <script>
-            notificationapi.init({
+            notificationapi = new NotificationAPI({
               root: "our-root",
               popupPosition: "${args.position ?? 'topLeft'}"
             });
+            notificationapi.processNotifications(${JSON.stringify(
+              notifications
+            )})
             notificationapi.openPopup();
           </script>
 
@@ -38,6 +44,7 @@ const Template2 = ({ ...args }) => {
 
 const notifications = [
   {
+    id: '1',
     title: '<b>Moe</b> posted an update.',
     redirectURL: '#',
     imageURL:
@@ -45,11 +52,13 @@ const notifications = [
     date: new Date()
   },
   {
+    id: '2',
     title: '<b>Maddie</b> added you to a <b>Startups</b> group.',
     redirectURL: '#',
     date: new Date()
   },
   {
+    id: '3',
     title:
       '<b>Shannon</b> sent you a friend request. If you do not wish to receive more friends requests from this person, you can safely ignore this.',
     imageURL:

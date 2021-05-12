@@ -1,9 +1,9 @@
-#notificationapi-container {
+.notificationapi-container {
   display: inline-block;
   position: relative;
 }
 
-#notificationapi-button {
+.notificationapi-button {
   all: initial;
   cursor: pointer;
   width: 32px;
@@ -14,20 +14,20 @@
   text-align: center;
 }
 
-#notificationapi-button::before,
-#notificationapi-button::after {
+.notificationapi-button::before,
+.notificationapi-button::after {
   all: unset;
 }
 
-#notificationapi-button * {
+.notificationapi-button * {
   all: unset;
 }
 
-#notificationapi-button > span {
+.notificationapi-button > span {
   font-size: 1.25em;
 }
 
-#notificationapi-unread {
+.notificationapi-unread {
   background: #cc1016;
   border-radius: 50%;
   min-width: 16px;
@@ -42,11 +42,11 @@
   color: white;
 }
 
-#notificationapi-unread.hidden {
+.notificationapi-unread.hidden {
   display: none;
 }
 
-#notificationapi-popup {
+.notificationapi-popup {
   all: initial;
   display: block;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -58,85 +58,85 @@
   max-height: 90vh;
 }
 
-#notificationapi-popup.hovering {
+.notificationapi-popup.hovering {
   position: absolute;
   width: 340px;
 }
 
-#notificationapi-popup.hovering.closed {
+.notificationapi-popup.hovering.closed {
   display: none;
 }
 
-#notificationapi-popup.inline {
+.notificationapi-popup.inline {
   width: 100%;
 }
 
-#notificationapi-popup * {
+.notificationapi-popup * {
   all: unset;
 }
 
-#notificationapi-popup div,
-#notificationapi-popup p,
-#notificationapi-popup h1,
-#notificationapi-popup h2,
-#notificationapi-popup h3 {
+.notificationapi-popup div,
+.notificationapi-popup p,
+.notificationapi-popup h1,
+.notificationapi-popup h2,
+.notificationapi-popup h3 {
   display: block;
   display: block;
 }
 
-#notificationapi-popup #notificationapi-popup-inner {
+.notificationapi-popup .notificationapi-popup-inner {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0) #f8f8f8;
 }
 
-#notificationapi-popup #notificationapi-popup-inner {
+.notificationapi-popup .notificationapi-popup-inner {
   max-height: 90vh;
 }
 
-#notificationapi-popup #notificationapi-popup-inner:hover {
+.notificationapi-popup .notificationapi-popup-inner:hover {
   scrollbar-color: #ddd #eee;
 }
 
-#notificationapi-popup #notificationapi-popup-inner::-webkit-scrollbar {
+.notificationapi-popup .notificationapi-popup-inner::-webkit-scrollbar {
   width: 8px;
 }
 
-#notificationapi-popup #notificationapi-popup-inner::-webkit-scrollbar-track {
+.notificationapi-popup .notificationapi-popup-inner::-webkit-scrollbar-track {
   background: #f8f8f8;
   border-radius: 4px;
 }
 
-#notificationapi-popup #notificationapi-popup-inner::-webkit-scrollbar-thumb {
+.notificationapi-popup .notificationapi-popup-inner::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0);
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0);
   background-clip: padding-box;
 }
 
-#notificationapi-popup
-  #notificationapi-popup-inner:hover::-webkit-scrollbar-track {
+.notificationapi-popup
+  .notificationapi-popup-inner:hover::-webkit-scrollbar-track {
   background: #eee;
 }
 
-#notificationapi-popup
-  #notificationapi-popup-inner:hover::-webkit-scrollbar-thumb {
+.notificationapi-popup
+  .notificationapi-popup-inner:hover::-webkit-scrollbar-thumb {
   background-color: #ddd;
   border: 1px solid #eee;
 }
 
-#notificationapi-popup #notificationapi-header {
+.notificationapi-popup .notificationapi-header {
   margin: 20px 16px 12px 16px;
   padding: 0;
   font-size: 24px;
 }
 
-#notificationapi-popup #notificationapi-empty {
+.notificationapi-popup .notificationapi-empty {
   padding: 40px 20px;
   text-align: center;
 }
 
-#notificationapi-popup .notificationapi-notification {
+.notificationapi-popup .notificationapi-notification {
   display: flex;
   align-self: baseline;
   margin: 0 8px;
@@ -145,35 +145,35 @@
   cursor: default;
 }
 
-#notificationapi-popup .notificationapi-notification.unseen {
+.notificationapi-popup .notificationapi-notification.unseen {
   /* background: #eef7ff; */
 }
 
-#notificationapi-popup .notificationapi-notification[href] {
+.notificationapi-popup .notificationapi-notification[href] {
   cursor: pointer;
 }
 
-#notificationapi-popup .notificationapi-notification,
-#notificationapi-popup .notificationapi-notification:hover,
-#notificationapi-popup .notificationapi-notification:visited {
+.notificationapi-popup .notificationapi-notification,
+.notificationapi-popup .notificationapi-notification:hover,
+.notificationapi-popup .notificationapi-notification:visited {
   text-decoration: none;
   color: #111;
 }
 
-#notificationapi-popup .notificationapi-notification:hover {
+.notificationapi-popup .notificationapi-notification:hover {
   background: #f5f5f5;
 }
 
-#notificationapi-popup .notificationapi-notification-title {
+.notificationapi-popup .notificationapi-notification-title {
   margin: 0;
   padding: 0;
 }
 
-#notificationapi-popup .notificationapi-notification-title b {
+.notificationapi-popup .notificationapi-notification-title b {
   font-weight: 600;
 }
 
-#notificationapi-popup .notificationapi-notification-imageContainer {
+.notificationapi-popup .notificationapi-notification-imageContainer {
   width: 64px;
   min-width: 64px;
   max-width: 64px;
@@ -186,7 +186,7 @@
   text-align: center;
 }
 
-#notificationapi-popup .notificationapi-notification-image {
+.notificationapi-popup .notificationapi-notification-image {
   margin: 0;
   position: absolute;
   top: 50%;
@@ -195,7 +195,7 @@
   width: 100%;
 }
 
-#notificationapi-popup .notificationapi-notification-defaultIcon {
+.notificationapi-popup .notificationapi-notification-defaultIcon {
   margin: 0;
   position: absolute;
   top: 50%;
@@ -205,7 +205,7 @@
   color: #444;
 }
 
-#notificationapi-popup .notificationapi-notification-date {
+.notificationapi-popup .notificationapi-notification-date {
   color: rgb(9, 75, 255);
   font-size: 14px;
   margin: 0;

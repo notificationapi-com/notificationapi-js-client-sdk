@@ -9,7 +9,7 @@ import {
   WS_UnreadCountResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
-import notificationapi from '../index';
+import NotificationAPI from '../index';
 
 const testNotification: InappNotification = {
   id: '1',
@@ -47,25 +47,24 @@ const clientId = 'envId';
 const userId = 'userId';
 
 let spy: jest.SpyInstance;
+let notificationapi: NotificationAPI;
+let notificationapi2: NotificationAPI;
 beforeEach(() => {
   spy = jest.spyOn(console, 'error').mockImplementation();
 });
 
 afterEach(() => {
-  document.body.innerHTML = '<div id="root"></div>';
+  document.body.innerHTML = '<div id="root"></div><div id="root2"></div>';
   WS.clean();
   spy.mockRestore();
-  window.notificationapi.destroy();
+  if (notificationapi) notificationapi.destroy();
+  if (notificationapi2) notificationapi2.destroy();
 });
 
 describe('notificationapi', () => {
-  test('should exist', () => {
-    expect(notificationapi).toBeDefined();
-  });
-
   describe('init', () => {
     test('given bad root element shows error', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'none',
         clientId,
         userId
@@ -76,7 +75,7 @@ describe('notificationapi', () => {
     });
 
     test('given bad popupPosition, throws error', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         popupPosition: 'blah',
         clientId,
@@ -89,71 +88,69 @@ describe('notificationapi', () => {
       ]);
     });
 
-    test('adds the notificationapi container to the root', () => {
-      notificationapi.init({
+    test('adds the a notificationapi container to the root', () => {
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      expect($('[id="root"]').children()[0].id).toEqual(
-        'notificationapi-container'
-      );
+      expect($('[id="root"] > .notificationapi-container')).toHaveLength(1);
     });
 
     test('adds the notification popup button to the container', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      expect($('[id="notificationapi-container"]').children()[0].id).toEqual(
-        'notificationapi-button'
-      );
+      expect(
+        $('.notificationapi-container > .notificationapi-button')
+      ).toHaveLength(1);
     });
 
     describe('inline options', () => {
-      test('adds the notification popup to the container with .inline', () => {
-        notificationapi.init({
+      test('adds a notification popup to the container with .inline', () => {
+        notificationapi = new NotificationAPI({
           root: 'root',
           inline: true,
           clientId,
           userId
         });
-        expect($('#notificationapi-popup').parent().attr('id')).toEqual(
-          'notificationapi-container'
-        );
-        expect($('#notificationapi-popup').attr('class')).toEqual('inline');
+        expect(
+          $(
+            '.notificationapi-container > .notificationapi-popup.inline:not(.popup)'
+          )
+        ).toHaveLength(1);
       });
 
       test('openPopup and closePopup do not change popup style or throw error', () => {
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           inline: true,
           clientId,
           userId
         });
-        const classes = $('#notificationapi-popup')[0].classList;
+        const classes = $('.notificationapi-popup')[0].classList;
         notificationapi.openPopup();
-        expect($('#notificationapi-popup')[0].classList).toEqual(classes);
+        expect($('.notificationapi-popup')[0].classList).toEqual(classes);
         notificationapi.closePopup();
-        expect($('#notificationapi-popup')[0].classList).toEqual(classes);
+        expect($('.notificationapi-popup')[0].classList).toEqual(classes);
         expect(spy.mock.calls).toEqual([]);
       });
     });
 
     describe('popup option', () => {
       test('without inline, adds the notification popup to the container with .hovering.closed', () => {
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId
         });
-        expect($('#notificationapi-popup').parent().attr('id')).toEqual(
-          'notificationapi-container'
-        );
-        expect($('#notificationapi-popup').hasClass('popup'));
-        expect($('#notificationapi-popup').hasClass('hovering'));
-        expect($('#notificationapi-popup').hasClass('closed'));
+        expect(
+          $(
+            '.notificationapi-container > .notificationapi-popup.popup.hovering.closed:not(.inline)'
+          )
+        ).toHaveLength(1);
       });
     });
 
@@ -161,7 +158,7 @@ describe('notificationapi', () => {
       // TODO: test that the library will use the production websocket if not given a custom websocket
       test('given custom websocket, after init requests for unread and notifications', async () => {
         const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           websocket: 'ws://localhost:1234',
           clientId,
@@ -186,7 +183,7 @@ describe('notificationapi', () => {
       test('given mock option, websocket is not used', async () => {
         const server = new WS('ws://localhost:1234', { jsonProtocol: true });
 
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId,
@@ -203,7 +200,7 @@ describe('notificationapi', () => {
       });
 
       test('can show notifications inline', async () => {
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId,
@@ -216,52 +213,62 @@ describe('notificationapi', () => {
       });
     });
 
-    describe('re-initilizing (React)', () => {
-      test('reuses existing websocket connection', async () => {
-        const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-        let connections = 0;
-        server.on('connection', () => {
-          connections++;
+    describe('multiple initializations', () => {
+      test('maintains 2 separate websocket connections', async () => {
+        const server1 = new WS('ws://localhost:1234', { jsonProtocol: true });
+        const server2 = new WS('ws://localhost:1235', { jsonProtocol: true });
+        let connections1 = 0;
+        let connections2 = 0;
+        server1.on('connection', () => {
+          connections1++;
         });
-        notificationapi.init({
+        server2.on('connection', () => {
+          connections2++;
+        });
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId,
           websocket: 'ws://localhost:1234'
         });
 
-        notificationapi.init({
-          root: 'root',
+        notificationapi2 = new NotificationAPI({
+          root: 'root2',
           clientId,
           userId,
-          websocket: 'ws://localhost:1234'
+          websocket: 'ws://localhost:1235'
         });
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        expect(connections).toEqual(1);
+        expect(connections1).toEqual(1);
+        expect(connections2).toEqual(1);
       });
 
-      test('does not lose unread count', async () => {
-        notificationapi.init({
+      test('maintains separate unread count', async () => {
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId
         });
-
         notificationapi.setUnread(3);
 
-        notificationapi.init({
-          root: 'root',
+        notificationapi2 = new NotificationAPI({
+          root: 'root2',
           clientId,
           userId
         });
+        notificationapi2.setUnread(0);
 
-        expect($('#notificationapi-unread')[0].innerHTML).toEqual('3');
-        expect($('#notificationapi-unread').hasClass('.hidden')).toBeFalsy();
+        expect($('.notificationapi-unread')[0].innerHTML).toEqual('3');
+        expect($('.notificationapi-unread')[0].classList).not.toContain(
+          'hidden'
+        );
+        expect($('.notificationapi-unread')[1].innerHTML).toEqual('0');
+        expect($('.notificationapi-unread')[1].classList).toContain('hidden');
       });
 
-      test('does not lose notifications in popup', async () => {
-        notificationapi.init({
+      test('maintains separate notifications', async () => {
+        notificationapi = new NotificationAPI({
           root: 'root',
           clientId,
           userId
@@ -272,14 +279,20 @@ describe('notificationapi', () => {
           testNotificationUnseen
         ]);
 
-        notificationapi.init({
-          root: 'root',
+        notificationapi2 = new NotificationAPI({
+          root: 'root2',
           clientId,
           userId
         });
 
-        expect($('.notificationapi-notification')).toHaveLength(2);
-        expect($('#notificationapi-empty')).toHaveLength(0);
+        notificationapi2.processNotifications([testNotification]);
+
+        expect(
+          $('.notificationapi-popup-inner:nth(0) .notificationapi-notification')
+        ).toHaveLength(2);
+        expect(
+          $('.notificationapi-popup-inner:nth(1) .notificationapi-notification')
+        ).toHaveLength(1);
       });
     });
   });
@@ -287,7 +300,7 @@ describe('notificationapi', () => {
   describe('websocket receives', () => {
     test('given malformed message, doesnt break', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -300,7 +313,7 @@ describe('notificationapi', () => {
 
     test('given unread count, renders it', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -314,12 +327,12 @@ describe('notificationapi', () => {
         }
       };
       server.send(res);
-      expect($('#notificationapi-unread').html()).toEqual('3');
+      expect($('.notificationapi-unread').html()).toEqual('3');
     });
 
     test('given notifications, renders them', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -336,7 +349,7 @@ describe('notificationapi', () => {
 
     test('given no notifications, renders empty state', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -354,7 +367,7 @@ describe('notificationapi', () => {
 
     test('given new notifications (actual new and repeats), updates actual unread count on popup and shows actual new notificaitons in popup', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -385,25 +398,25 @@ describe('notificationapi', () => {
       };
       server.send(message3);
       expect($('.notificationapi-notification')).toHaveLength(3);
-      expect($('#notificationapi-unread').text()).toEqual('3');
+      expect($('.notificationapi-unread').text()).toEqual('3');
     });
   });
 
   describe('popup interactions', () => {
-    test('when button is clicked, popup has .hovering not .closed', () => {
-      notificationapi.init({
+    test('when button is clicked, popup has .hovering not .closed', async () => {
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      $('#notificationapi-button').trigger('click');
-      expect($('#notificationapi-popup').hasClass('hovering'));
-      expect(!$('#notificationapi-popup').hasClass('closed'));
+      $('.notificationapi-button').trigger('click');
+      expect($('.notificationapi-popup').hasClass('hovering'));
+      expect(!$('.notificationapi-popup').hasClass('closed'));
     });
 
     test('when button is clicked, removes unread badge and requests clearing unread', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -412,45 +425,45 @@ describe('notificationapi', () => {
       await server.connected;
       await server.nextMessage;
       await server.nextMessage;
-      $('#notificationapi-button').trigger('click');
+      $('.notificationapi-button').trigger('click');
       const expectedMsg: WS_ClearUnreadRequest = {
         route: 'inapp_web/unread_clear'
       };
-      expect($('#notificationapi-unread').hasClass('hidden')).toBeTruthy();
+      expect($('.notificationapi-unread').hasClass('hidden')).toBeTruthy();
       await expect(server).toReceiveMessage(expectedMsg);
     });
 
-    test('when button is clicked then clicked again, popup has .closed', () => {
-      notificationapi.init({
+    test('when button is clicked then clicked again, popup has .closed', async () => {
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      $('#notificationapi-button').trigger('click');
-      $('#notificationapi-button').trigger('click');
-      expect($('#notificationapi-popup').hasClass('closed'));
+      $('.notificationapi-button').trigger('click');
+      $('.notificationapi-button').trigger('click');
+      expect($('.notificationapi-popup').hasClass('closed'));
     });
 
     test('when button is clicked then popup content is clicked, popup is not .closed', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      $('#notificationapi-button').trigger('click');
-      $('#notificationapi-header').trigger('click');
-      expect(!$('#notificationapi-popup').hasClass('closed'));
+      $('.notificationapi-button').trigger('click');
+      $('.notificationapi-header').trigger('click');
+      expect(!$('.notificationapi-popup').hasClass('closed'));
     });
 
     test('when button is clicked then page clicked, popup has .closed', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      $('#notificationapi-button').trigger('click');
+      $('.notificationapi-button').trigger('click');
       $('body').trigger('click');
-      expect($('#notificationapi-popup').hasClass('closed'));
+      expect($('.notificationapi-popup').hasClass('closed'));
     });
 
     test('works with all different popupPosition variations', () => {
@@ -464,19 +477,19 @@ describe('notificationapi', () => {
         'rightTop',
         'rightBottom'
       ].map((popupPosition) => {
-        notificationapi.init({
+        notificationapi = new NotificationAPI({
           root: 'root',
           popupPosition,
           clientId,
           userId
         });
-        $('#notificationapi-button').trigger('click');
+        $('.notificationapi-button').trigger('click');
       });
     });
 
     test('after scrolling to the end, requests notifications before the oldest notification, scrolling again immediately wouldnt trigger this behavior again', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         websocket: 'ws://localhost:1234',
         clientId,
@@ -499,12 +512,12 @@ describe('notificationapi', () => {
         }
       };
       server.send(res);
-      $('#notificationapi-button').trigger('click');
+      $('.notificationapi-button').trigger('click');
       await server.nextMessage; // clear request
-      $('#notificationapi-popup-inner')[0].dispatchEvent(
+      $('.notificationapi-popup-inner')[0].dispatchEvent(
         new CustomEvent('scroll')
       );
-      $('#notificationapi-popup-inner')[0].dispatchEvent(
+      $('.notificationapi-popup-inner')[0].dispatchEvent(
         new CustomEvent('scroll')
       );
 
@@ -523,95 +536,95 @@ describe('notificationapi', () => {
 
   describe('setUnread', () => {
     test('doesnt not display or break in inline mode', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         inline: true,
         clientId,
         userId
       });
       notificationapi.setUnread(123);
-      expect($('#notificationapi-unread')).toHaveLength(0);
+      expect($('.notificationapi-unread')).toHaveLength(0);
       expect(spy.mock.calls).toHaveLength(0);
     });
 
     test('given 0, is not displayed', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
       notificationapi.setUnread(0);
-      expect($('#notificationapi-unread').hasClass('hidden')).toBeTruthy();
+      expect($('.notificationapi-unread').hasClass('hidden')).toBeTruthy();
     });
 
     test('given 1, shows 1', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
       notificationapi.setUnread(1);
-      expect($('#notificationapi-unread').hasClass('hidden')).toBeFalsy();
-      expect($('#notificationapi-unread').html()).toEqual('1');
+      expect($('.notificationapi-unread').hasClass('hidden')).toBeFalsy();
+      expect($('.notificationapi-unread').html()).toEqual('1');
     });
 
     test('given 100, shows +99', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
       notificationapi.setUnread(100);
-      expect($('#notificationapi-unread').hasClass('hidden')).toBeFalsy();
-      expect($('#notificationapi-unread').html()).toEqual('+99');
+      expect($('.notificationapi-unread').hasClass('hidden')).toBeFalsy();
+      expect($('.notificationapi-unread').html()).toEqual('+99');
     });
   });
 
   describe('processNotifications', () => {
     test('without popupinner, does not throw', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      $('#notificationapi-popup-inner').remove();
+      $('.notificationapi-popup-inner').remove();
       notificationapi.processNotifications([testNotification]);
       expect(spy.mock.calls).toEqual([]);
     });
 
     test('defaults to empty state (no notifications)', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
-      expect($('#notificationapi-empty')).toHaveLength(1);
+      expect($('.notificationapi-empty')).toHaveLength(1);
       expect($('.notificationapi-notification')).toHaveLength(0);
     });
 
     test('given 0 notifications, adds no notifications and shows empty', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
       notificationapi.processNotifications([]);
-      expect($('#notificationapi-empty')).toHaveLength(1);
+      expect($('.notificationapi-empty')).toHaveLength(1);
       expect($('.notificationapi-notification')).toHaveLength(0);
     });
 
     test('given any, removes empty state div', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
       });
       notificationapi.processNotifications([testNotification]);
-      expect($('#notificationapi-empty')).toHaveLength(0);
+      expect($('.notificationapi-empty')).toHaveLength(0);
     });
 
     test('given 2, adds 2 notifications', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
@@ -624,7 +637,7 @@ describe('notificationapi', () => {
     });
 
     test('given 1 notification, shows title, message, image and date with correct redirect', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
@@ -645,7 +658,7 @@ describe('notificationapi', () => {
     });
 
     test('without url, does not redirect', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
@@ -655,7 +668,7 @@ describe('notificationapi', () => {
     });
 
     test('without image, ignores image, uses icon', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
@@ -665,7 +678,7 @@ describe('notificationapi', () => {
     });
 
     test('unseen notification has unseen class on it', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId
@@ -677,7 +690,7 @@ describe('notificationapi', () => {
     });
 
     test('notifications with repeat ID are not added', () => {
-      notificationapi.init({
+      notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
         userId

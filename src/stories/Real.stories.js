@@ -1,4 +1,7 @@
-import notificationapi from '../index';
+import NotificationAPI from '../index';
+// eslint-disable-next-line no-undef
+window.NotificationAPI = NotificationAPI;
+let notificationapi;
 
 export default {
   title: 'Real'
@@ -9,7 +12,7 @@ const Component = ({ ...args }) => {
           <BR><BR>
 
           <script>
-            notificationapi.init({
+            notificationapi = new NotificationAPI({
               root: "our-root",
               userId: "${args.userId}",
               clientId: "${args.clientId}",
