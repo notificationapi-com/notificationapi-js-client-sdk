@@ -1,6 +1,7 @@
 import {
   InappNotification,
   Options,
+  PopupPosition,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
   WS_NotificationsRequest,
@@ -28,24 +29,14 @@ require('./assets/styles.css');
 const defaultWebSocket =
   'wss://fp7umb7q2c.execute-api.us-east-1.amazonaws.com/dev';
 
-const validPopupPositions = [
-  'topLeft',
-  'topRight',
-  'leftTop',
-  'leftBottom',
-  'bottomLeft',
-  'bottomRight',
-  'rightTop',
-  'rightBottom'
-];
-
 function position(
   popup: HTMLDivElement,
   popupInner: HTMLDivElement,
   button: HTMLButtonElement,
-  position: string
+  popupPosition: PopupPosition
 ) {
   let maxHeight = window.innerHeight + 'px';
+  const position: string = popupPosition.toString();
   if (position.startsWith('top')) {
     popup.style.top = 'auto';
     popup.style.bottom = button.clientHeight + 10 + 'px';
@@ -162,14 +153,14 @@ class NotificationAPI {
 
     if (
       options.popupPosition &&
-      !validPopupPositions.includes(options.popupPosition)
+      !Object.values(PopupPosition).includes(options.popupPosition)
     ) {
       console.error(
         `"${
           options.popupPosition
-        }" is not a valid position. Valid positions: ${validPopupPositions.join(
-          ', '
-        )}`
+        }" is not a valid position. Valid positions: ${Object.values(
+          PopupPosition
+        ).join(', ')}`
       );
       return;
     }
@@ -327,7 +318,7 @@ class NotificationAPI {
         this.elements.popup,
         this.elements.popupInner,
         this.elements.button,
-        this.state.options.popupPosition ?? 'rightBottom'
+        this.state.options.popupPosition ?? PopupPosition.RightBottom
       );
       this.setUnread(0);
       this.elements.popup.classList.remove('closed');

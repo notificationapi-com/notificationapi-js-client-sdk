@@ -9,9 +9,20 @@ export interface Options {
   clientId: string;
   userId: string;
   inline?: boolean;
-  popupPosition?: string;
+  popupPosition?: PopupPosition;
   websocket?: string;
   mock?: boolean;
+}
+
+export enum PopupPosition {
+  TopLeft = 'topLeft',
+  TopRight = 'topRight',
+  LeftTop = 'leftTop',
+  LeftBottom = 'leftBottom',
+  BottomLeft = 'bottomLeft',
+  BottomRight = 'bottomRight',
+  RightTop = 'rightTop',
+  RightBottom = 'rightBottom'
 }
 
 export interface InappNotification {

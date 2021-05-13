@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import {
   InappNotification,
+  PopupPosition,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
   WS_NotificationsRequest,
@@ -77,7 +78,7 @@ describe('notificationapi', () => {
     test('given bad popupPosition, throws error', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
-        popupPosition: 'blah',
+        popupPosition: <PopupPosition>(<unknown>'blah'),
         clientId,
         userId
       });
@@ -468,19 +469,10 @@ describe('notificationapi', () => {
 
     // TODO: add tests to validate correct positioning
     test('works with all different popupPosition variations', () => {
-      [
-        'topLeft',
-        'topRight',
-        'leftTop',
-        'leftBottom',
-        'bottomLeft',
-        'bottomRight',
-        'rightTop',
-        'rightBottom'
-      ].map((popupPosition) => {
+      Object.values(PopupPosition).map((popupPosition) => {
         notificationapi = new NotificationAPI({
           root: 'root',
-          popupPosition,
+          popupPosition: <PopupPosition>(<unknown>popupPosition),
           clientId,
           userId
         });
