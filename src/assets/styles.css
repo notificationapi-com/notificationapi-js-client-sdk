@@ -55,7 +55,6 @@
   background: #fff;
   overflow-y: hidden;
   overflow-x: hidden;
-  max-height: 90vh;
 }
 
 .notificationapi-popup.hovering {

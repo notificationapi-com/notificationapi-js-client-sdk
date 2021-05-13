@@ -1,13 +1,9 @@
-import NotificationAPI from '../index';
-// eslint-disable-next-line no-undef
-window.NotificationAPI = NotificationAPI;
-let notificationapi;
-
 export default {
   title: 'Mock'
 };
 
 const Template = ({ ...args }) => {
+  window.NotificationAPI = require('../index').default;
   return `<div id="our-root"></div>
           <BR><BR>
           <script>

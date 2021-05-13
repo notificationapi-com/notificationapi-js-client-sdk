@@ -1,8 +1,3 @@
-import NotificationAPI from '../index';
-// eslint-disable-next-line no-undef
-window.NotificationAPI = NotificationAPI;
-let notificationapi;
-
 export default {
   title: 'Positioning',
   argTypes: {
@@ -25,12 +20,14 @@ export default {
 };
 
 const Template2 = ({ ...args }) => {
+  window.NotificationAPI = require('../index').default;
   return `<div id="our-root" style="position: absolute; left: 50%; top: 40vh; width: 400px; height: 400px;"></div>
           <BR><BR>
 
           <script>
             notificationapi = new NotificationAPI({
               root: "our-root",
+              mock: true,
               popupPosition: "${args.position ?? 'topLeft'}"
             });
             notificationapi.processNotifications(${JSON.stringify(
@@ -39,32 +36,27 @@ const Template2 = ({ ...args }) => {
             notificationapi.openPopup();
           </script>
 
+          <div style="min-height: 2000px;">
+          </div>
 `;
 };
 
-const notifications = [
-  {
-    id: '1',
-    title: '<b>Moe</b> posted an update.',
-    redirectURL: '#',
-    imageURL:
-      'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Sami-Viitama%CC%88ki--414x414.jpeg',
-    date: new Date()
-  },
-  {
-    id: '2',
-    title: '<b>Maddie</b> added you to a <b>Startups</b> group.',
-    redirectURL: '#',
-    date: new Date()
-  },
-  {
-    id: '3',
-    title:
-      '<b>Shannon</b> sent you a friend request. If you do not wish to receive more friends requests from this person, you can safely ignore this.',
-    imageURL:
-      'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Rachel-Montan%CC%83ez.jpeg',
-    date: new Date()
-  }
-];
+const notification = {
+  title: '<b>Moe</b> posted an update.',
+  redirectURL: '#',
+  imageURL:
+    'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Sami-Viitama%CC%88ki--414x414.jpeg',
+  date: new Date()
+};
+let notifications = [];
+
+for (let i = 0; i < 30; i++) {
+  notifications = notifications.concat([
+    {
+      ...notification,
+      id: Math.round(Math.random() * 1000)
+    }
+  ]);
+}
 
 export const TopLeft = Template2.bind({});

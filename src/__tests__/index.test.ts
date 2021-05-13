@@ -466,6 +466,7 @@ describe('notificationapi', () => {
       expect($('.notificationapi-popup').hasClass('closed'));
     });
 
+    // TODO: add tests to validate correct positioning
     test('works with all different popupPosition variations', () => {
       [
         'topLeft',

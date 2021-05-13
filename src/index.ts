@@ -8,10 +8,19 @@ import {
   WS_UnreadCountRequest,
   WS_UnreadCountResponse
 } from './interfaces';
-
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
-TimeAgo.addDefaultLocale(en);
+
+try {
+  TimeAgo.addDefaultLocale(en);
+  // eslint-disable-next-line no-empty
+} catch (e) {
+  /* 
+    TimeAgo.addDefaultLocale throws error on being
+    invoked more than once. It may be invoked more
+    than when requiring this file multiple times.
+  */
+}
 const timeAgo = new TimeAgo('en-US');
 
 require('./assets/styles.css');
@@ -32,17 +41,22 @@ const validPopupPositions = [
 
 function position(
   popup: HTMLDivElement,
+  popupInner: HTMLDivElement,
   button: HTMLButtonElement,
   position: string
 ) {
+  let maxHeight = window.innerHeight + 'px';
   if (position.startsWith('top')) {
     popup.style.top = 'auto';
     popup.style.bottom = button.clientHeight + 10 + 'px';
+    maxHeight = button.getBoundingClientRect().top - 20 + 'px';
   }
 
   if (position.startsWith('bottom')) {
     popup.style.bottom = 'auto';
     popup.style.top = button.clientHeight + 10 + 'px';
+    maxHeight =
+      window.innerHeight - button.getBoundingClientRect().bottom - 40 + 'px';
   }
 
   if (position.startsWith('left')) {
@@ -58,11 +72,14 @@ function position(
   if (position.endsWith('Top')) {
     popup.style.top = 'auto';
     popup.style.bottom = '0px';
+    maxHeight = button.getBoundingClientRect().bottom - 20 + 'px';
   }
 
   if (position.endsWith('Bottom')) {
     popup.style.bottom = 'auto';
     popup.style.top = '0px';
+    maxHeight =
+      window.innerHeight - button.getBoundingClientRect().top - 40 + 'px';
   }
 
   if (position.endsWith('Left')) {
@@ -74,6 +91,7 @@ function position(
     popup.style.right = 'auto';
     popup.style.left = '0px';
   }
+  popupInner.style.maxHeight = maxHeight;
 }
 
 class NotificationAPI {
@@ -307,6 +325,7 @@ class NotificationAPI {
     ) {
       position(
         this.elements.popup,
+        this.elements.popupInner,
         this.elements.button,
         this.state.options.popupPosition ?? 'rightBottom'
       );
