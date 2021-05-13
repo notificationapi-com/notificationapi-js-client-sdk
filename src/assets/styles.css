@@ -60,6 +60,7 @@
 .notificationapi-popup.hovering {
   position: absolute;
   width: 340px;
+  z-index: 2147483647;
 }
 
 .notificationapi-popup.hovering.closed {
