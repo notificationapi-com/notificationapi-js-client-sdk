@@ -34,14 +34,14 @@ let notifications = [
     redirectURL: '#',
     imageURL:
       'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Sami-Viitama%CC%88ki--414x414.jpeg',
-    date: new Date()
+    date: new Date('2021-01-01')
   },
   {
     id: 2,
     seen: false,
     title: '<b>Maddie</b> added you to a <b>Startups</b> group.',
     redirectURL: '#',
-    date: new Date()
+    date: new Date('2021-03-01')
   },
   {
     id: 3,

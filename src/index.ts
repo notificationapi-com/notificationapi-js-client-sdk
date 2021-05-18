@@ -108,6 +108,7 @@ class NotificationAPI {
     websocket: WebSocket | null;
     root: HTMLElement | null;
     empty: HTMLDivElement | null;
+    header: HTMLHeadingElement;
   } = {
     unread: null,
     popup: document.createElement('div'),
@@ -115,7 +116,8 @@ class NotificationAPI {
     button: null,
     websocket: null,
     root: null,
-    empty: null
+    empty: null,
+    header: document.createElement('h1')
   };
 
   destroy(): void {
@@ -127,15 +129,12 @@ class NotificationAPI {
       oldestNotificationsDate: ''
     };
     this.elements.button?.remove();
-    this.elements.button = null;
     this.elements.popup.remove();
     this.elements.popupInner.remove();
     this.elements.unread?.remove();
-    this.elements.unread = null;
     this.elements.websocket?.close();
-    this.elements.websocket = null;
     this.elements.empty?.remove();
-    this.elements.empty = null;
+    this.elements.header.remove();
   }
 
   constructor(options: Options) {
@@ -225,10 +224,9 @@ class NotificationAPI {
     this.elements.popupInner = popupInner;
 
     // render header
-    const header = document.createElement('h1');
-    header.innerHTML = 'Notifications';
-    header.classList.add('notificationapi-header');
-    popupInner.appendChild(header);
+    this.elements.header.innerHTML = 'Notifications';
+    this.elements.header.classList.add('notificationapi-header');
+    popupInner.appendChild(this.elements.header);
 
     // render default empty state
     const empty = document.createElement('div');
@@ -376,10 +374,14 @@ class NotificationAPI {
       newNotifications
     );
 
-    this.state.notifications.map((n) => {
+    this.state.notifications.sort((a, b) => {
+      return Date.parse(b.date) - Date.parse(a.date);
+    });
+
+    this.state.notifications.map((n, i) => {
       if (
         this.elements.popupInner.querySelector(
-          `#notificationapi-notification-${n.id}`
+          `[data-notification-id="${n.id}"]`
         )
       ) {
         return;
@@ -391,7 +393,7 @@ class NotificationAPI {
         this.state.oldestNotificationsDate = n.date;
       }
       const notification = document.createElement('a');
-      notification.id = `notificationapi-notification-${n.id}`;
+      notification.setAttribute('data-notification-id', n.id);
       notification.classList.add('notificationapi-notification');
 
       if (!n.seen) {
@@ -437,9 +439,24 @@ class NotificationAPI {
       notificationMetaContainer.appendChild(date);
 
       notification.appendChild(notificationMetaContainer);
-      // processNotifications always happens after init(), ensuring popupInner is there
-      /* istanbul ignore next */
-      this.elements.popupInner?.appendChild(notification);
+
+      if (i === 0) {
+        this.elements.header.insertAdjacentElement('afterend', notification);
+      } else {
+        const preNotificationEl = this.elements.popupInner.querySelector(
+          `[data-notification-id="${this.state.notifications[i - 1].id}"]`
+        );
+        // ignoring the else statement coverage: unknown scenario.
+        /* istanbul ignore next */
+        if (preNotificationEl) {
+          preNotificationEl.insertAdjacentElement('afterend', notification);
+        } else {
+          console.error(
+            'error finding previous notification',
+            this.state.notifications[i - 1]
+          );
+        }
+      }
     });
     if (newNotifications.length > 0 && this.elements.empty) {
       this.elements.empty.remove();

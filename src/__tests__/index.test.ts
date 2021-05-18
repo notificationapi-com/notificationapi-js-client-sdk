@@ -52,10 +52,10 @@ let notificationapi: NotificationAPI;
 let notificationapi2: NotificationAPI;
 beforeEach(() => {
   spy = jest.spyOn(console, 'error').mockImplementation();
+  document.body.innerHTML = '<div id="root"></div><div id="root2"></div>';
 });
 
 afterEach(() => {
-  document.body.innerHTML = '<div id="root"></div><div id="root2"></div>';
   WS.clean();
   spy.mockRestore();
   if (notificationapi) notificationapi.destroy();
@@ -578,7 +578,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       $('.notificationapi-popup-inner').remove();
       notificationapi.processNotifications([testNotification]);
@@ -589,7 +590,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       expect($('.notificationapi-empty')).toHaveLength(1);
       expect($('.notificationapi-notification')).toHaveLength(0);
@@ -599,7 +601,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([]);
       expect($('.notificationapi-empty')).toHaveLength(1);
@@ -610,7 +613,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotification]);
       expect($('.notificationapi-empty')).toHaveLength(0);
@@ -620,7 +624,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([
         testNotification,
@@ -633,7 +638,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotification]);
       expect($('.notificationapi-notification').attr('href')).toEqual(
@@ -654,7 +660,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotificationWithoutURL]);
       expect($('.notificationapi-notification').attr('href')).toBeFalsy();
@@ -664,7 +671,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotificationWithoutImage]);
       expect($('.notificationapi-notification-image')).toHaveLength(0);
@@ -674,7 +682,8 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotificationUnseen]);
       expect(
@@ -686,11 +695,62 @@ describe('notificationapi', () => {
       notificationapi = new NotificationAPI({
         root: 'root',
         clientId,
-        userId
+        userId,
+        mock: true
       });
       notificationapi.processNotifications([testNotification]);
       notificationapi.processNotifications([testNotification]);
       expect($('.notificationapi-notification')).toHaveLength(1);
+    });
+
+    test('incoming new notification is placed at the top', () => {
+      notificationapi = new NotificationAPI({
+        root: 'root',
+        clientId,
+        userId,
+        mock: true
+      });
+      notificationapi.processNotifications([
+        testNotification,
+        testNotificationWithoutImage
+      ]);
+      notificationapi.processNotifications([
+        {
+          ...testNotification,
+          date: new Date('2030-01-01').toISOString(),
+          id: 'new'
+        }
+      ]);
+      expect(
+        $('.notificationapi-popup-inner')
+          .children()[1] // element 0 is header
+          .getAttribute('data-notification-id')
+      ).toEqual('new');
+    });
+
+    test('incoming old notification is placed at the bottom', () => {
+      notificationapi = new NotificationAPI({
+        root: 'root',
+        clientId,
+        userId,
+        mock: true
+      });
+      notificationapi.processNotifications([
+        testNotification,
+        testNotificationWithoutImage
+      ]);
+      notificationapi.processNotifications([
+        {
+          ...testNotification,
+          date: new Date('2000-01-01').toISOString(),
+          id: 'old'
+        }
+      ]);
+      expect(
+        $('.notificationapi-popup-inner')
+          .children()[3] // element 0 is header
+          .getAttribute('data-notification-id')
+      ).toEqual('old');
     });
   });
 });
