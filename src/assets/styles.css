@@ -136,6 +136,12 @@
   text-align: center;
 }
 
+.notificationapi-popup .notificationapi-nomore {
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 12px;
+}
+
 .notificationapi-popup .notificationapi-notification {
   display: flex;
   align-self: baseline;

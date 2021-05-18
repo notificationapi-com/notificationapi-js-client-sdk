@@ -29,6 +29,8 @@ require('./assets/styles.css');
 const defaultWebSocket =
   'wss://fp7umb7q2c.execute-api.us-east-1.amazonaws.com/dev';
 
+const notificationReqCount = 50;
+
 function position(
   popup: HTMLDivElement,
   popupInner: HTMLDivElement,
@@ -92,12 +94,14 @@ class NotificationAPI {
     lastNotificationsRequestAt: number;
     options: Options | null;
     oldestNotificationsDate: string;
+    lastResponseNotificationsCount: number | null;
   } = {
     lastNotificationsRequestAt: 0,
     notifications: [],
     options: null,
     unread: 0,
-    oldestNotificationsDate: ''
+    oldestNotificationsDate: '',
+    lastResponseNotificationsCount: null
   };
 
   private elements: {
@@ -126,7 +130,8 @@ class NotificationAPI {
       notifications: [],
       options: null,
       unread: 0,
-      oldestNotificationsDate: ''
+      oldestNotificationsDate: '',
+      lastResponseNotificationsCount: null
     };
     this.elements.button?.remove();
     this.elements.popup.remove();
@@ -242,14 +247,16 @@ class NotificationAPI {
         popupInner.scrollTop + popupInner.clientHeight >=
           popupInner.scrollHeight - 100 && // 100px before the end
         new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
-        this.elements.websocket
+        this.elements.websocket &&
+        (this.state.lastResponseNotificationsCount === null ||
+          this.state.lastResponseNotificationsCount >= notificationReqCount)
       ) {
         this.state.lastNotificationsRequestAt = new Date().getTime();
         const moreNotificationsRequest: WS_NotificationsRequest = {
           route: 'inapp_web/notifications',
           payload: {
             before: this.state.oldestNotificationsDate,
-            count: 50
+            count: notificationReqCount
           }
         };
         this.elements.websocket.send(JSON.stringify(moreNotificationsRequest));
@@ -271,7 +278,7 @@ class NotificationAPI {
         const notificationsReq: WS_NotificationsRequest = {
           route: 'inapp_web/notifications',
           payload: {
-            count: 50
+            count: notificationReqCount
           }
         };
         ws.send(JSON.stringify(notificationsReq));
@@ -290,7 +297,18 @@ class NotificationAPI {
 
         if (body.route === 'inapp_web/notifications') {
           const message = body as WS_NotificationsResponse;
+          this.state.lastResponseNotificationsCount =
+            message.payload.notifications.length;
           this.processNotifications(message.payload.notifications);
+          if (
+            message.payload.notifications.length < notificationReqCount &&
+            !this.elements.empty
+          ) {
+            const noMore = document.createElement('div');
+            noMore.innerHTML = 'No more notifications to load';
+            noMore.classList.add('notificationapi-nomore');
+            this.elements.popupInner.append(noMore);
+          }
         }
 
         if (body.route === 'inapp_web/new_notifications') {

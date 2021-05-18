@@ -44,6 +44,11 @@ const testNotificationUnseen: InappNotification = {
   date: new Date().toISOString()
 };
 
+const fiftyNotifs: InappNotification[] = [];
+for (let i = 0; i < 50; i++) {
+  fiftyNotifs[i] = { ...testNotification, id: i.toString() };
+}
+
 const clientId = 'envId';
 const userId = 'userId';
 
@@ -328,7 +333,7 @@ describe('websocket receives', () => {
     expect($('.notificationapi-unread').html()).toEqual('3');
   });
 
-  test('given notifications, renders them', async () => {
+  test('given < 50 notifications, renders them and no more message', async () => {
     const server = new WS('ws://localhost:1234', { jsonProtocol: true });
     notificationapi = new NotificationAPI({
       root: 'root',
@@ -343,9 +348,10 @@ describe('websocket receives', () => {
     };
     server.send(message);
     expect($('.notificationapi-notification')).toHaveLength(2);
+    expect($('.notificationapi-nomore')).toHaveLength(1);
   });
 
-  test('given no notifications, renders empty state', async () => {
+  test('given no notifications, renders empty state and not no more', async () => {
     const server = new WS('ws://localhost:1234', { jsonProtocol: true });
     notificationapi = new NotificationAPI({
       root: 'root',
@@ -360,7 +366,8 @@ describe('websocket receives', () => {
     };
     server.send(message);
     expect($('.notificationapi-notification')).toHaveLength(0);
-    expect($('.notificationapi-notification')).toHaveLength(0);
+    expect($('.notificationapi-empty')).toHaveLength(1);
+    expect($('.notificationapi-nomore')).toHaveLength(0);
   });
 
   test('given new notifications (actual new and repeats), updates actual unread count on popup and shows actual new notificaitons in popup', async () => {
@@ -477,7 +484,46 @@ describe('popup interactions', () => {
     });
   });
 
-  test('after scrolling to the end, requests notifications before the oldest notification, scrolling again immediately wouldnt trigger this behavior again', async () => {
+  test('after receiving >=50 notifications, scrolling to the end triggers requesting 50 more before the oldest notification', async () => {
+    const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      websocket: 'ws://localhost:1234',
+      clientId,
+      userId
+    });
+    await server.connected;
+    await server.nextMessage; // unread request
+    await server.nextMessage; // notifications request
+
+    fiftyNotifs[49] = {
+      ...testNotification,
+      id: '49',
+      date: '1989-09-28T10:00:00.000Z'
+    };
+    const res: WS_NotificationsResponse = {
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: fiftyNotifs
+      }
+    };
+    server.send(res);
+    $('.notificationapi-button').trigger('click');
+    await server.nextMessage; // clear request
+    $('.notificationapi-popup-inner')[0].dispatchEvent(
+      new CustomEvent('scroll')
+    );
+    const req4: WS_NotificationsRequest = {
+      route: 'inapp_web/notifications',
+      payload: {
+        before: '1989-09-28T10:00:00.000Z',
+        count: 50
+      }
+    };
+    await expect(server).toReceiveMessage(req4);
+  });
+
+  test('after receiving >=50 notifications, after scrolling and requesting more, scrolling quickly again does not trigger requesting more', async () => {
     const server = new WS('ws://localhost:1234', { jsonProtocol: true });
     notificationapi = new NotificationAPI({
       root: 'root',
@@ -491,14 +537,7 @@ describe('popup interactions', () => {
     const res: WS_NotificationsResponse = {
       route: 'inapp_web/notifications',
       payload: {
-        notifications: [
-          testNotification,
-          {
-            ...testNotificationWithoutImage,
-            date: '1989-09-28T10:00:00.000Z'
-          },
-          testNotificationWithoutURL
-        ]
+        notifications: fiftyNotifs
       }
     };
     server.send(res);
@@ -510,17 +549,40 @@ describe('popup interactions', () => {
     $('.notificationapi-popup-inner')[0].dispatchEvent(
       new CustomEvent('scroll')
     );
+    $('.notificationapi-popup-inner')[0].dispatchEvent(
+      new CustomEvent('scroll')
+    );
 
-    const req4: WS_NotificationsRequest = {
-      route: 'inapp_web/notifications',
-      payload: {
-        before: '1989-09-28T10:00:00.000Z',
-        count: 50
-      }
-    };
-    await expect(server).toReceiveMessage(req4);
     await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
     expect(server.messages).toHaveLength(4);
+  });
+
+  test('after receiving <50 notifications, scrolling does not trigger requetsing more', async () => {
+    const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      websocket: 'ws://localhost:1234',
+      clientId,
+      userId
+    });
+    await server.connected;
+    await server.nextMessage; // unread request
+    await server.nextMessage; // notifications request
+    const res: WS_NotificationsResponse = {
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    };
+    server.send(res);
+    $('.notificationapi-button').trigger('click');
+    await server.nextMessage; // clear request
+    $('.notificationapi-popup-inner')[0].dispatchEvent(
+      new CustomEvent('scroll')
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
+    expect(server.messages).toHaveLength(3);
+    expect($('.notificationapi-nomore')).toHaveLength(1);
   });
 });
 

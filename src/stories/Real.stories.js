@@ -19,8 +19,14 @@ const Component = ({ ...args }) => {
 `;
 };
 
-export const Popup = Component.bind({});
-Popup.args = {
+export const WithNotifications = Component.bind({});
+WithNotifications.args = {
   clientId: '24nojpnrsdc53fkslha0roov05',
   userId: '123'
+};
+
+export const WithoutNotifications = Component.bind({});
+WithoutNotifications.args = {
+  clientId: '24nojpnrsdc53fkslha0roov05',
+  userId: 'thisiddoesnotexist'
 };
