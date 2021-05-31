@@ -39,7 +39,7 @@ function position(
 ) {
   const position: string = popupPosition.toString();
 
-  let maxHeight = document.body.clientHeight + 'px';
+  let maxHeight = document.documentElement.clientHeight + 'px';
   let top = 'auto';
   let bottom = 'auto';
   let left = 'auto';

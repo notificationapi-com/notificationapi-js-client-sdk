@@ -4,7 +4,8 @@ export default {
   parameters: {
     viewport: {
       viewports: INITIAL_VIEWPORTS
-    }
+    },
+    layout: 'centered'
   },
   argTypes: {
     position: {
@@ -27,7 +28,7 @@ export default {
 
 const Template2 = ({ ...args }) => {
   window.NotificationAPI = require('../index').default;
-  return `<div id="our-root" style="position: absolute; left: 50%; top: 40vh; width: 400px; height: 400px;"></div>
+  return `<div id="our-root"></div>
           <BR><BR>
 
           <script>
@@ -41,9 +42,6 @@ const Template2 = ({ ...args }) => {
             )})
             notificationapi.openPopup();
           </script>
-
-          <div style="min-height: 2000px;">
-          </div>
 `;
 };
 
