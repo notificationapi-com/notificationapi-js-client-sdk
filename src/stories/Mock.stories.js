@@ -1,5 +1,11 @@
+import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
 export default {
-  title: 'Mock'
+  title: 'Mock',
+  parameters: {
+    viewport: {
+      viewports: INITIAL_VIEWPORTS
+    }
+  }
 };
 
 const Template = ({ ...args }) => {
@@ -14,15 +20,6 @@ const Template = ({ ...args }) => {
               args.notifications
             )});
           </script>
-
-          <br><br><br><br>
-          <p>Series of HTML elements with default styling for comparison.</p>
-          <span>span</span>
-          <h1>heading 1</h1>
-          <h2>heading 1</h2>
-          <h3>heading 1</h3>
-          <a href="something">link</a>
-          <button>button</button>
 `;
 };
 
@@ -92,4 +89,62 @@ Fixed.args = {
     mock: true
   },
   notifications: notifications
+};
+
+export const MobilePopupEmpty = Template.bind({});
+MobilePopupEmpty.args = {
+  options: {
+    root: 'our-root',
+    mock: true
+  },
+  notifications: []
+};
+MobilePopupEmpty.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
+};
+
+export const MobileFixedEmpty = Template.bind({});
+MobileFixedEmpty.args = {
+  options: {
+    root: 'our-root',
+    inline: true,
+    mock: true
+  },
+  notifications: []
+};
+MobileFixedEmpty.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
+};
+
+export const MobilePopup = Template.bind({});
+MobilePopup.args = {
+  options: {
+    root: 'our-root',
+    mock: true
+  },
+  notifications: notifications
+};
+MobilePopup.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
+};
+
+export const MobileFixed = Template.bind({});
+MobileFixed.args = {
+  options: {
+    root: 'our-root',
+    inline: true,
+    mock: true
+  },
+  notifications: notifications
+};
+MobileFixed.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
 };

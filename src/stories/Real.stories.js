@@ -1,5 +1,12 @@
+import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
+
 export default {
-  title: 'Real'
+  title: 'Real',
+  parameters: {
+    viewport: {
+      viewports: INITIAL_VIEWPORTS
+    }
+  }
 };
 
 const Component = ({ ...args }) => {
@@ -29,4 +36,26 @@ export const WithoutNotifications = Component.bind({});
 WithoutNotifications.args = {
   clientId: '24nojpnrsdc53fkslha0roov05',
   userId: 'thisiddoesnotexist'
+};
+
+export const MobileWithNotifications = Component.bind({});
+MobileWithNotifications.args = {
+  clientId: '24nojpnrsdc53fkslha0roov05',
+  userId: '123'
+};
+MobileWithNotifications.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
+};
+
+export const MobileWithoutNotifications = Component.bind({});
+MobileWithoutNotifications.args = {
+  clientId: '24nojpnrsdc53fkslha0roov05',
+  userId: 'thisiddoesnotexist'
+};
+MobileWithoutNotifications.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
 };

@@ -37,53 +37,78 @@ function position(
   button: HTMLButtonElement,
   popupPosition: PopupPosition
 ) {
-  let maxHeight = window.innerHeight + 'px';
   const position: string = popupPosition.toString();
-  if (position.startsWith('top')) {
-    popup.style.top = 'auto';
-    popup.style.bottom = button.clientHeight + 10 + 'px';
-    maxHeight = button.getBoundingClientRect().top - 20 + 'px';
+
+  let maxHeight = document.body.clientHeight + 'px';
+  let top = 'auto';
+  let bottom = 'auto';
+  let left = 'auto';
+  let right = 'auto';
+
+  if (window.innerWidth < 768) {
+    top = -button.getBoundingClientRect().top + 'px';
+    bottom =
+      -(
+        document.documentElement.clientHeight -
+        button.getBoundingClientRect().bottom
+      ) + 'px';
+    left = -button.getBoundingClientRect().left + 'px';
+    right =
+      -(
+        document.documentElement.clientWidth -
+        button.getBoundingClientRect().right
+      ) + 'px';
+  } else {
+    if (position.startsWith('top')) {
+      bottom = button.clientHeight + 10 + 'px';
+      maxHeight = button.getBoundingClientRect().top - 20 + 'px';
+    }
+
+    if (position.startsWith('bottom')) {
+      bottom = 'auto';
+      top = button.clientHeight + 10 + 'px';
+      maxHeight =
+        window.innerHeight - button.getBoundingClientRect().bottom - 40 + 'px';
+    }
+
+    if (position.startsWith('left')) {
+      left = 'auto';
+      right = button.clientWidth + 10 + 'px';
+    }
+
+    if (position.startsWith('right')) {
+      right = 'auto';
+      left = button.clientWidth + 10 + 'px';
+    }
+
+    if (position.endsWith('Top')) {
+      top = 'auto';
+      bottom = '0px';
+      maxHeight = button.getBoundingClientRect().bottom - 20 + 'px';
+    }
+
+    if (position.endsWith('Bottom')) {
+      bottom = 'auto';
+      top = '0px';
+      maxHeight =
+        window.innerHeight - button.getBoundingClientRect().top - 40 + 'px';
+    }
+
+    if (position.endsWith('Left')) {
+      left = 'auto';
+      right = '0px';
+    }
+
+    if (position.endsWith('Right')) {
+      right = 'auto';
+      left = '0px';
+    }
   }
 
-  if (position.startsWith('bottom')) {
-    popup.style.bottom = 'auto';
-    popup.style.top = button.clientHeight + 10 + 'px';
-    maxHeight =
-      window.innerHeight - button.getBoundingClientRect().bottom - 40 + 'px';
-  }
-
-  if (position.startsWith('left')) {
-    popup.style.left = 'auto';
-    popup.style.right = button.clientWidth + 10 + 'px';
-  }
-
-  if (position.startsWith('right')) {
-    popup.style.right = 'auto';
-    popup.style.left = button.clientWidth + 10 + 'px';
-  }
-
-  if (position.endsWith('Top')) {
-    popup.style.top = 'auto';
-    popup.style.bottom = '0px';
-    maxHeight = button.getBoundingClientRect().bottom - 20 + 'px';
-  }
-
-  if (position.endsWith('Bottom')) {
-    popup.style.bottom = 'auto';
-    popup.style.top = '0px';
-    maxHeight =
-      window.innerHeight - button.getBoundingClientRect().top - 40 + 'px';
-  }
-
-  if (position.endsWith('Left')) {
-    popup.style.left = 'auto';
-    popup.style.right = '0px';
-  }
-
-  if (position.endsWith('Right')) {
-    popup.style.right = 'auto';
-    popup.style.left = '0px';
-  }
+  popup.style.top = top;
+  popup.style.bottom = bottom;
+  popup.style.left = left;
+  popup.style.right = right;
   popupInner.style.maxHeight = maxHeight;
 }
 
@@ -229,7 +254,16 @@ class NotificationAPI {
     this.elements.popupInner = popupInner;
 
     // render header
-    this.elements.header.innerHTML = 'Notifications';
+    const headerCloseButton = document.createElement('button');
+    const headerHeading = document.createElement('h1');
+    headerHeading.innerHTML = 'Notifications';
+    headerCloseButton.innerHTML =
+      '<i class=".notificationapi-arrow .notificationapi-arrow-left"></i>';
+    this.elements.header.appendChild(headerCloseButton);
+    this.elements.header.appendChild(headerHeading);
+    headerCloseButton.addEventListener('click', () => {
+      this.closePopup();
+    });
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
 

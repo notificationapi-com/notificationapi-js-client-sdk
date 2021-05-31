@@ -58,6 +58,11 @@ let notificationapi2: NotificationAPI;
 beforeEach(() => {
   spy = jest.spyOn(console, 'error').mockImplementation();
   document.body.innerHTML = '<div id="root"></div><div id="root2"></div>';
+  Object.defineProperty(window, 'innerWidth', {
+    writable: true,
+    configurable: true,
+    value: 1600
+  });
 });
 
 afterEach(() => {
@@ -471,6 +476,17 @@ describe('popup interactions', () => {
     expect($('.notificationapi-popup').hasClass('closed'));
   });
 
+  test('when button is clicked then header close button clicked, popup has .closed', () => {
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      clientId,
+      userId
+    });
+    $('.notificationapi-button').trigger('click');
+    $('.notificationapi-header button').trigger('click');
+    expect($('.notificationapi-popup').hasClass('closed'));
+  });
+
   // TODO: add tests to validate correct positioning
   test('works with all different popupPosition variations', () => {
     Object.values(PopupPosition).map((popupPosition) => {
@@ -481,7 +497,24 @@ describe('popup interactions', () => {
         userId
       });
       $('.notificationapi-button').trigger('click');
+      expect(spy.mock.calls).toEqual([]);
     });
+  });
+
+  // TODO: add tests to validate correct sizing in small screen
+  test('works in screens smaller than 768', () => {
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 767
+    });
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      clientId,
+      userId
+    });
+    $('.notificationapi-button').trigger('click');
+    expect(spy.mock.calls).toEqual([]);
   });
 
   test('after receiving >=50 notifications, scrolling to the end triggers requesting 50 more before the oldest notification', async () => {

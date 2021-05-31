@@ -63,6 +63,16 @@
   z-index: 2147483647;
 }
 
+@media screen and (max-width: 767px) {
+  .notificationapi-popup.hovering {
+    width: auto;
+  }
+
+  .notificationapi-popup.hovering .notificationapi-header button {
+    display: inline-block;
+  }
+}
+
 .notificationapi-popup.hovering.closed {
   display: none;
 }
@@ -128,7 +138,21 @@
 .notificationapi-popup .notificationapi-header {
   margin: 20px 16px 12px 16px;
   padding: 0;
+}
+
+.notificationapi-popup .notificationapi-header h1 {
   font-size: 24px;
+  display: inline-block;
+}
+
+.notificationapi-popup .notificationapi-header button {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  padding: 6px;
+  transform: translateY(-9px) rotate(135deg);
+  -webkit-transform: translateY(-9px) rotate(135deg);
+  margin: 0 8px 0 8px;
+  display: none;
 }
 
 .notificationapi-popup .notificationapi-empty {

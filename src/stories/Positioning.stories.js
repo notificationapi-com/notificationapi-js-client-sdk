@@ -1,5 +1,11 @@
+import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
 export default {
   title: 'Positioning',
+  parameters: {
+    viewport: {
+      viewports: INITIAL_VIEWPORTS
+    }
+  },
   argTypes: {
     position: {
       control: {
@@ -59,4 +65,11 @@ for (let i = 0; i < 30; i++) {
   ]);
 }
 
-export const TopLeft = Template2.bind({});
+export const PopupDirection = Template2.bind({});
+
+export const MobilePopupDirection = Template2.bind({});
+MobilePopupDirection.parameters = {
+  viewport: {
+    defaultViewport: 'iphone12promax'
+  }
+};
