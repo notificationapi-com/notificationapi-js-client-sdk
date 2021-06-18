@@ -23,6 +23,7 @@
     "lib/**/*"
   ],
   "scripts": {
+    "postinstall": "patch-package",
     "test": "jest --collectCoverage",
     "build": "tsc && cp -R src/assets lib",
     "lint": "eslint . --ext .ts",
@@ -47,6 +48,7 @@
     "jest-websocket-mock": "^2.2.0",
     "jquery": "^3.5.1",
     "mock-socket": "^9.0.3",
+    "patch-package": "^6.4.7",
     "prettier": "^2.1.2",
     "sb": "^6.1.11",
     "ts-jest": "^26.4.1",
@@ -54,6 +56,6 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "javascript-time-ago": "^2.3.4"
+    "javascript-time-ago": "^2.3.7"
   }
 }

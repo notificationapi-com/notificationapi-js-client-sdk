@@ -2,6 +2,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "strict": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types/",
+  ],
     "lib": ["ES6", "DOM"],
     "declaration": true,
     "outDir": "./lib",

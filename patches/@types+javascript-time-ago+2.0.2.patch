@@ -1,0 +1,12 @@
+diff --git a/node_modules/@types/javascript-time-ago/style/index.d.ts b/node_modules/@types/javascript-time-ago/style/index.d.ts
+index 4dc0423..de3c2b3 100644
+--- a/node_modules/@types/javascript-time-ago/style/index.d.ts
++++ b/node_modules/@types/javascript-time-ago/style/index.d.ts
+@@ -17,6 +17,7 @@ export interface FormatStyle {
+     units?: Unit;
+     gradation?: Gradation[];
+     flavour?: Flavour[];
++    future?: boolean;
+     custom?: CustomFormatter;
+     format?(date: Date | number, locale: Locale): string;
+ }

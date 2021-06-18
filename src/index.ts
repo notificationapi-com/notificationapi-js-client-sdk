@@ -11,6 +11,7 @@ import {
 } from './interfaces';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
+import { FormatStyle } from 'javascript-time-ago/style';
 
 try {
   TimeAgo.addDefaultLocale(en);
@@ -487,7 +488,11 @@ class NotificationAPI {
 
       const date = document.createElement('p');
       date.classList.add('notificationapi-notification-date');
-      date.innerHTML = timeAgo.format(new Date(n.date), 'round-minute');
+      const customStyle: FormatStyle = {
+        units: 'minute',
+        future: false
+      };
+      date.innerHTML = timeAgo.format(new Date(n.date), customStyle);
       notificationMetaContainer.appendChild(date);
 
       notification.appendChild(notificationMetaContainer);
