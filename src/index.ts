@@ -11,7 +11,6 @@ import {
 } from './interfaces';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
-import { FormatStyle } from 'javascript-time-ago/style';
 
 try {
   TimeAgo.addDefaultLocale(en);
