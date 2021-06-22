@@ -43,7 +43,24 @@ const testNotificationUnseen: InappNotification = {
   title: 'You have a new comment',
   date: new Date().toISOString()
 };
-
+const closePastDate = Date.now() - 10 * 1000;
+const testNotificationWithClosePastDate: InappNotification = {
+  id: '5',
+  seen: true,
+  title: 'You have a new comment',
+  redirectURL: 'https://www.notificationapi.com',
+  imageURL: 'https://via.placeholder.com/350x150',
+  date: new Date(closePastDate).toISOString()
+};
+const closeFutureDate = Date.now() + 10 * 1000;
+const testNotificationWithCloseFutureDate: InappNotification = {
+  id: '5',
+  seen: true,
+  title: 'You have a new comment',
+  redirectURL: 'https://www.notificationapi.com',
+  imageURL: 'https://via.placeholder.com/350x150',
+  date: new Date(closeFutureDate).toISOString()
+};
 const fiftyNotifs: InappNotification[] = [];
 for (let i = 0; i < 50; i++) {
   fiftyNotifs[i] = { ...testNotification, id: i.toString() };
@@ -745,7 +762,26 @@ describe('processNotifications', () => {
     );
     expect($('.notificationapi-notification-date').text()).toEqual('just now');
   });
-
+  test('date with just a moment ago', () => {
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      clientId,
+      userId,
+      mock: true
+    });
+    notificationapi.processNotifications([testNotificationWithClosePastDate]);
+    expect($('.notificationapi-notification-date').text()).toEqual('just now');
+  });
+  test('date with just a moment in future', () => {
+    notificationapi = new NotificationAPI({
+      root: 'root',
+      clientId,
+      userId,
+      mock: true
+    });
+    notificationapi.processNotifications([testNotificationWithCloseFutureDate]);
+    expect($('.notificationapi-notification-date').text()).toEqual('just now');
+  });
   test('without url, does not redirect', () => {
     notificationapi = new NotificationAPI({
       root: 'root',
