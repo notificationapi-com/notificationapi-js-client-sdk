@@ -487,13 +487,9 @@ class NotificationAPI {
 
       const date = document.createElement('p');
       date.classList.add('notificationapi-notification-date');
-      if (
-        new Date(n.date).getTime() - Date.now() > 0 &&
-        new Date(n.date).getTime() - Date.now() < 60 * 1000
-      ) {
-        date.innerHTML = timeAgo.format(Date.now(), 'round-minute');
-      } else {
-        date.innerHTML = timeAgo.format(new Date(n.date), 'round-minute');
+      date.innerHTML = timeAgo.format(new Date(n.date), 'round-minute');
+      if (date.innerHTML === 'in a moment') {
+        date.innerHTML = 'just now';
       }
 
       notificationMetaContainer.appendChild(date);
