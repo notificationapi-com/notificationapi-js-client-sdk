@@ -3,6 +3,7 @@
 
 # dist
 /lib
+/dist
 
 # dev tools
 /coverage

@@ -1,6 +1,6 @@
 {
   "name": "notificationapi-js-client-sdk",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "NotificationAPI client-side library for JavaScript",
   "keywords": [
     "notificationapi",
@@ -20,11 +20,12 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "dist/**/*"
   ],
   "scripts": {
     "test": "jest --collectCoverage",
-    "build": "tsc && cp -R src/assets lib",
+    "build": "tsc && cp -R src/assets lib && ./node_modules/.bin/webpack",
     "lint": "eslint . --ext .ts",
     "prettier-check": "prettier --config .prettierrc './**/*.ts' --check",
     "storybook": "start-storybook -p 6006",
@@ -42,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
     "babel-loader": "^8.2.2",
+    "css-loader": "^5.2.6",
     "eslint": "^7.11.0",
     "jest": "^26.5.3",
     "jest-websocket-mock": "^2.2.0",
@@ -50,7 +52,9 @@
     "prettier": "^2.1.2",
     "sb": "^6.1.11",
     "ts-jest": "^26.4.1",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "webpack": "^5.41.1",
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {
     "axios": "^0.21.1",
