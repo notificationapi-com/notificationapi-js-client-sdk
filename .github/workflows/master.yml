@@ -5,7 +5,7 @@ on:
 name: pipeline
 jobs:
   pipeline:
-    name: Test & Build
+    name: Test & Build & Punlish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
