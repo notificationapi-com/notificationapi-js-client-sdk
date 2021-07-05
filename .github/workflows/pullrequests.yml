@@ -1,0 +1,40 @@
+on:
+  pull_request:
+    branches:
+      - master
+
+name: pullrequest
+jobs:
+  pullrequest:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: 12.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+
+      - name: NPM Install
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Lint
+        run: npm run-script lint
+
+      - name: Pretty
+        run: npm run-script prettier-check
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
