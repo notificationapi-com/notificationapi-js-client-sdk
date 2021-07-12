@@ -201,7 +201,7 @@ describe('init', () => {
       );
     });
 
-    test('given custom websocket & userIdHash, sends hash to the connection URL', async () => {
+    test('given custom websocket & userIdHash, requests connection URL with UserId, envId and userIdHash', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
       notificationapi = new NotificationAPI({
         root: 'root',
