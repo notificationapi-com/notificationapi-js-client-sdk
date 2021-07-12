@@ -301,7 +301,9 @@ class NotificationAPI {
     if (!options.mock) {
       const websocketAddress = `${
         options.websocket ?? defaultWebSocket
-      }?envId=${options.clientId}&userId=${options.userId}`;
+      }?envId=${options.clientId}&userId=${options.userId}${
+        options.userIdHash ? '&userIdHash=' + options.userIdHash : ''
+      }`;
       const ws: WebSocket = new WebSocket(websocketAddress);
       ws.onopen = () => {
         const unreadReq: WS_UnreadCountRequest = {

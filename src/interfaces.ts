@@ -8,6 +8,7 @@ export interface Options {
   root: string;
   clientId: string;
   userId: string;
+  userIdHash?: string;
   inline?: boolean;
   popupPosition?: PopupPosition;
   websocket?: string;

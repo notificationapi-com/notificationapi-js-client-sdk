@@ -68,6 +68,7 @@ for (let i = 0; i < 50; i++) {
 
 const clientId = 'envId';
 const userId = 'userId';
+const userIdHash = 'userIdHash';
 
 let spy: jest.SpyInstance;
 let notificationapi: NotificationAPI;
@@ -181,7 +182,44 @@ describe('init', () => {
     });
   });
 
-  describe('websocket sends', () => {
+  describe('websocket open and sends', () => {
+    test('given custom websocket, requests connection URL with UserId and envId', async () => {
+      const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+      notificationapi = new NotificationAPI({
+        root: 'root',
+        websocket: 'ws://localhost:1234',
+        clientId,
+        userId
+      });
+      let requestedURL = '';
+      server.on('connection', (socket) => {
+        requestedURL = socket.url;
+      });
+      await server.connected;
+      expect(requestedURL).toBe(
+        'ws://localhost:1234/?envId=envId&userId=userId'
+      );
+    });
+
+    test('given custom websocket & userIdHash, requests connection URL with UserId, envId and userIdHash', async () => {
+      const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+      notificationapi = new NotificationAPI({
+        root: 'root',
+        websocket: 'ws://localhost:1234',
+        clientId,
+        userId,
+        userIdHash
+      });
+      let requestedURL = '';
+      server.on('connection', (socket) => {
+        requestedURL = socket.url;
+      });
+      await server.connected;
+      expect(requestedURL).toBe(
+        'ws://localhost:1234/?envId=envId&userId=userId&userIdHash=userIdHash'
+      );
+    });
+
     // TODO: test that the library will use the production websocket if not given a custom websocket
     test('given custom websocket, after init requests for unread and notifications', async () => {
       const server = new WS('ws://localhost:1234', { jsonProtocol: true });
