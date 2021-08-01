@@ -301,8 +301,12 @@ class NotificationAPI {
     if (!options.mock) {
       const websocketAddress = `${
         options.websocket ?? defaultWebSocket
-      }?envId=${options.clientId}&userId=${options.userId}${
-        options.userIdHash ? '&userIdHash=' + options.userIdHash : ''
+      }?envId=${encodeURIComponent(
+        options.clientId
+      )}&userId=${encodeURIComponent(options.userId)}${
+        options.userIdHash
+          ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
+          : ''
       }`;
       const ws: WebSocket = new WebSocket(websocketAddress);
       ws.onopen = () => {
