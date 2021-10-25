@@ -1,6 +1,8 @@
 import {
   InappNotification,
-  Options,
+  InAppOptions,
+  InitOptions,
+  NotificationAPIClientInterface,
   PopupPosition,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
@@ -112,63 +114,47 @@ function position(
   popupInner.style.maxHeight = maxHeight;
 }
 
-class NotificationAPI {
-  private state: {
-    notifications: InappNotification[];
-    unread: number;
-    lastNotificationsRequestAt: number;
-    options: Options | null;
-    oldestNotificationsDate: string;
-    lastResponseNotificationsCount: number | null;
-  } = {
-    lastNotificationsRequestAt: 0,
-    notifications: [],
-    options: null,
-    unread: 0,
-    oldestNotificationsDate: '',
-    lastResponseNotificationsCount: null
+class NotificationAPIClient implements NotificationAPIClientInterface {
+  state: NotificationAPIClientInterface['state'];
+  elements: NotificationAPIClientInterface['elements'];
+
+  destroy = (): void => {
+    this.elements.websocket?.close();
+    this.elements.button?.remove();
+    this.elements.popup?.remove();
+    this.elements.popupInner?.remove();
+    this.elements.unread?.remove();
+    this.elements.empty?.remove();
+    this.elements.header?.remove();
   };
 
-  private elements: {
-    unread: HTMLDivElement | null;
-    popup: HTMLDivElement;
-    popupInner: HTMLDivElement;
-    button: HTMLButtonElement | null;
-    websocket: WebSocket | null;
-    root: HTMLElement | null;
-    empty: HTMLDivElement | null;
-    header: HTMLHeadingElement;
-  } = {
-    unread: null,
-    popup: document.createElement('div'),
-    popupInner: document.createElement('div'),
-    button: null,
-    websocket: null,
-    root: null,
-    empty: null,
-    header: document.createElement('h1')
-  };
-
-  destroy(): void {
+  constructor(options: InitOptions) {
+    this.elements = {};
     this.state = {
+      initOptions: options,
       lastNotificationsRequestAt: 0,
       notifications: [],
-      options: null,
       unread: 0,
-      oldestNotificationsDate: '',
-      lastResponseNotificationsCount: null
+      oldestNotificationsDate: ''
     };
-    this.elements.button?.remove();
-    this.elements.popup.remove();
-    this.elements.popupInner.remove();
-    this.elements.unread?.remove();
-    this.elements.websocket?.close();
-    this.elements.empty?.remove();
-    this.elements.header.remove();
+
+    // connect to WS
+    if (!options.mock) {
+      const websocketAddress = `${
+        options.websocket ?? defaultWebSocket
+      }?envId=${encodeURIComponent(
+        options.clientId
+      )}&userId=${encodeURIComponent(options.userId)}${
+        options.userIdHash
+          ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
+          : ''
+      }`;
+      this.elements.websocket = new WebSocket(websocketAddress);
+    }
   }
 
-  constructor(options: Options) {
-    this.state.options = options;
+  showInApp = (options: InAppOptions) => {
+    this.state.inappOptions = options;
 
     // validation
     const root = document.getElementById(options.root);
@@ -205,6 +191,7 @@ class NotificationAPI {
     root.appendChild(container);
 
     // render popup & button & unread badge
+    this.elements.popup = document.createElement('div');
     const popup = this.elements.popup;
     popup.classList.add('notificationapi-popup');
     if (options.inline) {
@@ -221,9 +208,9 @@ class NotificationAPI {
       container.appendChild(button);
       button.onclick = () => {
         if (popup.classList.contains('closed')) {
-          this.openPopup();
+          this.openInAppPopup();
         } else {
-          this.closePopup();
+          this.closeInAppPopup();
         }
       };
       this.elements.button = button;
@@ -243,11 +230,12 @@ class NotificationAPI {
       unread.classList.add('notificationapi-unread');
       button.appendChild(unread);
       this.elements.unread = unread;
-      this.setUnread(this.state.unread);
+      this.setInAppUnread(this.state.unread);
     }
     container.appendChild(popup);
 
     // render popup inner container
+    this.elements.popupInner = document.createElement('div');
     const popupInner = this.elements.popupInner;
     popupInner.classList.add('notificationapi-popup-inner');
     popup.appendChild(popupInner);
@@ -259,10 +247,11 @@ class NotificationAPI {
     headerHeading.innerHTML = 'Notifications';
     headerCloseButton.innerHTML =
       '<i class=".notificationapi-arrow .notificationapi-arrow-left"></i>';
+    this.elements.header = document.createElement('div');
     this.elements.header.appendChild(headerCloseButton);
     this.elements.header.appendChild(headerHeading);
     headerCloseButton.addEventListener('click', () => {
-      this.closePopup();
+      this.closeInAppPopup();
     });
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
@@ -282,7 +271,7 @@ class NotificationAPI {
           popupInner.scrollHeight - 100 && // 100px before the end
         new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
         this.elements.websocket &&
-        (this.state.lastResponseNotificationsCount === null ||
+        (this.state.lastResponseNotificationsCount === undefined ||
           this.state.lastResponseNotificationsCount >= notificationReqCount)
       ) {
         this.state.lastNotificationsRequestAt = new Date().getTime();
@@ -297,19 +286,9 @@ class NotificationAPI {
       }
     };
 
-    // connect to WS
-    if (!options.mock) {
-      const websocketAddress = `${
-        options.websocket ?? defaultWebSocket
-      }?envId=${encodeURIComponent(
-        options.clientId
-      )}&userId=${encodeURIComponent(options.userId)}${
-        options.userIdHash
-          ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
-          : ''
-      }`;
-      const ws: WebSocket = new WebSocket(websocketAddress);
-      ws.onopen = () => {
+    // use WS for inapp
+    if (this.elements.websocket) {
+      const sendInitialRequests = (ws: WebSocket) => {
         const unreadReq: WS_UnreadCountRequest = {
           route: 'inapp_web/unread_count'
         };
@@ -323,7 +302,17 @@ class NotificationAPI {
         };
         ws.send(JSON.stringify(notificationsReq));
       };
-      ws.onmessage = (m: MessageEvent) => {
+
+      const ws = this.elements.websocket;
+      if (ws.readyState == ws.OPEN) {
+        sendInitialRequests(ws);
+      } else {
+        ws.addEventListener('open', () => {
+          sendInitialRequests(ws);
+        });
+      }
+
+      ws.addEventListener('message', (m: MessageEvent) => {
         const body = JSON.parse(m.data);
 
         if (!body || !body.route) {
@@ -332,7 +321,7 @@ class NotificationAPI {
 
         if (body.route === 'inapp_web/unread_count') {
           const message = body as WS_UnreadCountResponse;
-          this.setUnread(message.payload.count);
+          this.setInAppUnread(message.payload.count);
         }
 
         if (body.route === 'inapp_web/notifications') {
@@ -347,7 +336,7 @@ class NotificationAPI {
             const noMore = document.createElement('div');
             noMore.innerHTML = 'No more notifications to load';
             noMore.classList.add('notificationapi-nomore');
-            this.elements.popupInner.append(noMore);
+            popupInner.append(noMore);
           }
         }
 
@@ -356,30 +345,29 @@ class NotificationAPI {
           const beforeCount = this.state.notifications.length;
           this.processNotifications(message.payload.notifications);
           const afterCount = this.state.notifications.length;
-          this.setUnread(this.state.unread + afterCount - beforeCount);
+          this.setInAppUnread(this.state.unread + afterCount - beforeCount);
         }
-      };
-      this.elements.websocket = ws;
+      });
     }
-  }
+  };
 
-  openPopup(): void {
+  openInAppPopup(): void {
     if (
       this.elements.popup &&
+      this.elements.popupInner &&
       this.elements.button &&
-      this.state.options &&
-      !this.state.options.inline
+      this.state.inappOptions &&
+      !this.state.inappOptions.inline
     ) {
       position(
         this.elements.popup,
         this.elements.popupInner,
         this.elements.button,
-        this.state.options.popupPosition ?? PopupPosition.RightBottom
+        this.state.inappOptions.popupPosition ?? PopupPosition.RightBottom
       );
-      this.setUnread(0);
+      this.setInAppUnread(0);
       this.elements.popup.classList.remove('closed');
     }
-
     if (this.elements.websocket && this.elements.websocket.readyState === 1) {
       const clearReq: WS_ClearUnreadRequest = {
         route: 'inapp_web/unread_clear'
@@ -388,22 +376,22 @@ class NotificationAPI {
     }
   }
 
-  closePopup(): void {
+  closeInAppPopup(): void {
     if (
       this.elements.popup &&
-      this.state.options &&
-      !this.state.options.inline
+      this.state.inappOptions &&
+      !this.state.inappOptions.inline
     ) {
       this.elements.popup.classList.add('closed');
     }
   }
 
-  setUnread(count: number): void {
+  setInAppUnread(count: number): void {
     this.state.unread = count;
     if (
       this.elements.unread &&
-      this.state.options &&
-      !this.state.options.inline
+      this.state.inappOptions &&
+      !this.state.inappOptions.inline
     ) {
       if (count === 0) {
         this.elements.unread.classList.add('hidden');
@@ -420,6 +408,10 @@ class NotificationAPI {
   }
 
   processNotifications(notifications: InappNotification[]): void {
+    const header = this.elements.header;
+    const popupInner = this.elements.popupInner;
+    if (!header || !popupInner) return;
+
     // filter existing
     const newNotifications = notifications.filter((n) => {
       const found = this.state.notifications.find((existingN) => {
@@ -437,11 +429,7 @@ class NotificationAPI {
     });
 
     this.state.notifications.map((n, i) => {
-      if (
-        this.elements.popupInner.querySelector(
-          `[data-notification-id="${n.id}"]`
-        )
-      ) {
+      if (popupInner.querySelector(`[data-notification-id="${n.id}"]`)) {
         return;
       }
       if (
@@ -503,9 +491,9 @@ class NotificationAPI {
       notification.appendChild(notificationMetaContainer);
 
       if (i === 0) {
-        this.elements.header.insertAdjacentElement('afterend', notification);
+        header.insertAdjacentElement('afterend', notification);
       } else {
-        const preNotificationEl = this.elements.popupInner.querySelector(
+        const preNotificationEl = popupInner.querySelector(
           `[data-notification-id="${this.state.notifications[i - 1].id}"]`
         );
         // ignoring the else statement coverage: unknown scenario.
@@ -522,9 +510,16 @@ class NotificationAPI {
     });
     if (newNotifications.length > 0 && this.elements.empty) {
       this.elements.empty.remove();
-      this.elements.empty = null;
+      delete this.elements.empty;
     }
   }
 }
+
+const NotificationAPI = {
+  init: (options: InitOptions): NotificationAPIClient => {
+    const client = new NotificationAPIClient(options);
+    return client;
+  }
+};
 
 export default NotificationAPI;

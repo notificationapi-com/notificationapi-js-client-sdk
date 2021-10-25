@@ -32,15 +32,17 @@ const Template2 = ({ ...args }) => {
           <BR><BR>
 
           <script>
-            notificationapi = new NotificationAPI({
-              root: "our-root",
-              mock: true,
-              popupPosition: "${args.position ?? 'topLeft'}"
+            notificationapi = NotificationAPI.init({
+              mock: true
             });
+            notificationapi.showInApp({
+              root: "our-root",
+              popupPosition: "${args.position ?? 'topLeft'}"
+            })
             notificationapi.processNotifications(${JSON.stringify(
               notifications
             )})
-            notificationapi.openPopup();
+            notificationapi.openInAppPopup();
           </script>
 `;
 };
@@ -48,8 +50,7 @@ const Template2 = ({ ...args }) => {
 const notification = {
   title: '<b>Moe</b> posted an update.',
   redirectURL: '#',
-  imageURL:
-    'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Sami-Viitama%CC%88ki--414x414.jpeg',
+  imageURL: 'https://picsum.photos/200',
   date: new Date()
 };
 let notifications = [];

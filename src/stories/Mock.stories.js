@@ -13,9 +13,10 @@ const Template = ({ ...args }) => {
   return `<div id="our-root"></div>
           <BR><BR>
           <script>
-            notificationapi = new NotificationAPI(${JSON.stringify(
-              args.options
+            notificationapi = NotificationAPI.init(${JSON.stringify(
+              args.initOptions
             )});
+            notificationapi.showInApp(${JSON.stringify(args.inappOptions)})
             notificationapi.processNotifications(${JSON.stringify(
               args.notifications
             )});
@@ -29,8 +30,7 @@ let notifications = [
     seen: false,
     title: '<b>Moe</b> posted an update.',
     redirectURL: '#',
-    imageURL:
-      'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Sami-Viitama%CC%88ki--414x414.jpeg',
+    imageURL: 'https://picsum.photos/200',
     date: new Date('2021-01-01')
   },
   {
@@ -45,8 +45,7 @@ let notifications = [
     seen: false,
     title:
       '<b>Shannon</b> sent you a friend request. If you do not wish to receive more friends requests from this person, you can safely ignore this.',
-    imageURL:
-      'https://cultivatedculture.com/wp-content/uploads/2019/12/LinkedIn-Profile-Picture-Example-Rachel-Montan%CC%83ez.jpeg',
+    imageURL: 'https://picsum.photos/200',
     date: new Date()
   }
 ];
@@ -55,47 +54,57 @@ notifications = notifications.concat(notifications).concat(notifications);
 
 export const PopupEmpty = Template.bind({});
 PopupEmpty.args = {
-  options: {
-    root: 'our-root',
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root'
   },
   notifications: []
 };
 
 export const FixedEmpty = Template.bind({});
 FixedEmpty.args = {
-  options: {
-    root: 'our-root',
-    inline: true,
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root',
+    inline: true
   },
   notifications: []
 };
 
 export const Popup = Template.bind({});
 Popup.args = {
-  options: {
-    root: 'our-root',
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root'
   },
   notifications: notifications
 };
 
 export const Fixed = Template.bind({});
 Fixed.args = {
-  options: {
-    root: 'our-root',
-    inline: true,
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root',
+    inline: true
   },
   notifications: notifications
 };
 
 export const MobilePopupEmpty = Template.bind({});
 MobilePopupEmpty.args = {
-  options: {
-    root: 'our-root',
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root'
   },
   notifications: []
 };
@@ -107,10 +116,12 @@ MobilePopupEmpty.parameters = {
 
 export const MobileFixedEmpty = Template.bind({});
 MobileFixedEmpty.args = {
-  options: {
-    root: 'our-root',
-    inline: true,
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root',
+    inline: true
   },
   notifications: []
 };
@@ -122,9 +133,11 @@ MobileFixedEmpty.parameters = {
 
 export const MobilePopup = Template.bind({});
 MobilePopup.args = {
-  options: {
-    root: 'our-root',
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root'
   },
   notifications: notifications
 };
@@ -136,10 +149,12 @@ MobilePopup.parameters = {
 
 export const MobileFixed = Template.bind({});
 MobileFixed.args = {
-  options: {
-    root: 'our-root',
-    inline: true,
+  initOptions: {
     mock: true
+  },
+  inappOptions: {
+    root: 'our-root',
+    inline: true
   },
   notifications: notifications
 };
