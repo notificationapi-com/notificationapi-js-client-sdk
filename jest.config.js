@@ -191,5 +191,5 @@ module.exports = {
   // Whether to use watchman for file crawling
   // watchman: true,
 
-  testTimeout: 10000
+  testTimeout: 3000
 };

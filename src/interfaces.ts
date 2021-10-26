@@ -4,15 +4,47 @@ export interface User {
   email?: string;
 }
 
-export interface Options {
-  root: string;
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface NotificationAPIClientInterface {
+  showInApp: (options: InAppOptions) => void;
+  openInAppPopup: () => void;
+  closeInAppPopup: () => void;
+  setInAppUnread: (count: number) => void;
+  processNotifications: (notifications: InappNotification[]) => void;
+  destroy: () => void;
+  elements: {
+    websocket?: WebSocket;
+    unread?: HTMLDivElement;
+    popup?: HTMLDivElement;
+    popupInner?: HTMLDivElement;
+    button?: HTMLButtonElement;
+    root?: HTMLElement;
+    empty?: HTMLDivElement;
+    header?: HTMLDivElement;
+  };
+  state: {
+    lastNotificationsRequestAt: number;
+    notifications: InappNotification[];
+    unread: number;
+    oldestNotificationsDate: string;
+    lastResponseNotificationsCount?: number;
+    inappOptions?: InAppOptions;
+    initOptions: InitOptions;
+  };
+}
+
+export interface InitOptions {
   clientId: string;
   userId: string;
   userIdHash?: string;
-  inline?: boolean;
-  popupPosition?: PopupPosition;
   websocket?: string;
   mock?: boolean;
+}
+
+export interface InAppOptions {
+  root: string;
+  inline?: boolean;
+  popupPosition?: PopupPosition;
 }
 
 export enum PopupPosition {
