@@ -5,7 +5,6 @@ import {
   NotificationAPIClientInterface,
   PopupPosition,
   Preference,
-  UserPreferencesOptions,
   WS_ANY_VALID_REQUEST,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
@@ -339,9 +338,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   };
 
-  showUserPreferences = (options?: UserPreferencesOptions) => {
-    this.state.userPreferencesOptions = options;
-
+  showUserPreferences = () => {
     if (!this.elements.preferencesContainer) {
       // create container
       const root = document.getElementsByTagName('body')[0];
