@@ -4,12 +4,15 @@ import {
   InitOptions,
   NotificationAPIClientInterface,
   PopupPosition,
+  Preference,
+  UserPreferencesOptions,
+  WS_ANY_VALID_REQUEST,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
-  WS_UnreadCountRequest,
-  WS_UnreadCountResponse
+  WS_UnreadCountResponse,
+  WS_UserPreferencesResponse
 } from './interfaces';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
@@ -117,15 +120,13 @@ function position(
 class NotificationAPIClient implements NotificationAPIClientInterface {
   state: NotificationAPIClientInterface['state'];
   elements: NotificationAPIClientInterface['elements'];
+  websocket?: WebSocket;
 
   destroy = (): void => {
-    this.elements.websocket?.close();
-    this.elements.button?.remove();
-    this.elements.popup?.remove();
-    this.elements.popupInner?.remove();
-    this.elements.unread?.remove();
-    this.elements.empty?.remove();
-    this.elements.header?.remove();
+    this.websocket?.close();
+    Object.values(this.elements).map((e) => {
+      e && e.remove();
+    });
   };
 
   constructor(options: InitOptions) {
@@ -139,7 +140,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     };
 
     // connect to WS
-    if (!options.mock) {
+    if (options.websocket !== false) {
       const websocketAddress = `${
         options.websocket ?? defaultWebSocket
       }?envId=${encodeURIComponent(
@@ -149,7 +150,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
           : ''
       }`;
-      this.elements.websocket = new WebSocket(websocketAddress);
+      this.websocket = new WebSocket(websocketAddress);
     }
   }
 
@@ -270,7 +271,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         popupInner.scrollTop + popupInner.clientHeight >=
           popupInner.scrollHeight - 100 && // 100px before the end
         new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
-        this.elements.websocket &&
+        this.websocket &&
         (this.state.lastResponseNotificationsCount === undefined ||
           this.state.lastResponseNotificationsCount >= notificationReqCount)
       ) {
@@ -282,36 +283,23 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             count: notificationReqCount
           }
         };
-        this.elements.websocket.send(JSON.stringify(moreNotificationsRequest));
+        this.websocket.send(JSON.stringify(moreNotificationsRequest));
       }
     };
 
     // use WS for inapp
-    if (this.elements.websocket) {
-      const sendInitialRequests = (ws: WebSocket) => {
-        const unreadReq: WS_UnreadCountRequest = {
-          route: 'inapp_web/unread_count'
-        };
-        ws.send(JSON.stringify(unreadReq));
-
-        const notificationsReq: WS_NotificationsRequest = {
-          route: 'inapp_web/notifications',
-          payload: {
-            count: notificationReqCount
-          }
-        };
-        ws.send(JSON.stringify(notificationsReq));
-      };
-
-      const ws = this.elements.websocket;
-      if (ws.readyState == ws.OPEN) {
-        sendInitialRequests(ws);
-      } else {
-        ws.addEventListener('open', () => {
-          sendInitialRequests(ws);
-        });
+    this.sendWSMessage({
+      route: 'inapp_web/unread_count'
+    });
+    this.sendWSMessage({
+      route: 'inapp_web/notifications',
+      payload: {
+        count: notificationReqCount
       }
+    });
 
+    if (this.websocket) {
+      const ws = this.websocket;
       ws.addEventListener('message', (m: MessageEvent) => {
         const body = JSON.parse(m.data);
 
@@ -351,6 +339,78 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   };
 
+  showUserPreferences = (options?: UserPreferencesOptions) => {
+    this.state.userPreferencesOptions = options;
+
+    if (!this.elements.preferencesContainer) {
+      // create container
+      const root = document.getElementsByTagName('body')[0];
+      const container = document.createElement('div');
+      container.classList.add('notificationapi-preferences-container');
+      this.elements.preferencesContainer = container;
+      root.appendChild(container);
+
+      // create backdrop
+      const backdrop = document.createElement('div');
+      backdrop.classList.add('notificationapi-preferences-backdrop');
+      backdrop.addEventListener('click', () => {
+        container.classList.add('closed');
+      });
+      container.appendChild(backdrop);
+
+      // create popup
+      const popup = document.createElement('div');
+      popup.classList.add('notificationapi-preferences-popup');
+      container.appendChild(popup);
+      this.elements.preferencesPopup = popup;
+
+      // create close button
+      const close = document.createElement('button');
+      close.classList.add('notificationapi-preferences-close');
+      close.addEventListener('click', () => {
+        container.classList.add('closed');
+      });
+      popup.appendChild(close);
+
+      // create title
+      const title = document.createElement('h1');
+      title.innerHTML = 'Notification Preferences';
+      popup.appendChild(title);
+
+      // render loading state
+      const loading = document.createElement('div');
+      loading.classList.add('notificationapi-loading');
+      const icon = document.createElement('span');
+      icon.classList.add('icon-spinner', 'spinner');
+      loading.appendChild(icon);
+      popup.appendChild(loading);
+      this.elements.preferencesLoading = loading;
+
+      if (this.websocket) {
+        const ws = this.websocket;
+        ws.addEventListener('message', (m) => {
+          const body = JSON.parse(m.data);
+
+          if (!body || !body.route) {
+            return;
+          }
+
+          if (body.route === 'user_preferences/preferences') {
+            const message = body as WS_UserPreferencesResponse;
+            this.renderPreferences(message.payload.userPreferences);
+          }
+        });
+      }
+    } else {
+      this.elements.preferencesContainer.classList.remove('closed');
+    }
+
+    // Request user preferences every time render is run to get the latest
+    this.sendWSMessage({
+      route: 'user_preferences/get_preferences'
+    });
+  };
+
   openInAppPopup(): void {
     if (
       this.elements.popup &&
@@ -368,11 +428,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       this.setInAppUnread(0);
       this.elements.popup.classList.remove('closed');
     }
-    if (this.elements.websocket && this.elements.websocket.readyState === 1) {
+    if (this.websocket && this.websocket.readyState === 1) {
       const clearReq: WS_ClearUnreadRequest = {
         route: 'inapp_web/unread_clear'
       };
-      this.elements.websocket.send(JSON.stringify(clearReq));
+      this.websocket.send(JSON.stringify(clearReq));
     }
   }
 
@@ -513,12 +573,198 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       delete this.elements.empty;
     }
   }
+
+  renderPreferences(preferences: Preference[]): void {
+    if (!this.elements.preferencesPopup) return;
+
+    // remove loading
+    this.elements.preferencesLoading?.remove();
+    this.elements.preferencesLoading = undefined;
+
+    const popup = this.elements.preferencesPopup;
+    const validPreferences = preferences.filter((p) => p.settings.length > 0);
+    if (validPreferences.length === 0 && !this.elements.preferencesEmpty) {
+      const empty = document.createElement('div');
+      empty.classList.add('notificationapi-preferences-empty');
+      empty.innerHTML = 'There are no notifications to configure.';
+      popup.appendChild(empty);
+      this.elements.preferencesEmpty = empty;
+      return;
+    }
+
+    // render grid
+    this.elements.preferencesGrid?.remove();
+    this.elements.preferencesGrid = undefined;
+    const grid = document.createElement('div');
+    grid.classList.add('notificationapi-preferences-grid');
+    this.elements.preferencesGrid = grid;
+    popup.appendChild(grid);
+
+    const channels: Record<string, string> = {};
+    validPreferences.map((p) => {
+      p.settings.map((s) => {
+        if (!channels[s.channel]) channels[s.channel] = s.channelName;
+      });
+    });
+
+    Object.values(channels).map((v, i) => {
+      const channel = document.createElement('div');
+      channel.innerHTML = v;
+      channel.classList.add(
+        'notificationapi-preferences-channel',
+        `notificationapi-preferences-col${i + 2}`
+      );
+      grid.appendChild(channel);
+    });
+
+    // render preference rows
+    validPreferences.map((pref) => {
+      const title = document.createElement('div');
+      title.classList.add(
+        'notificationapi-preferences-title',
+        'notificationapi-preferences-col1'
+      );
+      title.innerHTML = pref.title;
+      grid.appendChild(title);
+      pref.settings.map((s) => {
+        const toggle = document.createElement('div');
+        const col = Object.keys(channels).indexOf(s.channel) + 2;
+        toggle.classList.add(
+          'notificationapi-preferences-toggle',
+          `notificationapi-preferences-col${col}`
+        );
+        toggle.setAttribute('data-notificationId', pref.notificationId);
+        toggle.setAttribute('data-channel', s.channel);
+
+        const label = document.createElement('label');
+        label.classList.add('switch');
+        toggle.appendChild(label);
+
+        const input = document.createElement('input');
+        input.setAttribute('type', 'checkbox');
+        input.checked = s.state;
+        label.appendChild(input);
+        const i = document.createElement('i');
+        label.appendChild(i);
+
+        input.addEventListener('change', () => {
+          this.sendWSMessage({
+            route: 'user_preferences/patch_preferences',
+            payload: {
+              notificationId: pref.notificationId,
+              data: [
+                {
+                  channel: s.channel,
+                  state: input.checked
+                }
+              ]
+            }
+          });
+        });
+        grid.appendChild(toggle);
+      });
+
+      if (pref.subNotificationPreferences) {
+        const expand = document.createElement('button');
+        expand.innerHTML = 'expand';
+        expand.setAttribute('data-notificationId', pref.notificationId);
+        const col = Object.keys(channels).length + 2;
+        expand.classList.add(
+          'notificationapi-preferences-expand',
+          `notificationapi-preferences-col${col}`
+        );
+        expand.addEventListener('click', (e) => {
+          const expand = e.target as HTMLButtonElement;
+          const notificationId = expand.getAttribute('data-notificationId');
+          popup
+            .querySelectorAll(
+              `[data-notificationId="${notificationId}"][data-subNotificationId]`
+            )
+            .forEach((e) => {
+              e.classList.toggle('closed');
+            });
+        });
+        grid.appendChild(expand);
+
+        pref.subNotificationPreferences.map((subPref) => {
+          const title = document.createElement('div');
+          title.classList.add(
+            'notificationapi-preferences-subtitle',
+            'notificationapi-preferences-col1',
+            'closed'
+          );
+          title.setAttribute(
+            'data-subNotificationId',
+            subPref.subNotificationId
+          );
+
+          title.setAttribute('data-notificationId', pref.notificationId);
+          title.innerHTML = subPref.title;
+          grid.appendChild(title);
+          subPref.settings.map((s) => {
+            const toggle = document.createElement('div');
+            const col = Object.keys(channels).indexOf(s.channel) + 2;
+            toggle.classList.add(
+              'notificationapi-preferences-subtoggle',
+              `notificationapi-preferences-col${col}`,
+              'closed'
+            );
+            toggle.setAttribute('data-notificationId', subPref.notificationId);
+            toggle.setAttribute(
+              'data-subNotificationId',
+              subPref.subNotificationId
+            );
+            toggle.setAttribute('data-channel', s.channel);
+
+            const label = document.createElement('label');
+            label.classList.add('switch', 'small');
+            toggle.appendChild(label);
+
+            const input = document.createElement('input');
+            input.setAttribute('type', 'checkbox');
+            input.checked = s.state;
+            label.appendChild(input);
+            const i = document.createElement('i');
+            label.appendChild(i);
+
+            input.addEventListener('change', () => {
+              this.sendWSMessage({
+                route: 'user_preferences/patch_preferences',
+                payload: {
+                  notificationId: pref.notificationId,
+                  subNotificationId: subPref.subNotificationId,
+                  data: [
+                    {
+                      channel: s.channel,
+                      state: input.checked
+                    }
+                  ]
+                }
+              });
+            });
+            grid.appendChild(toggle);
+          });
+        });
+      }
+    });
+  }
+
+  sendWSMessage(request: WS_ANY_VALID_REQUEST): void {
+    if (!this.websocket) return;
+    const ws = this.websocket;
+    if (ws.readyState == ws.OPEN) {
+      ws.send(JSON.stringify(request));
+    } else {
+      ws.addEventListener('open', () => {
+        ws.send(JSON.stringify(request));
+      });
+    }
+  }
 }
 
 const NotificationAPI = {
   init: (options: InitOptions): NotificationAPIClient => {
-    const client = new NotificationAPIClient(options);
-    return client;
+    return new NotificationAPIClient(options);
   }
 };
 

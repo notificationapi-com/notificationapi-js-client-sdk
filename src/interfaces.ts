@@ -1,4 +1,3 @@
-// TODO: abstract from all js SDKs
 export interface User {
   id: string;
   email?: string;
@@ -7,13 +6,15 @@ export interface User {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NotificationAPIClientInterface {
   showInApp: (options: InAppOptions) => void;
+  showUserPreferences: (options?: UserPreferencesOptions) => void;
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
   processNotifications: (notifications: InappNotification[]) => void;
+  renderPreferences: (preferences: Preference[]) => void;
   destroy: () => void;
+  websocket?: WebSocket;
   elements: {
-    websocket?: WebSocket;
     unread?: HTMLDivElement;
     popup?: HTMLDivElement;
     popupInner?: HTMLDivElement;
@@ -21,6 +22,11 @@ export interface NotificationAPIClientInterface {
     root?: HTMLElement;
     empty?: HTMLDivElement;
     header?: HTMLDivElement;
+    preferencesContainer?: HTMLDivElement;
+    preferencesPopup?: HTMLDivElement;
+    preferencesLoading?: HTMLDivElement;
+    preferencesEmpty?: HTMLDivElement;
+    preferencesGrid?: HTMLDivElement;
   };
   state: {
     lastNotificationsRequestAt: number;
@@ -30,6 +36,7 @@ export interface NotificationAPIClientInterface {
     lastResponseNotificationsCount?: number;
     inappOptions?: InAppOptions;
     initOptions: InitOptions;
+    userPreferencesOptions?: UserPreferencesOptions;
   };
 }
 
@@ -37,8 +44,7 @@ export interface InitOptions {
   clientId: string;
   userId: string;
   userIdHash?: string;
-  websocket?: string;
-  mock?: boolean;
+  websocket?: string | false;
 }
 
 export interface InAppOptions {
@@ -46,6 +52,8 @@ export interface InAppOptions {
   inline?: boolean;
   popupPosition?: PopupPosition;
 }
+
+export interface UserPreferencesOptions {}
 
 export enum PopupPosition {
   TopLeft = 'topLeft',
@@ -65,6 +73,20 @@ export interface InappNotification {
   redirectURL?: string;
   imageURL?: string;
   date: string; // ISO date
+}
+
+export interface Preference {
+  notificationId: string;
+  title: string;
+  settings: {
+    channel: string;
+    channelName: string;
+    state: boolean;
+  }[];
+  subNotificationPreferences?: (Omit<
+    Preference,
+    'subNotificationPreferences'
+  > & { subNotificationId: string })[];
 }
 
 export interface WS_NotificationsRequest {
@@ -103,3 +125,31 @@ export interface WS_NewNotificationsResponse {
     notifications: InappNotification[];
   };
 }
+
+export interface WS_UserPreferencesRequest {
+  route: 'user_preferences/get_preferences';
+}
+
+export interface WS_UserPreferencesResponse {
+  route: 'user_preferences/get_preferences';
+  payload: {
+    userPreferences: Preference[];
+  };
+}
+
+export interface WS_UserPreferencesPatchRequest {
+  route: 'user_preferences/patch_preferences';
+  payload: {
+    notificationId: string;
+    subNotificationId?: string;
+    data: { channel: string; state: boolean }[];
+  };
+}
+
+export type WS_ANY_VALID_REQUEST =
+  | WS_NotificationsRequest
+  | WS_ClearUnreadRequest
+  | WS_UnreadCountRequest
+  | WS_UserPreferencesRequest
+  | WS_UserPreferencesRequest
+  | WS_UserPreferencesPatchRequest;
