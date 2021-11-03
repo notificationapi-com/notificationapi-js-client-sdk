@@ -441,6 +441,18 @@ describe('renderPreferences', () => {
     ).toHaveLength(1);
   });
 
+  test('does not show expand button if subNotificationPreferences is empty', () => {
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([
+      { ...emailInAppPreference, subNotificationPreferences: [] }
+    ]);
+    expect(
+      $(
+        '.notificationapi-preferences-grid > .notificationapi-preferences-expand'
+      )
+    ).toHaveLength(0);
+  });
+
   test(`given a complex preference, adds expand button, subtitles and subtoggles to grid`, async () => {
     notificationapi.showUserPreferences();
     notificationapi.renderPreferences([

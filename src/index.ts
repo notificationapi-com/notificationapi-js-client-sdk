@@ -661,7 +661,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         grid.appendChild(toggle);
       });
 
-      if (pref.subNotificationPreferences) {
+      if (
+        pref.subNotificationPreferences &&
+        pref.subNotificationPreferences.length > 0
+      ) {
         const expand = document.createElement('button');
         expand.innerHTML = 'expand';
         expand.setAttribute('data-notificationId', pref.notificationId);
