@@ -131,7 +131,7 @@ export interface WS_UserPreferencesRequest {
 }
 
 export interface WS_UserPreferencesResponse {
-  route: 'user_preferences/get_preferences';
+  route: 'user_preferences/preferences';
   payload: {
     userPreferences: Preference[];
   };
