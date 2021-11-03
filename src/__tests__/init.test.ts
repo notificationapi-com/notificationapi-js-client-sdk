@@ -8,6 +8,7 @@ const userIdHash = 'userIdHash@';
 
 let spy: jest.SpyInstance;
 let notificationapi: NotificationAPIClientInterface;
+
 beforeEach(() => {
   spy = jest.spyOn(console, 'error').mockImplementation();
   document.body.innerHTML = '<div id="root"></div><div id="root2"></div>';
@@ -19,40 +20,12 @@ afterEach(() => {
   if (notificationapi) notificationapi.destroy();
 });
 
-test('init returns a NotificationAPIClient object', async () => {
+test('init returns a NotificationAPIClient object and adds to window', async () => {
   notificationapi = NotificationAPI.init({
     clientId,
     userId
   });
   expect(notificationapi).toBeTruthy();
-});
-
-test('maintains 2 separate instances given different clientId/userId', async () => {
-  const server1 = new WS('ws://localhost:1234', { jsonProtocol: true });
-  const server2 = new WS('ws://localhost:1235', { jsonProtocol: true });
-  let connections1 = 0;
-  let connections2 = 0;
-  server1.on('connection', () => {
-    connections1++;
-  });
-  server2.on('connection', () => {
-    connections2++;
-  });
-  notificationapi = NotificationAPI.init({
-    clientId,
-    userId,
-    websocket: 'ws://localhost:1234'
-  });
-
-  NotificationAPI.init({
-    clientId,
-    userId,
-    websocket: 'ws://localhost:1235'
-  });
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  expect(connections1).toEqual(1);
-  expect(connections2).toEqual(1);
 });
 
 test('given custom websocket, requests connection URL with UserId and envId', async () => {
@@ -98,19 +71,11 @@ test('given custom websocket & userIdHash, requests connection URL with encoded 
 
 // TODO: test that the library will use the production websocket if not given a custom websocket
 
-test('given mock option, websocket is not used', async () => {
-  const server = new WS('ws://localhost:1234', { jsonProtocol: true });
+test('given websocket:false, websocket is not opened', async () => {
   notificationapi = NotificationAPI.init({
     clientId,
     userId,
-    mock: true,
-    websocket: 'ws://localhost:1234'
+    websocket: false
   });
-  let connected = false;
-  server.on('connection', () => {
-    connected = true;
-  });
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
-
-  expect(connected).toBeFalsy();
+  expect(notificationapi.websocket).toBeFalsy();
 });

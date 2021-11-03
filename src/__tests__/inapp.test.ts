@@ -143,6 +143,18 @@ describe('defaults', () => {
       )
     ).toHaveLength(1);
   });
+
+  test('given no WS, throws no error', async () => {
+    notificationapi = NotificationAPI.init({
+      clientId,
+      userId,
+      websocket: false
+    });
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    expect(spy.mock.calls).toEqual([]);
+  });
 });
 
 describe('inline mode', () => {
@@ -388,7 +400,7 @@ describe('processNotifications', () => {
     notificationapi = NotificationAPI.init({
       clientId,
       userId,
-      mock: true
+      websocket: false
     });
     notificationapi.processNotifications([testNotification]);
     expect(spy.mock.calls).toEqual([]);
@@ -655,26 +667,5 @@ describe('websocket send & receives', () => {
     server.send(message3);
     expect($('.notificationapi-notification')).toHaveLength(3);
     expect($('.notificationapi-unread').text()).toEqual('3');
-  });
-});
-
-describe('mock', () => {
-  test('given mock option, messages are not sent over ws', async () => {
-    notificationapi = NotificationAPI.init({
-      clientId,
-      userId,
-      mock: true,
-      websocket: 'ws://localhost:1234'
-    });
-    notificationapi.showInApp({
-      root: 'root'
-    });
-    let messages = false;
-    server.on('message', () => {
-      messages = true;
-    });
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
-
-    expect(messages).toBeFalsy();
   });
 });
