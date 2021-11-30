@@ -595,6 +595,65 @@ describe('renderPreferences', () => {
     ).toHaveLength(4);
   });
 
+  test('subtoggles are active for enabled notifications and inactive for disabled notifications', async () => {
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([
+      {
+        ...emailInAppPreference,
+        subNotificationPreferences: [
+          {
+            ...emailInAppPreference,
+            subNotificationId: 'subNotificationId1',
+            title: 'subtitle1'
+          }
+        ]
+      }
+    ]);
+
+    expect(
+      $('.notificationapi-preferences-subtoggle input:disabled')
+    ).toHaveLength(1);
+    expect(
+      $('.notificationapi-preferences-subtoggle input:not(:disabled)')
+    ).toHaveLength(1);
+  });
+
+  test('clicking toggle changes the disabled state of subtoggles', async () => {
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([
+      {
+        ...emailInAppPreference,
+        subNotificationPreferences: [
+          {
+            ...emailInAppPreference,
+            subNotificationId: 'subNotificationId1',
+            title: 'subtitle1'
+          }
+        ]
+      }
+    ]);
+
+    $(
+      '.notificationapi-preferences-toggle[data-channel="EMAIL"] input'
+    ).trigger('click');
+
+    expect(
+      $(
+        '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input:disabled'
+      )
+    ).toHaveLength(1);
+
+    $(
+      '.notificationapi-preferences-toggle[data-channel="EMAIL"] input'
+    ).trigger('click');
+
+    expect(
+      $(
+        '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input:not(:disabled)'
+      )
+    ).toHaveLength(1);
+  });
+
   test(`given preferences repeatedly, removes old preferences and renders new preferences`, async () => {
     notificationapi.showUserPreferences();
     notificationapi.renderPreferences([emailInAppPreference]);
