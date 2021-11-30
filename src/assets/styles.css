@@ -494,7 +494,7 @@
 }
 
 .switch input:checked + i {
-  background-color: #4bd763;
+  background-color: #1890ff;
 }
 
 .switch input:checked + i::before {
