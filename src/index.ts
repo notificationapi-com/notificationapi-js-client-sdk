@@ -645,6 +645,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         label.appendChild(i);
 
         input.addEventListener('change', () => {
+          grid
+            .querySelectorAll(
+              `.notificationapi-preferences-subtoggle[data-notificationid="${pref.notificationId}"][data-channel="${s.channel}"] input`
+            )
+            .forEach((e) => {
+              (e as HTMLInputElement).disabled = !input.checked;
+            });
           this.sendWSMessage({
             route: 'user_preferences/patch_preferences',
             payload: {
@@ -723,6 +730,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             const input = document.createElement('input');
             input.setAttribute('type', 'checkbox');
             input.checked = s.state;
+            if (
+              pref.settings.find(
+                (ps) => ps.channel === s.channel && ps.state === false
+              )
+            )
+              input.disabled = true;
             label.appendChild(input);
             const i = document.createElement('i');
             label.appendChild(i);

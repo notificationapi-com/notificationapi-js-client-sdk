@@ -494,7 +494,7 @@
 }
 
 .switch input:checked + i {
-  background-color: #4bd763;
+  background-color: #1890ff;
 }
 
 .switch input:checked + i::before {
@@ -503,6 +503,10 @@
 
 .switch input:checked + i::after {
   transform: translate3d(24px, 2px, 0);
+}
+
+.switch input:disabled + i {
+  opacity: 0.5;
 }
 
 .switch.small input:checked + i::after {
