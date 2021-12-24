@@ -254,8 +254,6 @@
   justify-content: center;
   color: #222;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  border: 1px solid #dddddd;
-  border-radius: 8px;
   overflow-y: hidden;
   overflow-x: hidden;
 }
@@ -418,13 +416,13 @@
 }
 
 /* Switch */
-.switch {
+.notificationapi-preferences-popup .switch {
   display: inline-block;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-.switch i {
+.notificationapi-preferences-popup .switch i {
   position: relative;
   display: inline-block;
   margin-right: 0.5rem;
@@ -436,13 +434,13 @@
   transition: all 0.3s linear;
 }
 
-.switch.small i {
+.notificationapi-preferences-popup .switch.small i {
   width: 28px;
   height: 16px;
   border-radius: 14px;
 }
 
-.switch i::before {
+.notificationapi-preferences-popup .switch i::before {
   content: '';
   position: absolute;
   left: 0;
@@ -454,12 +452,12 @@
   transition: all 0.25s linear;
 }
 
-.switch.small i::before {
+.notificationapi-preferences-popup .switch.small i::before {
   width: 24px;
   height: 14px;
 }
 
-.switch i::after {
+.notificationapi-preferences-popup .switch i::after {
   content: '';
   position: absolute;
   left: 0;
@@ -472,7 +470,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.switch.small i::after {
+.notificationapi-preferences-popup .switch.small i::after {
   width: 12px;
   height: 12px;
   border-radius: 6px;
@@ -480,36 +478,36 @@
   transform: translate3d(3px, 2px, 0);
 }
 
-.switch:active i::after {
+.notificationapi-preferences-popup .switch:active i::after {
   width: 28px;
   transform: translate3d(2px, 2px, 0);
 }
 
-.switch:active input:checked + i::after {
+.notificationapi-preferences-popup .switch:active input:checked + i::after {
   transform: translate3d(16px, 2px, 0);
 }
 
-.switch input {
+.notificationapi-preferences-popup .switch input {
   display: none;
 }
 
-.switch input:checked + i {
+.notificationapi-preferences-popup .switch input:checked + i {
   background-color: #1890ff;
 }
 
-.switch input:checked + i::before {
+.notificationapi-preferences-popup .switch input:checked + i::before {
   transform: translate3d(18px, 2px, 0) scale3d(0, 0, 0);
 }
 
-.switch input:checked + i::after {
+.notificationapi-preferences-popup .switch input:checked + i::after {
   transform: translate3d(24px, 2px, 0);
 }
 
-.switch input:disabled + i {
+.notificationapi-preferences-popup .switch input:disabled + i {
   opacity: 0.5;
 }
 
-.switch.small input:checked + i::after {
+.notificationapi-preferences-popup .switch.small input:checked + i::after {
   transform: translate3d(14px, 2px, 0);
 }
 
@@ -563,7 +561,7 @@
     transform: rotate(360deg);
   }
 }
-.spinner {
+.notificationapi-preferences-popup .spinner {
   display: inline-block;
   font-size: 4em;
   height: 1em;
