@@ -220,7 +220,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           (e.target as Element).closest('.notificationapi-popup') ?? false;
         const clickedButton =
           (e.target as Element).closest('.notificationapi-button') ?? false;
-        if (!clickedButton && !clickedPopup) {
+        const clickedPreferences =
+          (e.target as Element).closest(
+            '.notificationapi-preferences-container'
+          ) ?? false;
+        if (!clickedButton && !clickedPopup && !clickedPreferences) {
           popup.classList.add('closed');
         }
       });
@@ -242,17 +246,30 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.elements.popupInner = popupInner;
 
     // render header
+    this.elements.header = document.createElement('div');
+
     const headerCloseButton = document.createElement('button');
-    const headerHeading = document.createElement('h1');
-    headerHeading.innerHTML = 'Notifications';
+    headerCloseButton.classList.add('notificationapi-close-button');
     headerCloseButton.innerHTML =
       '<i class=".notificationapi-arrow .notificationapi-arrow-left"></i>';
-    this.elements.header = document.createElement('div');
-    this.elements.header.appendChild(headerCloseButton);
-    this.elements.header.appendChild(headerHeading);
     headerCloseButton.addEventListener('click', () => {
       this.closeInAppPopup();
     });
+
+    const headerHeading = document.createElement('h1');
+    headerHeading.innerHTML = 'Notifications';
+
+    const headerPreferencesButton = document.createElement('button');
+    headerPreferencesButton.classList.add('notificationapi-preferences-button');
+    headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
+    headerPreferencesButton.addEventListener('click', () => {
+      this.showUserPreferences();
+    });
+
+    this.elements.header.appendChild(headerCloseButton);
+    this.elements.header.appendChild(headerHeading);
+    this.elements.header.appendChild(headerPreferencesButton);
+
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
 
