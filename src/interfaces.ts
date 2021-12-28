@@ -139,8 +139,8 @@ export interface WS_UserPreferencesPatchRequest {
   payload: {
     notificationId: string;
     subNotificationId?: string;
-    data: { channel: string; state: boolean }[];
-  };
+    channelPreferences: { channel: string; state: boolean }[];
+  }[];
 }
 
 export type WS_ANY_VALID_REQUEST =

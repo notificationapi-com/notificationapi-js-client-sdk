@@ -211,15 +211,17 @@ describe('websocket send & receives', () => {
 
     const req1: WS_UserPreferencesPatchRequest = {
       route: 'user_preferences/patch_preferences',
-      payload: {
-        notificationId: emailInAppPreference.notificationId,
-        data: [
-          {
-            channel: 'EMAIL',
-            state: false
-          }
-        ]
-      }
+      payload: [
+        {
+          notificationId: emailInAppPreference.notificationId,
+          channelPreferences: [
+            {
+              channel: 'EMAIL',
+              state: false
+            }
+          ]
+        }
+      ]
     };
     expect(
       $(
@@ -232,15 +234,17 @@ describe('websocket send & receives', () => {
     ).trigger('click');
     const req2: WS_UserPreferencesPatchRequest = {
       route: 'user_preferences/patch_preferences',
-      payload: {
-        notificationId: emailInAppPreference.notificationId,
-        data: [
-          {
-            channel: 'EMAIL',
-            state: true
-          }
-        ]
-      }
+      payload: [
+        {
+          notificationId: emailInAppPreference.notificationId,
+          channelPreferences: [
+            {
+              channel: 'EMAIL',
+              state: true
+            }
+          ]
+        }
+      ]
     };
     expect(
       $(
@@ -271,16 +275,18 @@ describe('websocket send & receives', () => {
 
     const req1: WS_UserPreferencesPatchRequest = {
       route: 'user_preferences/patch_preferences',
-      payload: {
-        notificationId: emailInAppPreference.notificationId,
-        subNotificationId: 'subNotificationId1',
-        data: [
-          {
-            channel: 'EMAIL',
-            state: false
-          }
-        ]
-      }
+      payload: [
+        {
+          notificationId: emailInAppPreference.notificationId,
+          subNotificationId: 'subNotificationId1',
+          channelPreferences: [
+            {
+              channel: 'EMAIL',
+              state: false
+            }
+          ]
+        }
+      ]
     };
     expect(
       $(
@@ -293,16 +299,18 @@ describe('websocket send & receives', () => {
     ).trigger('click');
     const req2: WS_UserPreferencesPatchRequest = {
       route: 'user_preferences/patch_preferences',
-      payload: {
-        notificationId: emailInAppPreference.notificationId,
-        subNotificationId: 'subNotificationId1',
-        data: [
-          {
-            channel: 'EMAIL',
-            state: true
-          }
-        ]
-      }
+      payload: [
+        {
+          notificationId: emailInAppPreference.notificationId,
+          subNotificationId: 'subNotificationId1',
+          channelPreferences: [
+            {
+              channel: 'EMAIL',
+              state: true
+            }
+          ]
+        }
+      ]
     };
     expect(
       $(
@@ -382,17 +390,17 @@ describe('renderPreferences', () => {
     ).toHaveLength(3);
     expect(
       $(
-        '.notificationapi-preferences-channel.notificationapi-preferences-col2'
+        '.notificationapi-preferences-channel.notificationapi-preferences-col2.notificationapi-preferences-row1'
       )[0].innerHTML
     ).toEqual('Email');
     expect(
       $(
-        '.notificationapi-preferences-channel.notificationapi-preferences-col3'
+        '.notificationapi-preferences-channel.notificationapi-preferences-col3.notificationapi-preferences-row1'
       )[0].innerHTML
     ).toEqual('In-App (Web)');
     expect(
       $(
-        '.notificationapi-preferences-channel.notificationapi-preferences-col4'
+        '.notificationapi-preferences-channel.notificationapi-preferences-col4.notificationapi-preferences-row1'
       )[0].innerHTML
     ).toEqual('SMS');
   });
@@ -421,22 +429,22 @@ describe('renderPreferences', () => {
     ).toHaveLength(4);
     expect(
       $(
-        '.notificationapi-preferences-toggle.notificationapi-preferences-col2[data-notificationId="notificationId1"][data-channel="EMAIL"] input:checked'
+        '.notificationapi-preferences-toggle.notificationapi-preferences-col2.notificationapi-preferences-row2[data-notificationId="notificationId1"][data-channel="EMAIL"] input:checked'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-toggle.notificationapi-preferences-col3[data-notificationId="notificationId1"][data-channel="INAPP_WEB"] input:not(:checked)'
+        '.notificationapi-preferences-toggle.notificationapi-preferences-col3.notificationapi-preferences-row2[data-notificationId="notificationId1"][data-channel="INAPP_WEB"] input:not(:checked)'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-toggle.notificationapi-preferences-col3[data-notificationId="notificationId2"][data-channel="INAPP_WEB"] input:not(:checked)'
+        '.notificationapi-preferences-toggle.notificationapi-preferences-col3.notificationapi-preferences-row3[data-notificationId="notificationId2"][data-channel="INAPP_WEB"] input:not(:checked)'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-toggle.notificationapi-preferences-col4[data-notificationId="notificationId2"][data-channel="SMS"] input:checked'
+        '.notificationapi-preferences-toggle.notificationapi-preferences-col4.notificationapi-preferences-row3[data-notificationId="notificationId2"][data-channel="SMS"] input:checked'
       )
     ).toHaveLength(1);
   });
@@ -496,22 +504,22 @@ describe('renderPreferences', () => {
     ).toHaveLength(4);
     expect(
       $(
-        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col2[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId1"][data-channel="EMAIL"] input:checked'
+        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col2.notificationapi-preferences-row3[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId1"][data-channel="EMAIL"] input:checked'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col3[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId1"][data-channel="INAPP_WEB"] input:not(:checked)'
+        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col3.notificationapi-preferences-row3[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId1"][data-channel="INAPP_WEB"] input:not(:checked)'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col2[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId2"][data-channel="EMAIL"] input:checked'
+        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col2.notificationapi-preferences-row4[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId2"][data-channel="EMAIL"] input:checked'
       )
     ).toHaveLength(1);
     expect(
       $(
-        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col3[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId2"][data-channel="INAPP_WEB"] input:not(:checked)'
+        '.notificationapi-preferences-subtoggle.notificationapi-preferences-col3.notificationapi-preferences-row4[data-notificationId="notificationId1"][data-subNotificationId="subNotificationId2"][data-channel="INAPP_WEB"] input:not(:checked)'
       )
     ).toHaveLength(1);
   });
