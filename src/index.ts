@@ -220,7 +220,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           (e.target as Element).closest('.notificationapi-popup') ?? false;
         const clickedButton =
           (e.target as Element).closest('.notificationapi-button') ?? false;
-        if (!clickedButton && !clickedPopup) {
+        const clickedPreferences =
+          (e.target as Element).closest(
+            '.notificationapi-preferences-container'
+          ) ?? false;
+        if (!clickedButton && !clickedPopup && !clickedPreferences) {
           popup.classList.add('closed');
         }
       });
@@ -242,17 +246,30 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.elements.popupInner = popupInner;
 
     // render header
+    this.elements.header = document.createElement('div');
+
     const headerCloseButton = document.createElement('button');
-    const headerHeading = document.createElement('h1');
-    headerHeading.innerHTML = 'Notifications';
+    headerCloseButton.classList.add('notificationapi-close-button');
     headerCloseButton.innerHTML =
       '<i class=".notificationapi-arrow .notificationapi-arrow-left"></i>';
-    this.elements.header = document.createElement('div');
-    this.elements.header.appendChild(headerCloseButton);
-    this.elements.header.appendChild(headerHeading);
     headerCloseButton.addEventListener('click', () => {
       this.closeInAppPopup();
     });
+
+    const headerHeading = document.createElement('h1');
+    headerHeading.innerHTML = 'Notifications';
+
+    const headerPreferencesButton = document.createElement('button');
+    headerPreferencesButton.classList.add('notificationapi-preferences-button');
+    headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
+    headerPreferencesButton.addEventListener('click', () => {
+      this.showUserPreferences();
+    });
+
+    this.elements.header.appendChild(headerCloseButton);
+    this.elements.header.appendChild(headerHeading);
+    this.elements.header.appendChild(headerPreferencesButton);
+
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
 
@@ -604,22 +621,27 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       });
     });
 
+    let row = 1;
     Object.values(channels).map((v, i) => {
       const channel = document.createElement('div');
       channel.innerHTML = v;
       channel.classList.add(
         'notificationapi-preferences-channel',
-        `notificationapi-preferences-col${i + 2}`
+        `notificationapi-preferences-col${i + 2}`,
+        `notificationapi-preferences-row${row}`
       );
       grid.appendChild(channel);
     });
+    row++;
 
     // render preference rows
+
     validPreferences.map((pref) => {
       const title = document.createElement('div');
       title.classList.add(
         'notificationapi-preferences-title',
-        'notificationapi-preferences-col1'
+        'notificationapi-preferences-col1',
+        `notificationapi-preferences-row${row}`
       );
       title.innerHTML = pref.title;
       grid.appendChild(title);
@@ -628,7 +650,8 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         const col = Object.keys(channels).indexOf(s.channel) + 2;
         toggle.classList.add(
           'notificationapi-preferences-toggle',
-          `notificationapi-preferences-col${col}`
+          `notificationapi-preferences-col${col}`,
+          `notificationapi-preferences-row${row}`
         );
         toggle.setAttribute('data-notificationId', pref.notificationId);
         toggle.setAttribute('data-channel', s.channel);
@@ -654,20 +677,23 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             });
           this.sendWSMessage({
             route: 'user_preferences/patch_preferences',
-            payload: {
-              notificationId: pref.notificationId,
-              data: [
-                {
-                  channel: s.channel,
-                  state: input.checked
-                }
-              ]
-            }
+            payload: [
+              {
+                notificationId: pref.notificationId,
+                channelPreferences: [
+                  {
+                    channel: s.channel,
+                    state: input.checked
+                  }
+                ]
+              }
+            ]
           });
         });
         grid.appendChild(toggle);
       });
 
+      row++;
       if (
         pref.subNotificationPreferences &&
         pref.subNotificationPreferences.length > 0
@@ -678,7 +704,8 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         const col = Object.keys(channels).length + 2;
         expand.classList.add(
           'notificationapi-preferences-expand',
-          `notificationapi-preferences-col${col}`
+          `notificationapi-preferences-col${col}`,
+          `notificationapi-preferences-row${row - 1}`
         );
         expand.addEventListener('click', (e) => {
           const expand = e.target as HTMLButtonElement;
@@ -698,6 +725,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           title.classList.add(
             'notificationapi-preferences-subtitle',
             'notificationapi-preferences-col1',
+            `notificationapi-preferences-row${row}`,
             'closed'
           );
           title.setAttribute(
@@ -714,6 +742,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             toggle.classList.add(
               'notificationapi-preferences-subtoggle',
               `notificationapi-preferences-col${col}`,
+              `notificationapi-preferences-row${row}`,
               'closed'
             );
             toggle.setAttribute('data-notificationId', subPref.notificationId);
@@ -743,20 +772,23 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             input.addEventListener('change', () => {
               this.sendWSMessage({
                 route: 'user_preferences/patch_preferences',
-                payload: {
-                  notificationId: pref.notificationId,
-                  subNotificationId: subPref.subNotificationId,
-                  data: [
-                    {
-                      channel: s.channel,
-                      state: input.checked
-                    }
-                  ]
-                }
+                payload: [
+                  {
+                    notificationId: pref.notificationId,
+                    subNotificationId: subPref.subNotificationId,
+                    channelPreferences: [
+                      {
+                        channel: s.channel,
+                        state: input.checked
+                      }
+                    ]
+                  }
+                ]
               });
             });
             grid.appendChild(toggle);
           });
+          row++;
         });
       }
     });

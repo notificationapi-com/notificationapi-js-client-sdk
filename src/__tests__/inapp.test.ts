@@ -191,7 +191,7 @@ describe('popup interactions', () => {
     });
     $('.notificationapi-button').trigger('click');
     expect($('.notificationapi-popup').hasClass('hovering'));
-    expect(!$('.notificationapi-popup').hasClass('closed'));
+    expect($('.notificationapi-popup').hasClass('closed')).toBeFalsy();
   });
 
   test('when button is clicked, unread badge is removed and requests clearing unread', async () => {
@@ -223,7 +223,7 @@ describe('popup interactions', () => {
     });
     $('.notificationapi-button').trigger('click');
     $('.notificationapi-header').trigger('click');
-    expect(!$('.notificationapi-popup').hasClass('closed'));
+    expect($('.notificationapi-popup').hasClass('closed')).toBeFalsy();
   });
 
   test('when button is clicked then page clicked, popup has .closed', () => {
@@ -240,8 +240,32 @@ describe('popup interactions', () => {
       root: 'root'
     });
     $('.notificationapi-button').trigger('click');
-    $('.notificationapi-header button').trigger('click');
+    $('.notificationapi-header .notificationapi-close-button').trigger('click');
     expect($('.notificationapi-popup').hasClass('closed'));
+  });
+
+  test('when button is clicked, then preferences button is clicked, calls showUserPreferences', () => {
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    spy = jest
+      .spyOn(notificationapi, 'showUserPreferences')
+      .mockImplementation();
+    $('.notificationapi-button').trigger('click');
+    $('.notificationapi-header .notificationapi-preferences-button').trigger(
+      'click'
+    );
+    expect(spy.mock.calls).toHaveLength(1);
+  });
+
+  test('when button is clicked, then preferences button is clicked, then anything in preferences are clicked, popup is not .closed', () => {
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    $('.notificationapi-button').trigger('click');
+    $('.notificationapi-preferences-button').trigger('click');
+    $('.notificationapi-preferences-container').trigger('click');
+    expect($('.notificationapi-popup').hasClass('closed')).toBeFalsy();
   });
 
   // TODO: add tests to validate correct positioning

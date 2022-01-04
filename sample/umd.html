@@ -6,11 +6,14 @@
   <body>
     <div id="root"></div>
     <script>
-      new NotificationAPI({
-        root: 'root',
+      const notificationapi = NotificationAPI.init({
         clientId: '24nojpnrsdc53fkslha0roov05',
-        userId: '123'
+        userId: 'sahand'
       });
+      notificationapi.showInApp({
+        root: 'root'
+      });
+      notificationapi.showUserPreferences();
     </script>
   </body>
 </html>
