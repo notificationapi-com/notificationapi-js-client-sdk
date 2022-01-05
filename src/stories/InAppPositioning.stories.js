@@ -32,7 +32,7 @@ const Template2 = ({ ...args }) => {
           <BR><BR>
 
           <script>
-            notificationapi = NotificationAPI.init({
+            notificationapi = new NotificationAPI({
               mock: true
             });
             notificationapi.showInApp({

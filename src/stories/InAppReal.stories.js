@@ -14,7 +14,7 @@ const Component = ({ ...args }) => {
   return `<div id="our-root"></div>
           <BR><BR>
           <script>
-            notificationapi = NotificationAPI.init(${JSON.stringify(args)});
+            notificationapi = new NotificationAPI(${JSON.stringify(args)});
             notificationapi.showInApp({root: "our-root", popupPosition: "rightBottom"});
           </script>
 

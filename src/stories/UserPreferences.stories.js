@@ -8,7 +8,7 @@ const Component = ({ ...args }) => {
           <BR><BR>
           <script>
             if(window.notificationapi) notificationapi.destroy();
-            window.notificationapi = NotificationAPI.init(${JSON.stringify(
+            window.notificationapi = new NotificationAPI(${JSON.stringify(
               args.initOptions
             )});
             window.notificationapi.showUserPreferences();

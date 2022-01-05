@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 test('init returns a NotificationAPIClient object and adds to window', async () => {
-  notificationapi = NotificationAPI.init({
+  notificationapi = new NotificationAPI({
     clientId,
     userId
   });
@@ -30,7 +30,7 @@ test('init returns a NotificationAPIClient object and adds to window', async () 
 
 test('given custom websocket, requests connection URL with UserId and envId', async () => {
   const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-  notificationapi = NotificationAPI.init({
+  notificationapi = new NotificationAPI({
     websocket: 'ws://localhost:1234',
     clientId,
     userId
@@ -49,7 +49,7 @@ test('given custom websocket, requests connection URL with UserId and envId', as
 
 test('given custom websocket & userIdHash, requests connection URL with encoded UserId, envId and userIdHash', async () => {
   const server = new WS('ws://localhost:1234', { jsonProtocol: true });
-  notificationapi = NotificationAPI.init({
+  notificationapi = new NotificationAPI({
     websocket: 'ws://localhost:1234',
     clientId,
     userId,
@@ -72,7 +72,7 @@ test('given custom websocket & userIdHash, requests connection URL with encoded 
 // TODO: test that the library will use the production websocket if not given a custom websocket
 
 test('given websocket:false, websocket is not opened', async () => {
-  notificationapi = NotificationAPI.init({
+  notificationapi = new NotificationAPI({
     clientId,
     userId,
     websocket: false

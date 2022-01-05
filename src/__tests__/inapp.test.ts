@@ -82,7 +82,7 @@ beforeEach(() => {
     value: 1600
   });
   server = new WS('ws://localhost:1234', { jsonProtocol: true });
-  notificationapi = NotificationAPI.init({
+  notificationapi = new NotificationAPI({
     clientId,
     userId,
     websocket: 'ws://localhost:1234'
@@ -145,7 +145,7 @@ describe('defaults', () => {
   });
 
   test('given no WS, throws no error', async () => {
-    notificationapi = NotificationAPI.init({
+    notificationapi = new NotificationAPI({
       clientId,
       userId,
       websocket: false
@@ -421,7 +421,7 @@ describe('setUnread', () => {
 
 describe('processNotifications', () => {
   test('before showInApp, does not throw', () => {
-    notificationapi = NotificationAPI.init({
+    notificationapi = new NotificationAPI({
       clientId,
       userId,
       websocket: false
