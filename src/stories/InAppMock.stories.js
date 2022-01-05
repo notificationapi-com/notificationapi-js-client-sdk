@@ -13,7 +13,7 @@ const Template = ({ ...args }) => {
   return `<div id="our-root"></div>
           <BR><BR>
           <script>
-            notificationapi = NotificationAPI.init(${JSON.stringify(
+            notificationapi = new NotificationAPI(${JSON.stringify(
               args.initOptions
             )});
             notificationapi.showInApp(${JSON.stringify(args.inappOptions)})

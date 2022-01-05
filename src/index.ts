@@ -153,7 +153,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   }
 
-  showInApp = (options: InAppOptions) => {
+  showInApp = (options: InAppOptions): void => {
     this.state.inappOptions = options;
 
     // validation
@@ -355,7 +355,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   };
 
-  showUserPreferences = () => {
+  showUserPreferences = (): void => {
     if (!this.elements.preferencesContainer) {
       // create container
       const root = document.getElementsByTagName('body')[0];
@@ -807,10 +807,4 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   }
 }
 
-const NotificationAPI = {
-  init: (options: InitOptions): NotificationAPIClient => {
-    return new NotificationAPIClient(options);
-  }
-};
-
-export default NotificationAPI;
+export default NotificationAPIClient;
