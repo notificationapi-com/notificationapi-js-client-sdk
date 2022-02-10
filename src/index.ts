@@ -30,8 +30,7 @@ const timeAgo = new TimeAgo('en-US');
 
 require('./assets/styles.css');
 
-const defaultWebSocket =
-  'wss://fp7umb7q2c.execute-api.us-east-1.amazonaws.com/dev';
+const defaultWebSocket = 'wss://ws.notificationapi.com';
 
 const notificationReqCount = 50;
 
