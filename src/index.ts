@@ -5,6 +5,7 @@ import {
   NotificationAPIClientInterface,
   PopupPosition,
   Preference,
+  UserPreferencesOptions,
   WS_ANY_VALID_REQUEST,
   WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
@@ -354,12 +355,23 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   };
 
-  showUserPreferences = (): void => {
+  showUserPreferences = (options?: UserPreferencesOptions): void => {
     if (!this.elements.preferencesContainer) {
       // create container
-      const root = document.getElementsByTagName('body')[0];
+      let root: HTMLElement = document.getElementsByTagName('body')[0];
+      if (options?.parent) {
+        const parentElement = document.getElementById(options.parent);
+        if (!parentElement) {
+          console.error(
+            `There are no HTML elements with id="${options.parent}" on the page.`
+          );
+        } else {
+          root = parentElement;
+        }
+      }
       const container = document.createElement('div');
       container.classList.add('notificationapi-preferences-container');
+      if (options?.parent) container.classList.add('inline');
       this.elements.preferencesContainer = container;
       root.appendChild(container);
 
@@ -493,9 +505,8 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       return found ? false : true;
     });
 
-    this.state.notifications = this.state.notifications.concat(
-      newNotifications
-    );
+    this.state.notifications =
+      this.state.notifications.concat(newNotifications);
 
     this.state.notifications.sort((a, b) => {
       return Date.parse(b.date) - Date.parse(a.date);
@@ -554,7 +565,9 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
       const date = document.createElement('p');
       date.classList.add('notificationapi-notification-date');
-      date.innerHTML = timeAgo.format(new Date(n.date), 'round-minute');
+      date.innerHTML = timeAgo
+        .format(new Date(n.date), 'round-minute')
+        .toString();
       if (date.innerHTML === 'in a moment') {
         date.innerHTML = 'just now';
       }

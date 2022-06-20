@@ -6,7 +6,7 @@ export interface User {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NotificationAPIClientInterface {
   showInApp: (options: InAppOptions) => void;
-  showUserPreferences: () => void;
+  showUserPreferences: (options?: UserPreferencesOptions) => void;
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
@@ -50,6 +50,10 @@ export interface InAppOptions {
   root: string;
   inline?: boolean;
   popupPosition?: PopupPosition;
+}
+
+export interface UserPreferencesOptions {
+  parent: string;
 }
 
 export enum PopupPosition {

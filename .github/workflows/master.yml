@@ -8,19 +8,19 @@ jobs:
     name: Test & Build & Punlish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 12
+          node-version: 18.4
 
       - name: Cache node_modules
         id: cache-modules
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: 12.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+          key: 18.4.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
 
       - name: NPM Install
         if: steps.cache-modules.outputs.cache-hit != 'true'

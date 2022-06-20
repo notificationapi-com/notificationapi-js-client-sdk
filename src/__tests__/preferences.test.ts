@@ -135,6 +135,23 @@ describe('default elements and interactions', () => {
   });
 });
 
+describe('inline mode', () => {
+  test('gives an error when parent does not exist', () => {
+    notificationapi.showUserPreferences({ parent: 'does-not-exist-id' });
+    expect(spy.mock.calls).toEqual([
+      ['There are no HTML elements with id="does-not-exist-id" on the page.']
+    ]);
+  });
+  test('adds the notificationapi preferences container to the parent div with an inline style', () => {
+    notificationapi.showUserPreferences({ parent: 'root' });
+    expect(
+      $(
+        'body > div#root > div[class="notificationapi-preferences-container inline"]'
+      )
+    ).toHaveLength(1);
+  });
+});
+
 describe('websocket send & receives', () => {
   test('given no WS, throws no error', async () => {
     notificationapi = new NotificationAPI({
