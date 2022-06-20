@@ -269,6 +269,11 @@
   overflow-x: hidden;
 }
 
+.notificationapi-preferences-container.inline {
+  position: relative;
+  display: block;
+}
+
 .notificationapi-preferences-container.closed {
   display: none;
 }
@@ -284,6 +289,11 @@
   backdrop-filter: blur(2px);
 }
 
+.notificationapi-preferences-container.inline
+  .notificationapi-preferences-backdrop {
+  display: none;
+}
+
 .notificationapi-preferences-popup {
   background: #fff;
   padding: 16px;
@@ -291,10 +301,22 @@
   border-radius: 8px;
 }
 
+.notificationapi-preferences-container.inline
+  .notificationapi-preferences-popup {
+  background: none;
+  border-radius: 0;
+}
+
 .notificationapi-preferences-popup h1 {
   font-size: 24px;
   display: inline-block;
   margin: auto 16px 24px;
+}
+
+.notificationapi-preferences-container.inline
+  .notificationapi-preferences-popup
+  h1 {
+  display: none;
 }
 
 .notificationapi-preferences-close {
@@ -306,6 +328,11 @@
   -webkit-transform: translateY(-9px) rotate(135deg);
   margin: 0 0px 0 8px;
   display: inline-block;
+}
+
+.notificationapi-preferences-container.inline
+  .notificationapi-preferences-close {
+  display: none;
 }
 
 .notificationapi-preferences-empty {
@@ -480,7 +507,6 @@
 .notificationapi-preferences-popup .switch i {
   position: relative;
   display: inline-block;
-  margin-right: 0.5rem;
   width: 44px;
   height: 22px;
   background-color: #e6e6e6;
