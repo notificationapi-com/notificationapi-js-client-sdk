@@ -272,6 +272,7 @@
 .notificationapi-preferences-container.inline {
   position: relative;
   display: block;
+  z-index: auto;
 }
 
 .notificationapi-preferences-container.closed {
