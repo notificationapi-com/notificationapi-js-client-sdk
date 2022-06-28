@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ES6",
+    "target": "ES5",
     "strict": true,
     "lib": ["ES6", "DOM"],
     "declaration": true,
@@ -8,8 +9,9 @@
     "removeComments": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "Node"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*", "lib"]
 }
