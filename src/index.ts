@@ -14,20 +14,7 @@ import {
   WS_UnreadCountResponse,
   WS_UserPreferencesResponse
 } from './interfaces';
-import TimeAgo from 'javascript-time-ago';
-import en from 'javascript-time-ago/locale/en';
-
-try {
-  TimeAgo.addDefaultLocale(en);
-  // eslint-disable-next-line no-empty
-} catch (e) {
-  /* 
-    TimeAgo.addDefaultLocale throws error on being
-    invoked more than once. It may be invoked more
-    than when requiring this file multiple times.
-  */
-}
-const timeAgo = new TimeAgo('en-US');
+import timeAgo from './utils/timeago';
 
 require('./assets/styles.css');
 
@@ -565,12 +552,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
       const date = document.createElement('p');
       date.classList.add('notificationapi-notification-date');
-      date.innerHTML = timeAgo
-        .format(new Date(n.date), 'round-minute')
-        .toString();
-      if (date.innerHTML === 'in a moment') {
-        date.innerHTML = 'just now';
-      }
+      date.innerHTML = timeAgo(Date.now() - new Date(n.date).getTime());
 
       notificationMetaContainer.appendChild(date);
 
