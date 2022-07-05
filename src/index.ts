@@ -12,6 +12,7 @@ import {
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountResponse,
+  WS_UserPreferencesPatchRequest,
   WS_UserPreferencesResponse
 } from './interfaces';
 import timeAgo from './utils/timeago';
@@ -342,7 +343,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   };
 
-  showUserPreferences = (options?: UserPreferencesOptions): void => {
+  showUserPreferences(options?: UserPreferencesOptions): void {
     if (!this.elements.preferencesContainer) {
       // create container
       let root: HTMLElement = document.getElementsByTagName('body')[0];
@@ -421,7 +422,43 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.sendWSMessage({
       route: 'user_preferences/get_preferences'
     });
-  };
+  }
+
+  async getUserPreferences(): Promise<Preference[]> {
+    this.sendWSMessage({
+      route: 'user_preferences/get_preferences'
+    });
+    const message = (await this.websocketMessageReceived(
+      'user_preferences/preferences'
+    )) as WS_UserPreferencesResponse;
+    return message.payload.userPreferences;
+  }
+
+  patchUserPreference(
+    notificationId: string,
+    channel: string,
+    state: boolean,
+    subNotificationId?: string
+  ): void {
+    const message: WS_UserPreferencesPatchRequest = {
+      route: 'user_preferences/patch_preferences',
+      payload: [
+        {
+          notificationId,
+          channelPreferences: [
+            {
+              channel,
+              state: state
+            }
+          ]
+        }
+      ]
+    };
+    if (subNotificationId) {
+      message.payload[0].subNotificationId = subNotificationId;
+    }
+    this.sendWSMessage(message);
+  }
 
   openInAppPopup(): void {
     if (
@@ -669,20 +706,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             .forEach((e) => {
               (e as HTMLInputElement).disabled = !input.checked;
             });
-          this.sendWSMessage({
-            route: 'user_preferences/patch_preferences',
-            payload: [
-              {
-                notificationId: pref.notificationId,
-                channelPreferences: [
-                  {
-                    channel: s.channel,
-                    state: input.checked
-                  }
-                ]
-              }
-            ]
-          });
+          this.patchUserPreference(
+            pref.notificationId,
+            s.channel,
+            input.checked
+          );
         });
         grid.appendChild(toggle);
       });
@@ -764,21 +792,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
             label.appendChild(i);
 
             input.addEventListener('change', () => {
-              this.sendWSMessage({
-                route: 'user_preferences/patch_preferences',
-                payload: [
-                  {
-                    notificationId: pref.notificationId,
-                    subNotificationId: subPref.subNotificationId,
-                    channelPreferences: [
-                      {
-                        channel: s.channel,
-                        state: input.checked
-                      }
-                    ]
-                  }
-                ]
-              });
+              this.patchUserPreference(
+                pref.notificationId,
+                s.channel,
+                input.checked,
+                subPref.subNotificationId
+              );
             });
             grid.appendChild(toggle);
           });
@@ -798,6 +817,34 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         ws.send(JSON.stringify(request));
       });
     }
+  }
+
+  async websocketMessageReceived(route: string): Promise<unknown> {
+    const ws = await this.websocketOpened();
+    return new Promise((resolve) => {
+      ws.addEventListener('message', (message) => {
+        const body = JSON.parse(message.data);
+        if (body && body.route && body.route === route) {
+          resolve(body);
+        }
+      });
+    });
+  }
+
+  websocketOpened(): Promise<WebSocket> {
+    return new Promise((resolve, reject) => {
+      if (!this.websocket) reject('Websocket is not present.');
+      else {
+        const ws = this.websocket;
+        if (ws.readyState == ws.OPEN) {
+          resolve(ws);
+        } else {
+          ws.addEventListener('open', () => {
+            resolve(ws);
+          });
+        }
+      }
+    });
   }
 }
 

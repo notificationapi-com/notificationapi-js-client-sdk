@@ -7,6 +7,13 @@ export interface User {
 export interface NotificationAPIClientInterface {
   showInApp: (options: InAppOptions) => void;
   showUserPreferences: (options?: UserPreferencesOptions) => void;
+  getUserPreferences: () => Promise<Preference[]>;
+  patchUserPreference: (
+    notificationId: string,
+    channel: string,
+    state: boolean,
+    subNotificationId?: string
+  ) => void;
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
