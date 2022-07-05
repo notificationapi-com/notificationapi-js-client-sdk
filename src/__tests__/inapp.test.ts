@@ -44,24 +44,49 @@ const testNotificationUnseen: InappNotification = {
   title: 'You have a new comment',
   date: new Date().toISOString()
 };
-const closePastDate = Date.now() - 10 * 1000;
-const testNotificationWithClosePastDate: InappNotification = {
-  id: '5',
-  seen: true,
-  title: 'You have a new comment',
-  redirectURL: 'https://www.notificationapi.com',
-  imageURL: 'https://via.placeholder.com/350x150',
-  date: new Date(closePastDate).toISOString()
-};
-const closeFutureDate = Date.now() + 10 * 1000;
-const testNotificationWithCloseFutureDate: InappNotification = {
-  id: '5',
-  seen: true,
-  title: 'You have a new comment',
-  redirectURL: 'https://www.notificationapi.com',
-  imageURL: 'https://via.placeholder.com/350x150',
-  date: new Date(closeFutureDate).toISOString()
-};
+const timeCases_seconds = [
+  -100,
+  -10,
+  10,
+  1 * 60,
+  2 * 60,
+  1 * 60 * 60,
+  2 * 60 * 60,
+  1 * 60 * 60 * 24,
+  2 * 60 * 60 * 24,
+  1 * 60 * 60 * 24 * 30,
+  2 * 60 * 60 * 24 * 30,
+  1 * 60 * 60 * 24 * 30 * 365.25,
+  2 * 60 * 60 * 24 * 30 * 365.25
+].map((item, index) => {
+  return index > 2 ? item * 1000 : item;
+});
+const notificationWithDifferentTimes: InappNotification[] =
+  timeCases_seconds.map((timeCase_seconds, index) => {
+    return {
+      id: `${5 + index}`,
+      seen: true,
+      title: 'You have a new comment',
+      redirectURL: 'https://www.notificationapi.com',
+      imageURL: 'https://via.placeholder.com/350x150',
+      date: new Date(Date.now() - timeCase_seconds).toISOString()
+    };
+  });
+const timeCasesResults = [
+  'just now',
+  'just now',
+  'just now',
+  '1 minute ago',
+  '2 minutes ago',
+  '1 hour ago',
+  '2 hours ago',
+  '1 day ago',
+  '2 days ago',
+  '1 month ago',
+  '2 months ago',
+  '1 year ago',
+  '2 years ago'
+];
 const fiftyNotifs: InappNotification[] = [];
 for (let i = 0; i < 50; i++) {
   fiftyNotifs[i] = { ...testNotification, id: i.toString() };
@@ -482,21 +507,20 @@ describe('processNotifications', () => {
     );
     expect($('.notificationapi-notification-date').text()).toEqual('just now');
   });
-
-  test('date with just a moment ago', () => {
-    notificationapi.showInApp({
-      root: 'root'
-    });
-    notificationapi.processNotifications([testNotificationWithClosePastDate]);
-    expect($('.notificationapi-notification-date').text()).toEqual('just now');
-  });
-
-  test('date with just a moment in future', () => {
-    notificationapi.showInApp({
-      root: 'root'
-    });
-    notificationapi.processNotifications([testNotificationWithCloseFutureDate]);
-    expect($('.notificationapi-notification-date').text()).toEqual('just now');
+  describe('Relative times', () => {
+    notificationWithDifferentTimes.map(
+      (notificationWithDifferentTime, index) => {
+        test(`notification date with ${timeCases_seconds[index]} milliseconds relative time difference shows as  ${timeCasesResults[index]}`, () => {
+          notificationapi.showInApp({
+            root: 'root'
+          });
+          notificationapi.processNotifications([notificationWithDifferentTime]);
+          expect($('.notificationapi-notification-date').text()).toEqual(
+            timeCasesResults[index]
+          );
+        });
+      }
+    );
   });
 
   test('without url, does not redirect', () => {
