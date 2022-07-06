@@ -15,7 +15,7 @@ import {
   WS_UserPreferencesPatchRequest,
   WS_UserPreferencesResponse
 } from './interfaces';
-import timeAgo from './utils/timeago';
+import timeAgo from './utils/timeAgo';
 
 require('./assets/styles.css');
 
