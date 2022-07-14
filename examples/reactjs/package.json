@@ -18,7 +18,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "../../node_modules/.bin/gh-pages -d build --dest reactjs --user PullRequest<noreply@notificationapi.com>",
+    "deploy": "../../node_modules/.bin/gh-pages -d build --dest reactjs --user \"Automated Action <noreply@notificationapi.com>\"",
     "predeploy": "npm run build"
   },
   "eslintConfig": {
