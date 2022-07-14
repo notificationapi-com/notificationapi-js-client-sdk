@@ -33,23 +33,15 @@ jobs:
       - name: Pretty
         run: npm run-script prettier-check
 
-      - name: Test
+      - name: Local Test
         run: npm test
 
       - name: Build
         run: npm run build
 
-      - name: Publish
-        id: publish
-        uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.JS_CLIENT_SDK_NPM_AUTH_TOKEN }}
-          tag: 'dev'
-          check-version: false
-
-      - name: Update example dependencies
+      - name: Install example dependencies
         working-directory: examples/reactjs
-        run: npm install notificationapi-js-client-sdk@dev
+        run: npm install
 
       - name: Deploy example
         working-directory: examples/reactjs
