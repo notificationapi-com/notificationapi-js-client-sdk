@@ -23,7 +23,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "../../node_modules/.bin/gh-pages -d build --dest reactts",
+    "deploy": "../../node_modules/.bin/gh-pages -d build --dest reactts --user PullRequest<noreply@notificationapi.com>",
     "predeploy": "npm run build"
   },
   "eslintConfig": {
