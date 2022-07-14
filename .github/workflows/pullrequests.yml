@@ -73,15 +73,10 @@ jobs:
         working-directory: examples/${{matrix.example}}
         run: npm install
 
-      - name: Build example
-        if: ${{matrix.example != 'vanillajs'}}
-        working-directory: examples/${{matrix.example}}
-        run: npm run build
-
       - name: Deploy example
         working-directory: examples/${{matrix.example}}
         run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          ../../node_modules/.bin/gh-pages -d build --dest ${{matrix.example}} --user "Automated Action <noreply@notificationapi.com>"
+          npm run deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

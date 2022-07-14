@@ -8,6 +8,7 @@
 /dist
 /examples/reactjs/build
 /examples/reactts/build
+/examples/vanillajs/build
 
 # dev tools
 /coverage
