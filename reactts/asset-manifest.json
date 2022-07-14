@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/notificationapi-js-client-sdk/reactts/static/css/main.e318a59f.css",
+    "main.js": "/notificationapi-js-client-sdk/reactts/static/js/main.f27735df.js",
+    "static/media/icomoon.svg?xg9cqd": "/notificationapi-js-client-sdk/reactts/static/media/icomoon.7414a30b100a7e1e07f0.svg",
+    "static/media/icomoon.eot?xg9cqd": "/notificationapi-js-client-sdk/reactts/static/media/icomoon.17c7f2fbb58c5a6d3c83.eot",
+    "static/media/icomoon.woff?xg9cqd": "/notificationapi-js-client-sdk/reactts/static/media/icomoon.531d8118018b944eba00.woff",
+    "static/media/icomoon.ttf?xg9cqd": "/notificationapi-js-client-sdk/reactts/static/media/icomoon.ed9de9f324eb78f96c2a.ttf",
+    "index.html": "/notificationapi-js-client-sdk/reactts/index.html",
+    "main.e318a59f.css.map": "/notificationapi-js-client-sdk/reactts/static/css/main.e318a59f.css.map",
+    "main.f27735df.js.map": "/notificationapi-js-client-sdk/reactts/static/js/main.f27735df.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e318a59f.css",
+    "static/js/main.f27735df.js"
+  ]
+}
