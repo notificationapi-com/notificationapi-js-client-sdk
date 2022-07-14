@@ -1,3 +1,4 @@
+import React from 'react';
 import NotificationAPIComponent from './NotificationAPIComponent';
 
 function App() {
