@@ -3,9 +3,11 @@
 /examples/reactjs/node_modules
 /examples/reactts/node_modules
 
-# dist
+# builds
 /lib
 /dist
+/examples/reactjs/build
+/examples/reactts/build
 
 # dev tools
 /coverage
