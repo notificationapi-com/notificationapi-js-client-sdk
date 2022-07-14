@@ -69,12 +69,12 @@ jobs:
         run: npm run build
 
       - name: Install example dependencies
-        if: ${{matrix.example != vanillajs}}
+        if: ${{matrix.example != "vanillajs"}}
         working-directory: examples/${{matrix.example}}
         run: npm install
 
       - name: Build example
-        if: ${{matrix.example != vanillajs}}
+        if: ${{matrix.example != "vanillajs"}}
         working-directory: examples/${{matrix.example}}
         run: npm run build
 
