@@ -1,5 +1,7 @@
 # dependencies
 /node_modules
+/examples/reactjs/node_modules
+/examples/reactts/node_modules
 
 # dist
 /lib
