@@ -82,6 +82,6 @@ jobs:
         working-directory: examples/${{matrix.example}}
         run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          ../../node_modules/.bin/gh-pages -d build --dest ${{matrix.example}} --user \"Automated Action <noreply@notificationapi.com>\"
+          ../../node_modules/.bin/gh-pages -d build --dest ${{matrix.example}} --user "Automated Action <noreply@notificationapi.com>"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
