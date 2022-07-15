@@ -39,8 +39,8 @@ jobs:
       - name: Build
         run: npm run build
 
-  Examples:
-    name: Examples
+  DeployExamples:
+    name: DeployExamples
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -83,6 +83,7 @@ jobs:
 
   Cypress:
     name: Cypress
+    needs: DeployExamples
     runs-on: ubuntu-latest
     container: cypress/browsers:node12.18.3-chrome87-ff82
     steps:
