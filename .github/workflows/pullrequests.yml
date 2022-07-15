@@ -33,8 +33,50 @@ jobs:
       - name: Pretty
         run: npm run-script prettier-check
 
-      - name: Test
+      - name: Local Test
         run: npm test
 
       - name: Build
         run: npm run build
+
+  Examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        example: [reactjs, reactts, vanillajs]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.4
+
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: 18.4.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+
+      - name: NPM Install
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Install example dependencies
+        if: ${{matrix.example != 'vanillajs'}}
+        working-directory: examples/${{matrix.example}}
+        run: npm install
+
+      - name: Deploy example
+        working-directory: examples/${{matrix.example}}
+        run: |
+          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          npm run deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

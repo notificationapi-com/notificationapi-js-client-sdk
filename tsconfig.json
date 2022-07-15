@@ -12,6 +12,5 @@
     "esModuleInterop": true,
     "moduleResolution": "Node"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*", "lib"]
+  "include": ["src"]
 }
