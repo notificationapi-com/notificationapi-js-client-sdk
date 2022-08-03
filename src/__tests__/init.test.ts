@@ -20,6 +20,46 @@ afterEach(() => {
   if (notificationapi) notificationapi.destroy();
 });
 
+test('init returns an error on bad clientId', async () => {
+  notificationapi = new NotificationAPI({
+    clientId: ['somearray'][2],
+    userId
+  });
+  notificationapi = new NotificationAPI({
+    clientId: '',
+    userId
+  });
+  notificationapi = new NotificationAPI({
+    clientId: 'undefined',
+    userId
+  });
+  expect(spy.mock.calls).toEqual([
+    ['Invalid clientId.'],
+    ['Invalid clientId.'],
+    ['Invalid clientId.']
+  ]);
+});
+
+test('init returns an error on bad userId', async () => {
+  notificationapi = new NotificationAPI({
+    clientId,
+    userId: ['somearray'][2]
+  });
+  notificationapi = new NotificationAPI({
+    clientId,
+    userId: ''
+  });
+  notificationapi = new NotificationAPI({
+    clientId,
+    userId: 'undefined'
+  });
+  expect(spy.mock.calls).toEqual([
+    ['Invalid userId.'],
+    ['Invalid userId.'],
+    ['Invalid userId.']
+  ]);
+});
+
 test('init returns a NotificationAPIClient object and adds to window', async () => {
   notificationapi = new NotificationAPI({
     clientId,
