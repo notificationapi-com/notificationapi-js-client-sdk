@@ -126,6 +126,17 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       oldestNotificationsDate: ''
     };
 
+    // validations
+    if (!options.clientId || options.clientId === 'undefined') {
+      console.error('Invalid clientId.');
+      return;
+    }
+
+    if (!options.userId || options.userId === 'undefined') {
+      console.error('Invalid userId.');
+      return;
+    }
+
     // connect to WS
     if (options.websocket !== false) {
       const websocketAddress = `${
