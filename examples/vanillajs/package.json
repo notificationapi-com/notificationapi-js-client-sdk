@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf build & mkdir build & cp index.html build/index.html & cp -r ../../dist/ build",
+    "build": "rm -rf ./build && mkdir build && cp index.html ./build/index.html && cp -r ../../dist/ build",
     "deploy": "../../node_modules/.bin/gh-pages -d build --dest vanillajs --user \"Automated Action <noreply@notificationapi.com>\"",
     "predeploy": "npm run build"
   },

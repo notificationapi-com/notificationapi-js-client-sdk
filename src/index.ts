@@ -17,8 +17,6 @@ import {
 } from './interfaces';
 import timeAgo from './utils/timeAgo';
 
-require('./assets/styles.css');
-
 const defaultWebSocket = 'wss://ws.notificationapi.com';
 
 const notificationReqCount = 50;

@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'production',
-  entry: './lib/index.js',
+  entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'notificationapi-js-client-sdk.js',
@@ -13,6 +13,11 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.ts?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
       {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader']
@@ -26,5 +31,8 @@ module.exports = {
         type: 'asset/resource'
       }
     ]
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
   }
 };
