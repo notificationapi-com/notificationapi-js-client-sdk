@@ -14,5 +14,9 @@ URIs.forEach((URI) => {
     it(`shows the inapp button in ${URI}`, () => {
       cy.get('.notificationapi-button').should('have.length', 1);
     });
+
+    it(`with styles ${URI}`, () => {
+      cy.get('.notificationapi-button').should('have.css', 'width', '32px');
+    });
   });
 });

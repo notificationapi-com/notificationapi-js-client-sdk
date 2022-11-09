@@ -7,7 +7,9 @@
 /lib
 /dist
 /examples/reactjs/build
+/examples/reactjs/package-lock.json
 /examples/reactts/build
+/examples/reactts/package-lock.json
 /examples/vanillajs/build
 
 # dev tools

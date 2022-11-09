@@ -1,4 +1,5 @@
 import NotificationAPIComponent from './NotificationAPIComponent';
+import 'notificationapi-js-client-sdk/dist/styles.css';
 
 function App() {
   return (
