@@ -134,7 +134,24 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
     this.websocketHandlers = {
       notifications: (message: WS_NotificationsResponse) => {
-        this.processNotifications(message.payload.notifications);
+        const notifications = message.payload.notifications;
+        this.state.lastResponseNotificationsCount = notifications.length;
+        this.addNotificationsToState(notifications);
+
+        if (
+          notifications.length < NOTIFICATION_REQUEST_COUNT &&
+          !this.elements.empty &&
+          this.elements.popupInner
+        ) {
+          if (this.state.inappOptions && !this.state.inappOptions.paginated) {
+            const noMore = document.createElement('div');
+            noMore.innerHTML = 'No more notifications to load';
+            noMore.classList.add('notificationapi-nomore');
+            this.elements.popupInner.append(noMore);
+          }
+        }
+
+        this.renderNotifications();
       },
       newNotifications: (message: WS_NewNotificationsResponse) => {
         const beforeCount = this.state.notifications.length;
@@ -400,26 +417,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       };
       this.sendWSMessage(moreNotificationsRequest);
     }
-  }
-
-  processNotifications(notifications: InappNotification[]): void {
-    this.state.lastResponseNotificationsCount = notifications.length;
-    this.addNotificationsToState(notifications);
-
-    if (
-      notifications.length < NOTIFICATION_REQUEST_COUNT &&
-      !this.elements.empty &&
-      this.elements.popupInner
-    ) {
-      if (this.state.inappOptions && !this.state.inappOptions.paginated) {
-        const noMore = document.createElement('div');
-        noMore.innerHTML = 'No more notifications to load';
-        noMore.classList.add('notificationapi-nomore');
-        this.elements.popupInner.append(noMore);
-      }
-    }
-
-    this.renderNotifications();
   }
 
   showUserPreferences(options?: UserPreferencesOptions): void {

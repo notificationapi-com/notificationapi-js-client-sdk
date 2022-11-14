@@ -17,7 +17,6 @@ export interface NotificationAPIClientInterface {
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
-  processNotifications: (notifications: InappNotification[]) => void;
   renderPreferences: (preferences: Preference[]) => void;
   destroy: () => void;
   websocket?: WebSocket;

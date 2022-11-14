@@ -445,14 +445,19 @@ describe('setUnread', () => {
   });
 });
 
-describe('processNotifications', () => {
+describe('Handling WS_NotificationsResponse', () => {
   test('before showInApp, does not throw', () => {
     notificationapi = new NotificationAPI({
       clientId,
       userId,
       websocket: false
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect(spy.mock.calls).toEqual([]);
   });
 
@@ -468,7 +473,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: []
+      }
+    });
     expect($('.notificationapi-empty')).toHaveLength(1);
     expect($('.notificationapi-notification')).toHaveLength(0);
   });
@@ -477,7 +487,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-empty')).toHaveLength(0);
   });
 
@@ -485,10 +500,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationUnseen
-    ]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationUnseen]
+      }
+    });
     expect($('.notificationapi-notification')).toHaveLength(2);
   });
 
@@ -496,7 +513,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-notification').attr('href')).toEqual(
       testNotification.redirectURL
     );
@@ -508,6 +530,7 @@ describe('processNotifications', () => {
     );
     expect($('.notificationapi-notification-date').text()).toEqual('just now');
   });
+
   describe('Relative times', () => {
     notificationWithDifferentTimes.map(
       (notificationWithDifferentTime, index) => {
@@ -515,7 +538,12 @@ describe('processNotifications', () => {
           notificationapi.showInApp({
             root: 'root'
           });
-          notificationapi.processNotifications([notificationWithDifferentTime]);
+          notificationapi.websocketHandlers.notifications({
+            route: 'inapp_web/notifications',
+            payload: {
+              notifications: [notificationWithDifferentTime]
+            }
+          });
           expect($('.notificationapi-notification-date').text()).toEqual(
             timeCasesResults[index]
           );
@@ -528,7 +556,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationWithoutURL]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationWithoutURL]
+      }
+    });
     expect($('.notificationapi-notification').attr('href')).toBeFalsy();
   });
 
@@ -536,7 +569,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationWithoutImage]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationWithoutImage]
+      }
+    });
     expect($('.notificationapi-notification-image')).toHaveLength(0);
   });
 
@@ -544,7 +582,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationUnseen]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationUnseen]
+      }
+    });
     expect($('.notificationapi-notification').hasClass('unseen')).toBeTruthy();
   });
 
@@ -552,8 +595,18 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-notification')).toHaveLength(1);
   });
 
@@ -561,17 +614,24 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationWithoutImage
-    ]);
-    notificationapi.processNotifications([
-      {
-        ...testNotification,
-        date: new Date('2030-01-01').toISOString(),
-        id: 'new'
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationWithoutImage]
       }
-    ]);
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [
+          {
+            ...testNotification,
+            date: new Date('2030-01-01').toISOString(),
+            id: 'new'
+          }
+        ]
+      }
+    });
     expect(
       $('.notificationapi-popup-inner')
         .children()[1] // element 0 is header
@@ -583,17 +643,24 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationWithoutImage
-    ]);
-    notificationapi.processNotifications([
-      {
-        ...testNotification,
-        date: new Date('2000-01-01').toISOString(),
-        id: 'old'
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationWithoutImage]
       }
-    ]);
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [
+          {
+            ...testNotification,
+            date: new Date('2000-01-01').toISOString(),
+            id: 'old'
+          }
+        ]
+      }
+    });
     expect(
       $('.notificationapi-popup-inner')
         .children()[3] // element 0 is header
