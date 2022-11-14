@@ -1,5 +1,5 @@
 .notificationapi-container {
-  display: block;
+  display: inline-block;
   position: relative;
 }
 
