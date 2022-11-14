@@ -1,6 +1,8 @@
 import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
+import '../assets/styles.css';
+import { generateFakeNotifications } from './FakeNotificationGenerator';
 export default {
-  title: 'Positioning',
+  title: 'InApp/Positioning',
   parameters: {
     viewport: {
       viewports: INITIAL_VIEWPORTS
@@ -39,32 +41,23 @@ const Template2 = ({ ...args }) => {
               root: "our-root",
               popupPosition: "${args.position ?? 'topLeft'}"
             })
-            notificationapi.processNotifications(${JSON.stringify(
-              notifications
+            notificationapi.websocketHandlers.notifications(${JSON.stringify(
+              args.wsNotificationsResponse
             )})
             notificationapi.openInAppPopup();
           </script>
 `;
 };
 
-const notification = {
-  title: '<b>Moe</b> posted an update.',
-  redirectURL: '#',
-  imageURL: 'https://picsum.photos/200',
-  date: new Date()
-};
-let notifications = [];
-
-for (let i = 0; i < 30; i++) {
-  notifications = notifications.concat([
-    {
-      ...notification,
-      id: Math.round(Math.random() * 1000)
-    }
-  ]);
-}
-
 export const PopupDirection = Template2.bind({});
+PopupDirection.args = {
+  wsNotificationsResponse: {
+    route: 'inapp_web/notifications',
+    payload: {
+      notifications: generateFakeNotifications(100)
+    }
+  }
+};
 
 export const MobilePopupDirection = Template2.bind({});
 MobilePopupDirection.parameters = {

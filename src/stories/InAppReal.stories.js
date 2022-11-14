@@ -1,7 +1,8 @@
 import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
+import '../assets/styles.css';
 
 export default {
-  title: 'Real',
+  title: 'InApp/Real',
   parameters: {
     viewport: {
       viewports: INITIAL_VIEWPORTS
@@ -24,7 +25,7 @@ const Component = ({ ...args }) => {
 export const WithNotifications = Component.bind({});
 WithNotifications.args = {
   clientId: '24nojpnrsdc53fkslha0roov05',
-  userId: '123'
+  userId: 'sahand'
 };
 
 export const WithoutNotifications = Component.bind({});
@@ -36,8 +37,9 @@ WithoutNotifications.args = {
 export const MobileWithNotifications = Component.bind({});
 MobileWithNotifications.args = {
   clientId: '24nojpnrsdc53fkslha0roov05',
-  userId: '123'
+  userId: 'sahand'
 };
+
 MobileWithNotifications.parameters = {
   viewport: {
     defaultViewport: 'iphone12promax'
@@ -49,6 +51,7 @@ MobileWithoutNotifications.args = {
   clientId: '24nojpnrsdc53fkslha0roov05',
   userId: 'thisiddoesnotexist'
 };
+
 MobileWithoutNotifications.parameters = {
   viewport: {
     defaultViewport: 'iphone12promax'
