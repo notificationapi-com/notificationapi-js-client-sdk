@@ -19,7 +19,8 @@ import timeAgo from './utils/timeAgo';
 
 const defaultWebSocket = 'wss://ws.notificationapi.com';
 
-const notificationReqCount = 50;
+const NOTIFICATION_REQUEST_COUNT = 50;
+const PAGE_SIZE = 5;
 
 function position(
   popup: HTMLDivElement,
@@ -106,6 +107,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   state: NotificationAPIClientInterface['state'];
   elements: NotificationAPIClientInterface['elements'];
   websocket?: WebSocket;
+  websocketHandlers: {
+    notifications: (message: WS_NotificationsResponse) => void;
+    newNotifications: (message: WS_NewNotificationsResponse) => void;
+    unreadCount: (message: WS_UnreadCountResponse) => void;
+  };
 
   destroy = (): void => {
     this.websocket?.close();
@@ -121,7 +127,25 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       lastNotificationsRequestAt: 0,
       notifications: [],
       unread: 0,
-      oldestNotificationsDate: ''
+      oldestNotificationsDate: '',
+      currentPage: 0,
+      pageSize: 999999
+    };
+
+    this.websocketHandlers = {
+      notifications: (message: WS_NotificationsResponse) => {
+        this.processNotifications(message.payload.notifications);
+      },
+      newNotifications: (message: WS_NewNotificationsResponse) => {
+        const beforeCount = this.state.notifications.length;
+        this.addNotificationsToState(message.payload.notifications);
+        this.renderNotifications();
+        const afterCount = this.state.notifications.length;
+        this.setInAppUnread(this.state.unread + afterCount - beforeCount);
+      },
+      unreadCount: (message: WS_UnreadCountResponse) => {
+        this.setInAppUnread(message.payload.count);
+      }
     };
 
     // validations
@@ -247,8 +271,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
     const headerCloseButton = document.createElement('button');
     headerCloseButton.classList.add('notificationapi-close-button');
-    headerCloseButton.innerHTML =
-      '<i class=".notificationapi-arrow .notificationapi-arrow-left"></i>';
     headerCloseButton.addEventListener('click', () => {
       this.closeInAppPopup();
     });
@@ -277,28 +299,51 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     popupInner.appendChild(empty);
     this.elements.empty = empty;
 
-    this.processNotifications(this.state.notifications);
+    // render footer
+    this.elements.footer = document.createElement('div');
 
-    popupInner.onscroll = () => {
-      if (
-        popupInner.scrollTop + popupInner.clientHeight >=
-          popupInner.scrollHeight - 100 && // 100px before the end
-        new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
-        this.websocket &&
-        (this.state.lastResponseNotificationsCount === undefined ||
-          this.state.lastResponseNotificationsCount >= notificationReqCount)
-      ) {
-        this.state.lastNotificationsRequestAt = new Date().getTime();
-        const moreNotificationsRequest: WS_NotificationsRequest = {
-          route: 'inapp_web/notifications',
-          payload: {
-            before: this.state.oldestNotificationsDate,
-            count: notificationReqCount
-          }
-        };
-        this.websocket.send(JSON.stringify(moreNotificationsRequest));
-      }
-    };
+    if (options.paginated) {
+      this.state.pageSize = options.pageSize ?? PAGE_SIZE;
+
+      // footer prev button
+      const prevButton = document.createElement('button');
+      prevButton.classList.add('notificationapi-prev-button');
+      prevButton.innerHTML = '<';
+      prevButton.disabled = true;
+      prevButton.addEventListener('click', () => {
+        this.changePage(this.state.currentPage - 1);
+      });
+      this.elements.prevButton = prevButton;
+
+      // footer next button
+      const nextButton = document.createElement('button');
+      nextButton.classList.add('notificationapi-next-button');
+      nextButton.innerHTML = '>';
+      nextButton.disabled = true;
+      nextButton.addEventListener('click', () => {
+        this.changePage(this.state.currentPage + 1);
+      });
+      this.elements.nextButton = nextButton;
+
+      this.elements.footer.appendChild(prevButton);
+      this.elements.footer.appendChild(nextButton);
+    }
+
+    this.elements.footer.classList.add('notificationapi-footer');
+    popupInner.appendChild(this.elements.footer);
+
+    this.addNotificationsToState(this.state.notifications);
+
+    if (!options.paginated) {
+      popupInner.onscroll = () => {
+        if (
+          popupInner.scrollTop + popupInner.clientHeight >=
+          popupInner.scrollHeight - 100 // 100px before the end
+        ) {
+          this.requestMoreNotifications();
+        }
+      };
+    }
 
     // use WS for inapp
     this.sendWSMessage({
@@ -307,7 +352,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.sendWSMessage({
       route: 'inapp_web/notifications',
       payload: {
-        count: notificationReqCount
+        count: NOTIFICATION_REQUEST_COUNT
       }
     });
 
@@ -322,35 +367,60 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
         if (body.route === 'inapp_web/unread_count') {
           const message = body as WS_UnreadCountResponse;
-          this.setInAppUnread(message.payload.count);
+          this.websocketHandlers.unreadCount(message);
         }
 
         if (body.route === 'inapp_web/notifications') {
           const message = body as WS_NotificationsResponse;
-          this.state.lastResponseNotificationsCount =
-            message.payload.notifications.length;
-          this.processNotifications(message.payload.notifications);
-          if (
-            message.payload.notifications.length < notificationReqCount &&
-            !this.elements.empty
-          ) {
-            const noMore = document.createElement('div');
-            noMore.innerHTML = 'No more notifications to load';
-            noMore.classList.add('notificationapi-nomore');
-            popupInner.append(noMore);
-          }
+          this.websocketHandlers.notifications(message);
         }
 
         if (body.route === 'inapp_web/new_notifications') {
           const message = body as WS_NewNotificationsResponse;
-          const beforeCount = this.state.notifications.length;
-          this.processNotifications(message.payload.notifications);
-          const afterCount = this.state.notifications.length;
-          this.setInAppUnread(this.state.unread + afterCount - beforeCount);
+          this.websocketHandlers.newNotifications(message);
         }
       });
     }
   };
+
+  requestMoreNotifications(): void {
+    if (
+      this.websocket &&
+      new Date().getTime() - this.state.lastNotificationsRequestAt >= 500 &&
+      (this.state.lastResponseNotificationsCount === undefined ||
+        this.state.lastResponseNotificationsCount >= NOTIFICATION_REQUEST_COUNT)
+    ) {
+      this.state.lastNotificationsRequestAt = new Date().getTime();
+      const moreNotificationsRequest: WS_NotificationsRequest = {
+        route: 'inapp_web/notifications',
+        payload: {
+          before: this.state.oldestNotificationsDate,
+          count: NOTIFICATION_REQUEST_COUNT
+        }
+      };
+      this.sendWSMessage(moreNotificationsRequest);
+    }
+  }
+
+  processNotifications(notifications: InappNotification[]): void {
+    this.state.lastResponseNotificationsCount = notifications.length;
+    this.addNotificationsToState(notifications);
+
+    if (
+      notifications.length < NOTIFICATION_REQUEST_COUNT &&
+      !this.elements.empty &&
+      this.elements.popupInner
+    ) {
+      if (this.state.inappOptions && !this.state.inappOptions.paginated) {
+        const noMore = document.createElement('div');
+        noMore.innerHTML = 'No more notifications to load';
+        noMore.classList.add('notificationapi-nomore');
+        this.elements.popupInner.append(noMore);
+      }
+    }
+
+    this.renderNotifications();
+  }
 
   showUserPreferences(options?: UserPreferencesOptions): void {
     if (!this.elements.preferencesContainer) {
@@ -525,11 +595,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   }
 
-  processNotifications(notifications: InappNotification[]): void {
-    const header = this.elements.header;
-    const popupInner = this.elements.popupInner;
-    if (!header || !popupInner) return;
-
+  addNotificationsToState(notifications: InappNotification[]): void {
     // filter existing
     const newNotifications = notifications.filter((n) => {
       const found = this.state.notifications.find((existingN) => {
@@ -545,67 +611,69 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       return Date.parse(b.date) - Date.parse(a.date);
     });
 
-    this.state.notifications.map((n, i) => {
+    // set the oldest fetched notification date
+    if (this.state.notifications.length > 0)
+      this.state.oldestNotificationsDate =
+        this.state.notifications[this.state.notifications.length - 1].date;
+
+    if (newNotifications.length > 0 && this.elements.empty) {
+      this.elements.empty.remove();
+      delete this.elements.empty;
+    }
+  }
+
+  getPageCount(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.state.notifications.length / this.state.pageSize)
+    );
+  }
+
+  changePage(pageNumber: number): void {
+    this.state.currentPage = pageNumber;
+
+    if (this.state.currentPage >= this.getPageCount() - 2) {
+      this.requestMoreNotifications();
+    }
+
+    this.renderNotifications();
+  }
+
+  /*
+    renders the given range of state.notifications
+  */
+  renderNotifications(): void {
+    const header = this.elements.header;
+    const popupInner = this.elements.popupInner;
+    if (!header || !popupInner || !this.state.inappOptions) return;
+
+    const page = this.state.currentPage;
+    const pageSize = this.state.pageSize;
+
+    if (this.state.inappOptions.paginated) {
+      popupInner
+        .querySelectorAll('.notificationapi-notification')
+        .forEach((el) => {
+          el.remove();
+        });
+    }
+
+    for (
+      let i = page * pageSize;
+      i < this.state.notifications.length && i < page * pageSize + pageSize;
+      i++
+    ) {
+      const n = this.state.notifications[i];
+
+      // ignore if already rendered
       if (popupInner.querySelector(`[data-notification-id="${n.id}"]`)) {
-        return;
-      }
-      if (
-        !this.state.oldestNotificationsDate ||
-        n.date < this.state.oldestNotificationsDate
-      ) {
-        this.state.oldestNotificationsDate = n.date;
-      }
-      const notification = document.createElement('a');
-      notification.setAttribute('data-notification-id', n.id);
-      notification.classList.add('notificationapi-notification');
-
-      if (!n.seen) {
-        notification.classList.add('unseen');
+        continue;
       }
 
-      if (n.redirectURL) {
-        notification.href = n.redirectURL;
-      }
+      const el = this.generateNotificationElement(n);
 
-      const notificationImageContainer = document.createElement('div');
-      notificationImageContainer.classList.add(
-        'notificationapi-notification-imageContainer'
-      );
-      if (n.imageURL) {
-        const notificationImage = document.createElement('img');
-        notificationImage.classList.add('notificationapi-notification-image');
-        notificationImage.src = n.imageURL;
-        notificationImageContainer.appendChild(notificationImage);
-      } else {
-        const notificationIcon = document.createElement('span');
-        notificationIcon.classList.add('icon-commenting-o');
-        notificationIcon.classList.add(
-          'notificationapi-notification-defaultIcon'
-        );
-        notificationImageContainer.appendChild(notificationIcon);
-      }
-      notification.appendChild(notificationImageContainer);
-
-      const notificationMetaContainer = document.createElement('div');
-      notificationMetaContainer.classList.add(
-        'notificationapi-notification-metaContainer'
-      );
-
-      const notificationTitle = document.createElement('p');
-      notificationTitle.classList.add('notificationapi-notification-title');
-      notificationTitle.innerHTML = n.title;
-      notificationMetaContainer.appendChild(notificationTitle);
-
-      const date = document.createElement('p');
-      date.classList.add('notificationapi-notification-date');
-      date.innerHTML = timeAgo(Date.now() - new Date(n.date).getTime());
-
-      notificationMetaContainer.appendChild(date);
-
-      notification.appendChild(notificationMetaContainer);
-
-      if (i === 0) {
-        header.insertAdjacentElement('afterend', notification);
+      if (i === page * pageSize) {
+        header.insertAdjacentElement('afterend', el);
       } else {
         const preNotificationEl = popupInner.querySelector(
           `[data-notification-id="${this.state.notifications[i - 1].id}"]`
@@ -613,7 +681,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         // ignoring the else statement coverage: unknown scenario.
         /* istanbul ignore next */
         if (preNotificationEl) {
-          preNotificationEl.insertAdjacentElement('afterend', notification);
+          preNotificationEl.insertAdjacentElement('afterend', el);
         } else {
           console.error(
             'error finding previous notification',
@@ -621,11 +689,68 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           );
         }
       }
-    });
-    if (newNotifications.length > 0 && this.elements.empty) {
-      this.elements.empty.remove();
-      delete this.elements.empty;
     }
+
+    if (this.elements.prevButton) {
+      this.elements.prevButton.disabled = page === 0;
+    }
+
+    if (this.elements.nextButton) {
+      this.elements.nextButton.disabled =
+        page >= this.state.notifications.length / pageSize - 1;
+    }
+  }
+
+  generateNotificationElement(n: InappNotification): HTMLAnchorElement {
+    const notification = document.createElement('a');
+    notification.setAttribute('data-notification-id', n.id);
+    notification.classList.add('notificationapi-notification');
+
+    if (!n.seen) {
+      notification.classList.add('unseen');
+    }
+
+    if (n.redirectURL) {
+      notification.href = n.redirectURL;
+    }
+
+    const notificationImageContainer = document.createElement('div');
+    notificationImageContainer.classList.add(
+      'notificationapi-notification-imageContainer'
+    );
+    if (n.imageURL) {
+      const notificationImage = document.createElement('img');
+      notificationImage.classList.add('notificationapi-notification-image');
+      notificationImage.src = n.imageURL;
+      notificationImageContainer.appendChild(notificationImage);
+    } else {
+      const notificationIcon = document.createElement('span');
+      notificationIcon.classList.add('icon-commenting-o');
+      notificationIcon.classList.add(
+        'notificationapi-notification-defaultIcon'
+      );
+      notificationImageContainer.appendChild(notificationIcon);
+    }
+    notification.appendChild(notificationImageContainer);
+
+    const notificationMetaContainer = document.createElement('div');
+    notificationMetaContainer.classList.add(
+      'notificationapi-notification-metaContainer'
+    );
+
+    const notificationTitle = document.createElement('p');
+    notificationTitle.classList.add('notificationapi-notification-title');
+    notificationTitle.innerHTML = n.title;
+    notificationMetaContainer.appendChild(notificationTitle);
+
+    const date = document.createElement('p');
+    date.classList.add('notificationapi-notification-date');
+    date.innerHTML = timeAgo(Date.now() - new Date(n.date).getTime());
+
+    notificationMetaContainer.appendChild(date);
+
+    notification.appendChild(notificationMetaContainer);
+    return notification;
   }
 
   renderPreferences(preferences: Preference[]): void {
