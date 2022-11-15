@@ -12,6 +12,7 @@ import {
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
 import NotificationAPI from '../index';
+import { generateFakeNotifications } from './FakeNotificationGenerator';
 
 const testNotification: InappNotification = {
   id: '1',
@@ -444,14 +445,19 @@ describe('setUnread', () => {
   });
 });
 
-describe('processNotifications', () => {
+describe('Handling WS_NotificationsResponse', () => {
   test('before showInApp, does not throw', () => {
     notificationapi = new NotificationAPI({
       clientId,
       userId,
       websocket: false
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect(spy.mock.calls).toEqual([]);
   });
 
@@ -467,7 +473,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: []
+      }
+    });
     expect($('.notificationapi-empty')).toHaveLength(1);
     expect($('.notificationapi-notification')).toHaveLength(0);
   });
@@ -476,7 +487,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-empty')).toHaveLength(0);
   });
 
@@ -484,10 +500,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationUnseen
-    ]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationUnseen]
+      }
+    });
     expect($('.notificationapi-notification')).toHaveLength(2);
   });
 
@@ -495,7 +513,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-notification').attr('href')).toEqual(
       testNotification.redirectURL
     );
@@ -507,6 +530,7 @@ describe('processNotifications', () => {
     );
     expect($('.notificationapi-notification-date').text()).toEqual('just now');
   });
+
   describe('Relative times', () => {
     notificationWithDifferentTimes.map(
       (notificationWithDifferentTime, index) => {
@@ -514,7 +538,12 @@ describe('processNotifications', () => {
           notificationapi.showInApp({
             root: 'root'
           });
-          notificationapi.processNotifications([notificationWithDifferentTime]);
+          notificationapi.websocketHandlers.notifications({
+            route: 'inapp_web/notifications',
+            payload: {
+              notifications: [notificationWithDifferentTime]
+            }
+          });
           expect($('.notificationapi-notification-date').text()).toEqual(
             timeCasesResults[index]
           );
@@ -527,7 +556,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationWithoutURL]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationWithoutURL]
+      }
+    });
     expect($('.notificationapi-notification').attr('href')).toBeFalsy();
   });
 
@@ -535,7 +569,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationWithoutImage]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationWithoutImage]
+      }
+    });
     expect($('.notificationapi-notification-image')).toHaveLength(0);
   });
 
@@ -543,7 +582,12 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotificationUnseen]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotificationUnseen]
+      }
+    });
     expect($('.notificationapi-notification').hasClass('unseen')).toBeTruthy();
   });
 
@@ -551,8 +595,18 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([testNotification]);
-    notificationapi.processNotifications([testNotification]);
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification]
+      }
+    });
     expect($('.notificationapi-notification')).toHaveLength(1);
   });
 
@@ -560,17 +614,24 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationWithoutImage
-    ]);
-    notificationapi.processNotifications([
-      {
-        ...testNotification,
-        date: new Date('2030-01-01').toISOString(),
-        id: 'new'
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationWithoutImage]
       }
-    ]);
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [
+          {
+            ...testNotification,
+            date: new Date('2030-01-01').toISOString(),
+            id: 'new'
+          }
+        ]
+      }
+    });
     expect(
       $('.notificationapi-popup-inner')
         .children()[1] // element 0 is header
@@ -582,17 +643,24 @@ describe('processNotifications', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    notificationapi.processNotifications([
-      testNotification,
-      testNotificationWithoutImage
-    ]);
-    notificationapi.processNotifications([
-      {
-        ...testNotification,
-        date: new Date('2000-01-01').toISOString(),
-        id: 'old'
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [testNotification, testNotificationWithoutImage]
       }
-    ]);
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [
+          {
+            ...testNotification,
+            date: new Date('2000-01-01').toISOString(),
+            id: 'old'
+          }
+        ]
+      }
+    });
     expect(
       $('.notificationapi-popup-inner')
         .children()[3] // element 0 is header
@@ -645,7 +713,8 @@ describe('websocket send & receives', () => {
     expect(spy.mock.calls).toHaveLength(0);
   });
 
-  test('given unread count, renders it', async () => {
+  test('given WS_UnreadCountResponse, calls websocketHandlers.unreadCount', async () => {
+    const spy = jest.spyOn(notificationapi.websocketHandlers, 'unreadCount');
     notificationapi.showInApp({
       root: 'root'
     });
@@ -656,9 +725,43 @@ describe('websocket send & receives', () => {
       }
     };
     server.send(res);
-    expect($('.notificationapi-unread').html()).toEqual('3');
+    expect(spy).toHaveBeenCalledWith(res);
   });
 
+  test('given WS_NotificationsResponse, calls websocketHandlers.notifications', async () => {
+    const spy = jest.spyOn(notificationapi.websocketHandlers, 'notifications');
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    const res: WS_NotificationsResponse = {
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: []
+      }
+    };
+    server.send(res);
+    expect(spy).toHaveBeenCalledWith(res);
+  });
+
+  test('given WS_NewNotificationsResponse, calls websocketHandlers.newNotifications', async () => {
+    const spy = jest.spyOn(
+      notificationapi.websocketHandlers,
+      'newNotifications'
+    );
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    const res: WS_NewNotificationsResponse = {
+      route: 'inapp_web/new_notifications',
+      payload: {
+        notifications: []
+      }
+    };
+    server.send(res);
+    expect(spy).toHaveBeenCalledWith(res);
+  });
+
+  // needs refactoring:
   test('given < 50 notifications, renders them and no more message', async () => {
     notificationapi.showInApp({
       root: 'root'
@@ -690,19 +793,15 @@ describe('websocket send & receives', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    await server.nextMessage;
-    await server.nextMessage;
-    const message1: WS_NotificationsResponse = {
+    notificationapi.websocketHandlers.notifications({
       route: 'inapp_web/notifications',
       payload: { notifications: [testNotification] }
-    };
-    server.send(message1);
-    const message2: WS_UnreadCountResponse = {
+    });
+    notificationapi.websocketHandlers.unreadCount({
       route: 'inapp_web/unread_count',
       payload: { count: 1 }
-    };
-    server.send(message2);
-    const message3: WS_NewNotificationsResponse = {
+    });
+    notificationapi.websocketHandlers.newNotifications({
       route: 'inapp_web/new_notifications',
       payload: {
         notifications: [
@@ -711,9 +810,193 @@ describe('websocket send & receives', () => {
           testNotificationWithoutImage
         ]
       }
-    };
-    server.send(message3);
+    });
+
     expect($('.notificationapi-notification')).toHaveLength(3);
     expect($('.notificationapi-unread').text()).toEqual('3');
+  });
+});
+
+describe('paginated', () => {
+  test('displays next/prev buttons', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    expect(
+      $('.notificationapi-footer > .notificationapi-prev-button:disabled')
+    ).toHaveLength(1);
+    expect(
+      $('.notificationapi-footer > .notificationapi-next-button:disabled')
+    ).toHaveLength(1);
+  });
+
+  test('only displays first 5 notifications', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+
+    expect($('.notificationapi-notification')).toHaveLength(5);
+    expect($('[data-notification-id="fake-0"]')).toHaveLength(1);
+    expect($('[data-notification-id="fake-4"]')).toHaveLength(1);
+  });
+
+  test('when next is clicked, shows the next 5', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+
+    notificationapi.elements.nextButton?.click();
+    expect($('.notificationapi-notification')).toHaveLength(5);
+    expect($('[data-notification-id="fake-5"]')).toHaveLength(1);
+    expect($('[data-notification-id="fake-9"]')).toHaveLength(1);
+  });
+
+  test('when next is clicked, then prev is clicked, shows the first 5', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+
+    notificationapi.elements.nextButton?.click();
+    notificationapi.elements.prevButton?.click();
+    expect($('.notificationapi-notification')).toHaveLength(5);
+    expect($('[data-notification-id="fake-0"]')).toHaveLength(1);
+    expect($('[data-notification-id="fake-4"]')).toHaveLength(1);
+  });
+
+  test('prev & next are disabled page 1/1', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(5)
+      }
+    });
+    expect($('.notificationapi-prev-button:disabled')).toHaveLength(1);
+    expect($('.notificationapi-next-button:disabled')).toHaveLength(1);
+  });
+
+  test('next is enabled, prev is disabled page 1/3 pages', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+    expect($('.notificationapi-prev-button:disabled')).toHaveLength(1);
+    expect($('.notificationapi-next-button:not(:disabled)')).toHaveLength(1);
+  });
+
+  test('next & prev are enabled page 2/3 pages', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+    notificationapi.elements.nextButton?.click();
+    expect($('.notificationapi-prev-button:not(:disabled)')).toHaveLength(1);
+    expect($('.notificationapi-next-button:not(:disabled)')).toHaveLength(1);
+  });
+
+  test('next is disabled & prev is enabled page 3/3 pages', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+    notificationapi.elements.nextButton?.click();
+    notificationapi.elements.nextButton?.click();
+    expect($('.notificationapi-prev-button:not(:disabled)')).toHaveLength(1);
+    expect($('.notificationapi-next-button:disabled')).toHaveLength(1);
+  });
+
+  test('uses pageSize for custom pagination page size', () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true,
+      pageSize: 15
+    });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: generateFakeNotifications(15)
+      }
+    });
+    expect($('.notificationapi-next-button:disabled')).toHaveLength(1);
+  });
+
+  test('loads more notifications when it reaches one page before last', async () => {
+    notificationapi.showInApp({
+      root: 'root',
+      paginated: true,
+      pageSize: 10
+    });
+    await server.nextMessage; // unread
+    await server.nextMessage; // notifications
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: [
+          ...generateFakeNotifications(49),
+          {
+            ...testNotification,
+            date: '1989-09-28T10:00:00.000Z'
+          }
+        ]
+      }
+    });
+    expect(notificationapi.state.notifications).toHaveLength(50);
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s, does not load more quickly intentionally
+
+    notificationapi.elements.nextButton?.click(); // page 2
+    notificationapi.elements.nextButton?.click(); // page 3
+    notificationapi.elements.nextButton?.click(); // page 4
+
+    const req3: WS_NotificationsRequest = {
+      route: 'inapp_web/notifications',
+      payload: {
+        before: '1989-09-28T10:00:00.000Z',
+        count: 50
+      }
+    };
+    await expect(server).toReceiveMessage(req3);
   });
 });

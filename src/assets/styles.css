@@ -91,7 +91,6 @@
 .notificationapi-popup h2,
 .notificationapi-popup h3 {
   display: block;
-  display: block;
 }
 
 .notificationapi-popup .notificationapi-popup-inner {
@@ -251,6 +250,39 @@
   font-size: 14px;
   margin: 0;
   padding: 0;
+}
+
+.notificationapi-popup .notificationapi-footer {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 4px;
+}
+
+.notificationapi-footer button {
+  display: inline-block;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 12px;
+  text-align: center;
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.notificationapi-footer button:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.notificationapi-footer button:disabled {
+  color: #00000040;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
 }
 
 .notificationapi-preferences-container {

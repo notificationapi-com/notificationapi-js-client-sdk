@@ -17,11 +17,11 @@ export interface NotificationAPIClientInterface {
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
-  processNotifications: (notifications: InappNotification[]) => void;
   renderPreferences: (preferences: Preference[]) => void;
   destroy: () => void;
   websocket?: WebSocket;
   elements: {
+    footer?: HTMLDivElement;
     unread?: HTMLDivElement;
     popup?: HTMLDivElement;
     popupInner?: HTMLDivElement;
@@ -34,8 +34,12 @@ export interface NotificationAPIClientInterface {
     preferencesLoading?: HTMLDivElement;
     preferencesEmpty?: HTMLDivElement;
     preferencesGrid?: HTMLDivElement;
+    prevButton?: HTMLButtonElement;
+    nextButton?: HTMLButtonElement;
   };
   state: {
+    currentPage: number;
+    pageSize: number;
     lastNotificationsRequestAt: number;
     notifications: InappNotification[];
     unread: number;
@@ -43,6 +47,11 @@ export interface NotificationAPIClientInterface {
     lastResponseNotificationsCount?: number;
     inappOptions?: InAppOptions;
     initOptions: InitOptions;
+  };
+  websocketHandlers: {
+    notifications: (message: WS_NotificationsResponse) => void;
+    newNotifications: (message: WS_NewNotificationsResponse) => void;
+    unreadCount: (message: WS_UnreadCountResponse) => void;
   };
 }
 
@@ -57,6 +66,8 @@ export interface InAppOptions {
   root: string;
   inline?: boolean;
   popupPosition?: PopupPosition;
+  paginated?: boolean;
+  pageSize?: number;
 }
 
 export interface UserPreferencesOptions {
