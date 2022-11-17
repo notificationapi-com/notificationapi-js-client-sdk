@@ -318,6 +318,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
     headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
+    headerPreferencesButton.title = 'Notification Settings';
     headerPreferencesButton.addEventListener('click', () => {
       this.showUserPreferences();
     });
@@ -327,6 +328,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const headerReadAllButton = document.createElement('button');
       headerReadAllButton.classList.add('notificationapi-readAll-button');
       headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
+      headerReadAllButton.title = 'Mark all as read';
       headerReadAllButton.addEventListener('click', () => {
         this.readAll();
       });
