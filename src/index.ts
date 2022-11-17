@@ -470,7 +470,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const loading = document.createElement('div');
       loading.classList.add('notificationapi-loading');
       const icon = document.createElement('span');
-      icon.classList.add('icon-spinner', 'spinner');
+      icon.classList.add('icon-spinner8', 'spinner');
       loading.appendChild(icon);
       popup.appendChild(loading);
       this.elements.preferencesLoading = loading;
