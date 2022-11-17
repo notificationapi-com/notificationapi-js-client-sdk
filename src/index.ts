@@ -5,9 +5,9 @@ import {
   NotificationAPIClientInterface,
   PopupPosition,
   Preference,
+  MarkAsReadModes,
   UserPreferencesOptions,
   WS_ANY_VALID_REQUEST,
-  WS_ClearUnreadRequest,
   WS_NewNotificationsResponse,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
@@ -262,7 +262,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           (e.target as Element).closest(
             '.notificationapi-preferences-container'
           ) ?? false;
-        if (!clickedButton && !clickedPopup && !clickedPreferences) {
+
+        if (
+          !clickedButton &&
+          !clickedPopup &&
+          !clickedPreferences &&
+          !this.elements.notificationMenu
+        ) {
           popup.classList.add('closed');
         }
       });
@@ -275,6 +281,18 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       this.setInAppUnread(this.state.unread);
     }
     container.appendChild(popup);
+
+    // close notification menu
+    window.addEventListener('click', (e) => {
+      const clickedNotificationMenuButton =
+        (e.target as Element).closest(
+          '.notificationapi-notification-menu-button'
+        ) ?? false;
+      if (!clickedNotificationMenuButton && this.elements.notificationMenu) {
+        this.elements.notificationMenu.remove();
+        this.elements.notificationMenu = undefined;
+      }
+    });
 
     // render popup inner container
     this.elements.popupInner = document.createElement('div');
@@ -291,20 +309,31 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     headerCloseButton.addEventListener('click', () => {
       this.closeInAppPopup();
     });
+    this.elements.header.appendChild(headerCloseButton);
 
     const headerHeading = document.createElement('h1');
     headerHeading.innerHTML = 'Notifications';
+    this.elements.header.appendChild(headerHeading);
 
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
     headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
+    headerPreferencesButton.title = 'Notification Settings';
     headerPreferencesButton.addEventListener('click', () => {
       this.showUserPreferences();
     });
-
-    this.elements.header.appendChild(headerCloseButton);
-    this.elements.header.appendChild(headerHeading);
     this.elements.header.appendChild(headerPreferencesButton);
+
+    if (options.markAsReadMode === MarkAsReadModes.MANUAL) {
+      const headerReadAllButton = document.createElement('button');
+      headerReadAllButton.classList.add('notificationapi-readAll-button');
+      headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
+      headerReadAllButton.title = 'Mark all as read';
+      headerReadAllButton.addEventListener('click', () => {
+        this.readAll();
+      });
+      this.elements.header.appendChild(headerReadAllButton);
+    }
 
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
@@ -470,7 +499,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const loading = document.createElement('div');
       loading.classList.add('notificationapi-loading');
       const icon = document.createElement('span');
-      icon.classList.add('icon-spinner', 'spinner');
+      icon.classList.add('icon-spinner8', 'spinner');
       loading.appendChild(icon);
       popup.appendChild(loading);
       this.elements.preferencesLoading = loading;
@@ -550,14 +579,34 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         this.elements.button,
         this.state.inappOptions.popupPosition ?? PopupPosition.RightBottom
       );
-      this.setInAppUnread(0);
       this.elements.popup.classList.remove('closed');
+
+      if (
+        !this.state.inappOptions.markAsReadMode ||
+        this.state.inappOptions.markAsReadMode === MarkAsReadModes.AUTOMATIC
+      ) {
+        this.readAll();
+      }
     }
-    if (this.websocket && this.websocket.readyState === 1) {
-      const clearReq: WS_ClearUnreadRequest = {
-        route: 'inapp_web/unread_clear'
-      };
-      this.websocket.send(JSON.stringify(clearReq));
+  }
+
+  readAll(): void {
+    this.setInAppUnread(0);
+    this.state.notifications.map((n) => {
+      n.seen = true;
+    });
+    this.sendWSMessage({
+      route: 'inapp_web/unread_clear'
+    });
+
+    if (
+      this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode === MarkAsReadModes.MANUAL &&
+      this.elements.popupInner
+    ) {
+      this.elements.popupInner.querySelectorAll('.unseen').forEach((e) => {
+        e.classList.remove('unseen');
+      });
     }
   }
 
@@ -703,10 +752,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notification.setAttribute('data-notification-id', n.id);
     notification.classList.add('notificationapi-notification');
 
-    if (!n.seen) {
-      notification.classList.add('unseen');
-    }
-
     if (n.redirectURL) {
       notification.href = n.redirectURL;
     }
@@ -747,6 +792,46 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notificationMetaContainer.appendChild(date);
 
     notification.appendChild(notificationMetaContainer);
+
+    if (!n.seen) {
+      notification.classList.add('unseen');
+    }
+
+    // notification menu button
+    if (
+      this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode === MarkAsReadModes.MANUAL
+    ) {
+      const menuButton = document.createElement('button');
+      menuButton.classList.add('notificationapi-notification-menu-button');
+      menuButton.innerHTML = '<span class="icon-ellipsis-h"></span>';
+      menuButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.elements.notificationMenu?.remove();
+        const menu = document.createElement('div');
+        menu.classList.add('notificationapi-notification-menu');
+        const item = document.createElement('button');
+        item.classList.add('notificationapi-notification-menu-item');
+        item.innerHTML =
+          '<span class="icon-check"></span><span class="notificationapi-notification-menu-item-text">Mark as read</span>';
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          notification.classList.remove('unseen');
+          this.setInAppUnread(this.state.unread - 1);
+          this.sendWSMessage({
+            route: 'inapp_web/unread_clear',
+            payload: {
+              notificationId: n.id
+            }
+          });
+        });
+        menu.appendChild(item);
+        notification.appendChild(menu);
+        this.elements.notificationMenu = menu;
+      });
+      notification.appendChild(menuButton);
+    }
+
     return notification;
   }
 

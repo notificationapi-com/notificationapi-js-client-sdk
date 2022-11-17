@@ -5,7 +5,7 @@ export const generateFakeNotifications = (count) => {
   for (let index = 0; index < count; index++) {
     result.push({
       id: index,
-      seen: false,
+      seen: faker.datatype.boolean(),
       title:
         `<b>${faker.name.firstName()}</b> posted an update: ${faker.lorem.sentence()}` +
         index,

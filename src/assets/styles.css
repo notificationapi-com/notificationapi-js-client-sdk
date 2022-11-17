@@ -165,6 +165,14 @@
   cursor: pointer;
 }
 
+.notificationapi-popup .notificationapi-header .notificationapi-readAll-button {
+  color: #444;
+  position: absolute;
+  right: 24px;
+  top: 8px;
+  cursor: pointer;
+}
+
 .notificationapi-popup .notificationapi-empty {
   padding: 40px 20px;
   text-align: center;
@@ -179,14 +187,16 @@
 .notificationapi-popup .notificationapi-notification {
   display: flex;
   align-self: baseline;
-  margin: 0 8px;
+  margin: 4px 8px;
   padding: 8px;
   border-radius: 8px;
   cursor: default;
+  position: relative;
+  transition: all 100ms ease-in;
 }
 
 .notificationapi-popup .notificationapi-notification.unseen {
-  /* background: #eef7ff; */
+  background: #eef7ff;
 }
 
 .notificationapi-popup .notificationapi-notification[href] {
@@ -202,6 +212,10 @@
 
 .notificationapi-popup .notificationapi-notification:hover {
   background: #f5f5f5;
+}
+
+.notificationapi-popup .notificationapi-notification-metaContainer {
+  width: 100%;
 }
 
 .notificationapi-popup .notificationapi-notification-title {
@@ -250,6 +264,48 @@
   font-size: 14px;
   margin: 0;
   padding: 0;
+}
+
+.notificationapi-popup .notificationapi-notification-menu-button {
+  align-self: baseline;
+  color: rgba(0, 0, 0, 0.3);
+  visibility: hidden;
+  padding: 5px 8px 2px 8px;
+  border-radius: 50%;
+  transition: background 100ms ease-in;
+}
+
+.notificationapi-popup .notificationapi-notification-menu-button:hover {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.notificationapi-notification.unseen .notificationapi-notification-menu-button {
+  visibility: visible;
+}
+
+.notificationapi-popup .notificationapi-notification-menu {
+  display: block;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  background: #fff;
+  padding: 4px 0;
+  border-radius: 8px;
+}
+
+.notificationapi-popup .notificationapi-notification-menu-item {
+  padding: 8px 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.notificationapi-popup .notificationapi-notification-menu-item:hover {
+  color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.notificationapi-popup .notificationapi-notification-menu-item-text {
+  margin-left: 8px;
 }
 
 .notificationapi-popup .notificationapi-footer {
@@ -625,14 +681,14 @@
   transform: translate3d(14px, 2px, 0);
 }
 
-/* fonts */
+/* icomoon */
 @font-face {
   font-family: 'icomoon';
-  src: url('fonts/icomoon.eot?xg9cqd');
-  src: url('fonts/icomoon.eot?xg9cqd#iefix') format('embedded-opentype'),
-    url('fonts/icomoon.ttf?xg9cqd') format('truetype'),
-    url('fonts/icomoon.woff?xg9cqd') format('woff'),
-    url('fonts/icomoon.svg?xg9cqd#icomoon') format('svg');
+  src: url('fonts/icomoon.eot?yjc9oj');
+  src: url('fonts/icomoon.eot?yjc9oj#iefix') format('embedded-opentype'),
+    url('fonts/icomoon.ttf?yjc9oj') format('truetype'),
+    url('fonts/icomoon.woff?yjc9oj') format('woff'),
+    url('fonts/icomoon.svg?yjc9oj#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -649,28 +705,41 @@
   text-transform: none;
   line-height: 1;
 
+  /* Enable Ligatures ================ */
+  letter-spacing: 0;
+  -webkit-font-feature-settings: 'liga';
+  -moz-font-feature-settings: 'liga=1';
+  -moz-font-feature-settings: 'liga';
+  -ms-font-feature-settings: 'liga' 1;
+  font-feature-settings: 'liga';
+  -webkit-font-variant-ligatures: discretionary-ligatures;
+  font-variant-ligatures: discretionary-ligatures;
+
   /* Better Font Rendering =========== */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-spinner:before {
+.icon-ellipsis-h:before {
+  content: '\e905';
+}
+.icon-check:before {
+  content: '\e904';
+}
+.icon-cog:before {
+  content: '\e903';
+}
+.icon-commenting-o:before {
   content: '\e900';
 }
 .icon-bell-o:before {
-  content: '\f0a2';
+  content: '\e901';
 }
 .icon-bell:before {
-  content: '\f0f3';
+  content: '\e902';
 }
-.icon-commenting-o:before {
-  content: '\f27b';
-}
-.icon-cog:before {
-  content: '\f013';
-}
-.icon-gear:before {
-  content: '\f013';
+.icon-spinner8:before {
+  content: '\e981';
 }
 
 @keyframes anim-rotate {
