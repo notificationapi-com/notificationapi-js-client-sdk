@@ -192,6 +192,7 @@
   border-radius: 8px;
   cursor: default;
   position: relative;
+  transition: all 100ms ease-in;
 }
 
 .notificationapi-popup .notificationapi-notification.unseen {
@@ -267,8 +268,16 @@
 
 .notificationapi-popup .notificationapi-notification-menu-button {
   align-self: baseline;
-  color: #444;
+  color: rgba(0, 0, 0, 0.3);
   visibility: hidden;
+  padding: 5px 8px 2px 8px;
+  border-radius: 50%;
+  transition: background 100ms ease-in;
+}
+
+.notificationapi-popup .notificationapi-notification-menu-button:hover {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .notificationapi-notification.unseen .notificationapi-notification-menu-button {
