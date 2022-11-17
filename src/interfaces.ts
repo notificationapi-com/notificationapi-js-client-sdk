@@ -36,6 +36,7 @@ export interface NotificationAPIClientInterface {
     preferencesGrid?: HTMLDivElement;
     prevButton?: HTMLButtonElement;
     nextButton?: HTMLButtonElement;
+    notificationMenu?: HTMLDivElement;
   };
   state: {
     currentPage: number;
@@ -55,6 +56,12 @@ export interface NotificationAPIClientInterface {
   };
 }
 
+export enum MarkAsReadModes {
+  AUTOMATIC = 'AUTOMATIC', // notificaitons are set to read when user sees the notification
+  MANUAL = 'MANUAL' // notifications are set to read manually by the user
+  // MANUAL_AND_VISIT = 'MANUAL_AND_VISIT' // notifications are set to read manually by the user and also when user clicks the notification
+}
+
 export interface InitOptions {
   clientId: string;
   userId: string;
@@ -68,6 +75,7 @@ export interface InAppOptions {
   popupPosition?: PopupPosition;
   paginated?: boolean;
   pageSize?: number;
+  markAsReadMode?: MarkAsReadModes;
 }
 
 export interface UserPreferencesOptions {
@@ -136,6 +144,9 @@ export interface WS_UnreadCountRequest {
 
 export interface WS_ClearUnreadRequest {
   route: 'inapp_web/unread_clear';
+  payload?: {
+    notificationId?: string;
+  };
 }
 
 export interface WS_NewNotificationsResponse {
