@@ -70,6 +70,7 @@
     "css-loader": "^5.2.6",
     "cypress": "^10.4.0",
     "eslint": "^7.11.0",
+    "gh-pages": "^5.0.0",
     "jest": "^26.5.3",
     "jest-websocket-mock": "^2.2.0",
     "jquery": "^3.5.1",
