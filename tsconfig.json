@@ -1,16 +1,12 @@
+// Used for ESM build and any other default behavior
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "module": "ES6",
+    "lib": ["ES2022", "DOM"],
     "target": "ES5",
-    "strict": true,
-    "lib": ["ES6", "DOM"],
-    "declaration": true,
-    "outDir": "./lib",
-    "removeComments": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "esModuleInterop": true,
-    "moduleResolution": "Node"
-  },
-  "include": ["src"]
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./lib/esm",
+    "declarationDir": "./lib/esm/types"
+  }
 }

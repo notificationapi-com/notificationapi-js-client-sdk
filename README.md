@@ -27,3 +27,13 @@ npm run test
 ```
 
 100% code coverage required.
+
+# Build
+
+There are 3 builds for this package:
+
+1. lib/cjs targetting CommonJS
+2. lib/esm targetting ECMAScript
+3. dist targetting UMD
+
+Assets (styles, fonts) are copied into /umd and /lib for clarity and separation of concerns.

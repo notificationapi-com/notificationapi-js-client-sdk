@@ -1,6 +1,6 @@
 {
   "name": "notificationapi-js-client-sdk",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "NotificationAPI client-side library for JavaScript",
   "keywords": [
     "notificationapi",
@@ -17,16 +17,36 @@
     "url": "https://github.com/notificationapi-com/notificationapi-js-client-sdk/issues"
   },
   "homepage": "https://www.notificationapi.com",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/esm/types/index.d.ts",
+        "default": "./lib/esm/index.js"
+      },
+      "require": {
+        "types": "./lib/cjs/types/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
+    },
+    "./dist/styles.css": {
+      "import": "./dist/styles.css",
+      "require": "./dist/styles.css"
+    }
+  },
+  "types": "./lib/cjs/types/index.d.ts",
+  "main": "./lib/cjs/index.js",
   "files": [
-    "lib/**/*",
-    "dist/**/*"
+    "./lib/**/*",
+    "./dist/**/*"
   ],
   "scripts": {
     "clean": "rm -rf ./lib ./dist",
     "test": "jest --collectCoverage",
-    "build": "npm run clean && tsc && ./node_modules/.bin/webpack && cp -R src/assets/* dist",
+    "prepack": "npm run build",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:dist && ./fixpackagetype.sh",
+    "build:esm": "./node_modules/.bin/tsc -p ./tsconfig.json",
+    "build:cjs": "./node_modules/.bin/tsc -p ./tsconfig.cjs.json",
+    "build:dist": "./node_modules/.bin/webpack && cp -R src/assets/* dist",
     "lint": "eslint . --ext .ts",
     "prettier-check": "prettier --config .prettierrc './**/*.ts' --check",
     "storybook": "start-storybook -p 6006",
