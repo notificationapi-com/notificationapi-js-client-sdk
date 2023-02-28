@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set Permissions
+        run: chmod +x ./scripts/*
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -48,6 +51,9 @@ jobs:
         example: [reactjs, reactts, vanillajs]
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set Permissions
+        run: chmod +x ./scripts/*
 
       - name: Setup Node
         uses: actions/setup-node@v3

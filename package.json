@@ -43,7 +43,7 @@
     "clean": "rm -rf ./lib ./dist",
     "test": "jest --collectCoverage",
     "prepack": "npm run build",
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:dist && ./fixpackagetype.sh",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:dist && ./scripts/fixpackagetype.sh",
     "build:esm": "./node_modules/.bin/tsc -p ./tsconfig.json",
     "build:cjs": "./node_modules/.bin/tsc -p ./tsconfig.cjs.json",
     "build:dist": "./node_modules/.bin/webpack && cp -R src/assets/* dist",

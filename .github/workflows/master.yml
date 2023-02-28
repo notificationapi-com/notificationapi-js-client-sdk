@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set Permissions
+        run: chmod +x ./scripts/*
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -67,7 +70,6 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: steps.publish.outputs.type != 'none' && always()
 
-
   DeployExamplesLive:
     name: DeployExamplesLive
     needs: Release
@@ -79,6 +81,9 @@ jobs:
         example: [reactjs-live, reactts-live, vanillajs-live]
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set Permissions
+        run: chmod +x ./scripts/*
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -131,4 +136,4 @@ jobs:
           # pass GitHub token to allow accurately detecting a build vs a re-run build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
-          CYPRESS_TESTING_MODE: "LIVE"
+          CYPRESS_TESTING_MODE: 'LIVE'
