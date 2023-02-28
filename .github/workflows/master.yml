@@ -20,15 +20,16 @@ jobs:
         with:
           node-version: 18.4
 
-      - name: Cache node_modules
-        id: cache-modules
-        uses: actions/cache@v1
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-main-node-modules
         with:
-          path: node_modules
-          key: 18.4.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: NPM Install
-        if: steps.cache-modules.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Lint
@@ -90,15 +91,16 @@ jobs:
         with:
           node-version: 18.4
 
-      - name: Cache node_modules
-        id: cache-modules
-        uses: actions/cache@v1
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-main-node-modules
         with:
-          path: node_modules
-          key: 18.4.x-${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: NPM Install
-        if: steps.cache-modules.outputs.cache-hit != 'true'
         run: npm install
 
       - name: Build
