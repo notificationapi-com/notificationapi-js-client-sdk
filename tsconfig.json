@@ -1,12 +1,13 @@
-// Used for ESM build and any other default behavior
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM"],
-    "target": "ES5",
     "module": "ESNext",
+    "strict": true,
+    "lib": ["ES2022", "DOM"],
+    "declaration": true,
+    "declarationDir": "dts",
+    "emitDeclarationOnly": true,
     "moduleResolution": "NodeNext",
-    "outDir": "./lib/esm",
-    "declarationDir": "./lib/esm/types"
-  }
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["./src"]
 }

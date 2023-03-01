@@ -17,36 +17,18 @@
     "url": "https://github.com/notificationapi-com/notificationapi-js-client-sdk/issues"
   },
   "homepage": "https://www.notificationapi.com",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./lib/esm/types/index.d.ts",
-        "default": "./lib/esm/index.js"
-      },
-      "require": {
-        "types": "./lib/cjs/types/index.d.ts",
-        "default": "./lib/cjs/index.js"
-      }
-    },
-    "./dist/styles.css": {
-      "import": "./dist/styles.css",
-      "require": "./dist/styles.css"
-    }
-  },
-  "types": "./lib/cjs/types/index.d.ts",
-  "main": "./lib/cjs/index.js",
+  "types": "dist/index.d.ts",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "unpkg": "dist/index.js",
   "files": [
-    "./lib/**/*",
-    "./dist/**/*"
+    "dist"
   ],
   "scripts": {
-    "clean": "rm -rf ./lib ./dist",
+    "clean": "rimraf dist/**",
     "test": "jest --collectCoverage",
-    "prepack": "npm run build",
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:dist && ./scripts/fixpackagetype.sh",
-    "build:esm": "./node_modules/.bin/tsc -p ./tsconfig.json",
-    "build:cjs": "./node_modules/.bin/tsc -p ./tsconfig.cjs.json",
-    "build:dist": "./node_modules/.bin/webpack && cp -R src/assets/* dist",
+    "prepublishOnly": "npm run build",
+    "build": "npm run clean && rollup -c rollup.config.mjs && cp -R src/assets/* dist && rm -rf dist/dts",
     "lint": "eslint . --ext .ts",
     "prettier-check": "prettier --config .prettierrc './**/*.ts' --check",
     "storybook": "start-storybook -p 6006",
@@ -55,6 +37,8 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@faker-js/faker": "^7.6.0",
+    "@rollup/plugin-babel": "6.0.3",
+    "@rollup/plugin-typescript": "^11.0.0",
     "@storybook/addon-actions": "^6.5.9",
     "@storybook/addon-essentials": "^6.5.9",
     "@storybook/addon-links": "^6.5.9",
@@ -76,11 +60,15 @@
     "jquery": "^3.5.1",
     "mock-socket": "^9.0.3",
     "prettier": "^2.7.1",
+    "rollup": "^3.17.3",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-dts": "^5.2.0",
+    "rollup-plugin-filesize": "^9.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
     "sb": "^6.1.11",
     "ts-jest": "^26.4.1",
     "ts-loader": "^9.4.1",
     "typescript": "^4.0.3",
-    "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   }
 }

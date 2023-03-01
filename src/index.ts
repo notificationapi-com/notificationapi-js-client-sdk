@@ -102,8 +102,7 @@ function position(
   popup.style.right = right;
   popupInner.style.maxHeight = maxHeight;
 }
-
-class NotificationAPIClient implements NotificationAPIClientInterface {
+export class NotificationAPIClient implements NotificationAPIClientInterface {
   state: NotificationAPIClientInterface['state'];
   elements: NotificationAPIClientInterface['elements'];
   websocket?: WebSocket;
@@ -1064,4 +1063,4 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   }
 }
 
-export default NotificationAPIClient;
+export * from './interfaces';

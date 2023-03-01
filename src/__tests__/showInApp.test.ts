@@ -12,7 +12,7 @@ import {
   WS_UnreadCountResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
-import NotificationAPI from '../index';
+import { NotificationAPIClient as NotificationAPI } from '../index';
 import { generateFakeNotifications } from './FakeNotificationGenerator';
 
 const testNotification: InappNotification = {

@@ -5,7 +5,7 @@ import {
   WS_UserPreferencesResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
-import NotificationAPI from '../index';
+import { NotificationAPIClient as NotificationAPI } from '../index';
 
 const clientId = 'envId@';
 const userId = 'userId@';
