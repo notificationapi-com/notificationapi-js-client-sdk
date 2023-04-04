@@ -1004,131 +1004,172 @@ describe('paginated', () => {
 });
 
 describe('setAsReadMode', () => {
-  describe('MANUAL', () => {
-    test('given unread count/badge, when popup in opened, unread count/badge do not clear', async () => {
-      notificationapi.showInApp({
-        root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
+  [MarkAsReadModes.MANUAL, MarkAsReadModes.MANUAL_AND_CLICK].map((mode) => {
+    describe('MANUAL & MANUAL_AND_CLICK', () => {
+      test('given unread count/badge, when popup in opened, unread count/badge do not clear', async () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        notificationapi.websocketHandlers.unreadCount({
+          route: 'inapp_web/unread_count',
+          payload: {
+            count: 5
+          }
+        });
+        $('.notificationapi-button').trigger('click');
+        expect($('.notificationapi-unread').hasClass('hidden')).toBeFalsy();
+        expect($('.notificationapi-unread').html()).toEqual('5');
+        expect(notificationapi.state.unread).toEqual(5);
       });
-      notificationapi.websocketHandlers.unreadCount({
-        route: 'inapp_web/unread_count',
-        payload: {
-          count: 5
-        }
-      });
-      $('.notificationapi-button').trigger('click');
-      expect($('.notificationapi-unread').hasClass('hidden')).toBeFalsy();
-      expect($('.notificationapi-unread').html()).toEqual('5');
-      expect(notificationapi.state.unread).toEqual(5);
-    });
 
-    test('when mark all as read button is clicked, clear request is sent and count/badge is cleared, all notifications lose .unseen class, all notifications are set to seen', async () => {
-      notificationapi.showInApp({
-        root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
+      test('when mark all as read button is clicked, clear request is sent and count/badge is cleared, all notifications lose .unseen class, all notifications are set to seen', async () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        await server.nextMessage;
+        await server.nextMessage;
+        notificationapi.websocketHandlers.unreadCount({
+          route: 'inapp_web/unread_count',
+          payload: {
+            count: 5
+          }
+        });
+        notificationapi.websocketHandlers.notifications({
+          route: 'inapp_web/notifications',
+          payload: {
+            notifications: [testNotification, testNotificationUnseen]
+          }
+        });
+        $('.notificationapi-button').trigger('click');
+        $('.notificationapi-readAll-button').trigger('click');
+        expect($('.notificationapi-unread').hasClass('hidden')).toBeTruthy();
+        expect($('.notificationapi-unread').html()).toEqual('0');
+        expect(notificationapi.state.unread).toEqual(0);
+        expect(
+          notificationapi.state.notifications.filter((n) => !n.seen)
+        ).toHaveLength(0);
+        expect($('.unseen')).toHaveLength(0);
+        const expectedMsg: WS_ClearUnreadRequest = {
+          route: 'inapp_web/unread_clear'
+        };
+        await expect(server).toReceiveMessage(expectedMsg);
       });
-      await server.nextMessage;
-      await server.nextMessage;
-      notificationapi.websocketHandlers.unreadCount({
-        route: 'inapp_web/unread_count',
-        payload: {
-          count: 5
-        }
-      });
-      notificationapi.websocketHandlers.notifications({
-        route: 'inapp_web/notifications',
-        payload: {
-          notifications: [testNotification, testNotificationUnseen]
-        }
-      });
-      $('.notificationapi-button').trigger('click');
-      $('.notificationapi-readAll-button').trigger('click');
-      expect($('.notificationapi-unread').hasClass('hidden')).toBeTruthy();
-      expect($('.notificationapi-unread').html()).toEqual('0');
-      expect(notificationapi.state.unread).toEqual(0);
-      expect(
-        notificationapi.state.notifications.filter((n) => !n.seen)
-      ).toHaveLength(0);
-      expect($('.unseen')).toHaveLength(0);
-      const expectedMsg: WS_ClearUnreadRequest = {
-        route: 'inapp_web/unread_clear'
-      };
-      await expect(server).toReceiveMessage(expectedMsg);
-    });
 
-    test('there is a menu button for all seen/unseen notifications', () => {
-      notificationapi.showInApp({
-        root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
+      test('there is a menu button for all seen/unseen notifications', () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        notificationapi.websocketHandlers.notifications({
+          route: 'inapp_web/notifications',
+          payload: {
+            notifications: [testNotification, testNotificationUnseen]
+          }
+        });
+        expect(
+          $(
+            '[data-notification-id="4"] .notificationapi-notification-menu-button'
+          )
+        ).toHaveLength(1);
+        expect(
+          $(
+            '[data-notification-id="1"] .notificationapi-notification-menu-button'
+          )
+        ).toHaveLength(1);
       });
-      notificationapi.websocketHandlers.notifications({
-        route: 'inapp_web/notifications',
-        payload: {
-          notifications: [testNotification, testNotificationUnseen]
-        }
+
+      test('clicking menu button creates a menu, clicking the body deletes the menu but keeps the popup open', () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        notificationapi.websocketHandlers.notifications({
+          route: 'inapp_web/notifications',
+          payload: {
+            notifications: [testNotificationUnseen]
+          }
+        });
+        $('.notificationapi-button').trigger('click');
+        $('.notificationapi-notification-menu-button').trigger('click');
+        expect($('.notificationapi-notification-menu')).toHaveLength(1);
+        $('body').trigger('click');
+        expect($('.notificationapi-notification-menu')).toHaveLength(0);
+        expect($('#root .notificationapi-popup.closed')).toHaveLength(0);
       });
-      expect(
-        $(
-          '[data-notification-id="4"] .notificationapi-notification-menu-button'
-        )
-      ).toHaveLength(1);
-      expect(
+
+      test('cannot have 2 menus open', () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        notificationapi.websocketHandlers.notifications({
+          route: 'inapp_web/notifications',
+          payload: {
+            notifications: [
+              testNotificationUnseen,
+              {
+                ...testNotificationUnseen,
+                id: '1'
+              }
+            ]
+          }
+        });
+        $('.notificationapi-button').trigger('click');
         $(
           '[data-notification-id="1"] .notificationapi-notification-menu-button'
-        )
-      ).toHaveLength(1);
-    });
+        ).trigger('click');
+        $(
+          '[data-notification-id="4"] .notificationapi-notification-menu-button'
+        ).trigger('click');
+        expect($('.notificationapi-notification-menu')).toHaveLength(1);
+      });
 
-    test('clicking menu button creates a menu, clicking the body deletes the menu but keeps the popup open', () => {
+      test('clicking "Mark as Read" menu item reduces unread count, sends a unread ws message and closes the menu but not popup', async () => {
+        notificationapi.showInApp({
+          root: 'root',
+          markAsReadMode: mode
+        });
+        await server.nextMessage;
+        await server.nextMessage;
+        notificationapi.websocketHandlers.unreadCount({
+          route: 'inapp_web/unread_count',
+          payload: {
+            count: 5
+          }
+        });
+        notificationapi.websocketHandlers.notifications({
+          route: 'inapp_web/notifications',
+          payload: {
+            notifications: [testNotificationUnseen]
+          }
+        });
+        $('.notificationapi-button').trigger('click');
+        $('.notificationapi-notification-menu-button').trigger('click');
+        expect($('.notificationapi-notification-menu')).toHaveLength(1);
+        $('.notificationapi-notification-menu-item').trigger('click');
+        expect($('.notificationapi-unread')[0].innerHTML).toEqual('4');
+        expect(notificationapi.state.unread).toEqual(4);
+        expect($('.notificationapi-notification-menu')).toHaveLength(0);
+        expect($('#root .notificationapi-popup.closed')).toHaveLength(0);
+        await server.nextMessage;
+        const expectedMsg: WS_ClearUnreadRequest = {
+          route: 'inapp_web/unread_clear',
+          payload: {
+            notificationId: '4'
+          }
+        };
+        expect(server).toReceiveMessage(expectedMsg);
+      });
+    });
+  });
+
+  describe('MANUAL_AND_CLICK', () => {
+    test('clicking the notification reduces unread count, changes then notification ui, sends a unread ws message', async () => {
       notificationapi.showInApp({
         root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
-      });
-      notificationapi.websocketHandlers.notifications({
-        route: 'inapp_web/notifications',
-        payload: {
-          notifications: [testNotificationUnseen]
-        }
-      });
-      $('.notificationapi-button').trigger('click');
-      $('.notificationapi-notification-menu-button').trigger('click');
-      expect($('.notificationapi-notification-menu')).toHaveLength(1);
-      $('body').trigger('click');
-      expect($('.notificationapi-notification-menu')).toHaveLength(0);
-      expect($('#root .notificationapi-popup.closed')).toHaveLength(0);
-    });
-
-    test('cannot have 2 menus open', () => {
-      notificationapi.showInApp({
-        root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
-      });
-      notificationapi.websocketHandlers.notifications({
-        route: 'inapp_web/notifications',
-        payload: {
-          notifications: [
-            testNotificationUnseen,
-            {
-              ...testNotificationUnseen,
-              id: '1'
-            }
-          ]
-        }
-      });
-      $('.notificationapi-button').trigger('click');
-      $(
-        '[data-notification-id="1"] .notificationapi-notification-menu-button'
-      ).trigger('click');
-      $(
-        '[data-notification-id="4"] .notificationapi-notification-menu-button'
-      ).trigger('click');
-      expect($('.notificationapi-notification-menu')).toHaveLength(1);
-    });
-
-    test('clicking "Mark as Read" menu item reduces unread count, sends a unread ws message and closes the menu but not popup', async () => {
-      notificationapi.showInApp({
-        root: 'root',
-        markAsReadMode: MarkAsReadModes.MANUAL
+        markAsReadMode: MarkAsReadModes.MANUAL_AND_CLICK
       });
       await server.nextMessage;
       await server.nextMessage;
@@ -1145,13 +1186,10 @@ describe('setAsReadMode', () => {
         }
       });
       $('.notificationapi-button').trigger('click');
-      $('.notificationapi-notification-menu-button').trigger('click');
-      expect($('.notificationapi-notification-menu')).toHaveLength(1);
-      $('.notificationapi-notification-menu-item').trigger('click');
+      $('.notificationapi-notification-title').trigger('click');
       expect($('.notificationapi-unread')[0].innerHTML).toEqual('4');
       expect(notificationapi.state.unread).toEqual(4);
       expect($('.notificationapi-notification-menu')).toHaveLength(0);
-      expect($('#root .notificationapi-popup.closed')).toHaveLength(0);
       await server.nextMessage;
       const expectedMsg: WS_ClearUnreadRequest = {
         route: 'inapp_web/unread_clear',

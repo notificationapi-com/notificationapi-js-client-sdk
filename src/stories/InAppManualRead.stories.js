@@ -1,14 +1,11 @@
 import '../assets/styles.css';
-import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
 import { generateFakeNotifications } from './FakeNotificationGenerator';
 import { MarkAsReadModes } from '../interfaces';
 
 export default {
   title: 'InApp/ManualRead',
-  parameters: {
-    viewport: {
-      viewports: INITIAL_VIEWPORTS
-    }
+  argTypes: {
+    manualMode: { control: 'select', options: ['MANUAL', 'MANUAL_AND_CLICK'] }
   }
 };
 
@@ -18,7 +15,10 @@ const Component = ({ ...args }) => {
           <BR><BR>
           <script>
             notificationapi = new NotificationAPI(${JSON.stringify(args.init)});
-            notificationapi.showInApp(${JSON.stringify(args.show)});
+            notificationapi.showInApp(${JSON.stringify({
+              ...args.show,
+              markAsReadMode: args.manualMode
+            })});
             notificationapi.websocketHandlers.notifications(${JSON.stringify(
               args.wsNotificationsResponse
             )});
@@ -34,6 +34,7 @@ const clientId = 'test';
 const userId = 'test';
 export const Empty = Component.bind({});
 Empty.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,
@@ -59,6 +60,7 @@ Empty.args = {
 
 export const NoUnread = Component.bind({});
 NoUnread.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,
@@ -89,6 +91,7 @@ NoUnread.args = {
 
 export const SomeUnread = Component.bind({});
 SomeUnread.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,
@@ -114,6 +117,7 @@ SomeUnread.args = {
 
 export const Inline = Component.bind({});
 Inline.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,
@@ -140,6 +144,7 @@ Inline.args = {
 
 export const Paginated = Component.bind({});
 Paginated.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,
@@ -166,6 +171,7 @@ Paginated.args = {
 
 export const InlinePaginated = Component.bind({});
 InlinePaginated.args = {
+  manualMode: 'MANUAL',
   init: {
     clientId,
     userId,

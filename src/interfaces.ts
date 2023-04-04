@@ -58,8 +58,8 @@ export interface NotificationAPIClientInterface {
 
 export enum MarkAsReadModes {
   AUTOMATIC = 'AUTOMATIC', // notificaitons are set to read when user sees the notification
-  MANUAL = 'MANUAL' // notifications are set to read manually by the user
-  // MANUAL_AND_VISIT = 'MANUAL_AND_VISIT' // notifications are set to read manually by the user and also when user clicks the notification
+  MANUAL = 'MANUAL', // notifications are set to read manually by the user
+  MANUAL_AND_CLICK = 'MANUAL_AND_CLICK' // notifications are set to read manually by the user and also when user clicks the notification
 }
 
 export interface InitOptions {

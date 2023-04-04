@@ -324,7 +324,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     });
     this.elements.header.appendChild(headerPreferencesButton);
 
-    if (options.markAsReadMode === MarkAsReadModes.MANUAL) {
+    if (options.markAsReadMode !== MarkAsReadModes.AUTOMATIC) {
       const headerReadAllButton = document.createElement('button');
       headerReadAllButton.classList.add('notificationapi-readAll-button');
       headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
@@ -601,7 +601,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
     if (
       this.state.inappOptions &&
-      this.state.inappOptions.markAsReadMode === MarkAsReadModes.MANUAL &&
+      this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC &&
       this.elements.popupInner
     ) {
       this.elements.popupInner.querySelectorAll('.unseen').forEach((e) => {
@@ -800,7 +800,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     // notification menu button
     if (
       this.state.inappOptions &&
-      this.state.inappOptions.markAsReadMode === MarkAsReadModes.MANUAL
+      this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC
     ) {
       const menuButton = document.createElement('button');
       menuButton.classList.add('notificationapi-notification-menu-button');
@@ -830,6 +830,34 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         this.elements.notificationMenu = menu;
       });
       notification.appendChild(menuButton);
+    }
+
+    if (
+      this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode ===
+        MarkAsReadModes.MANUAL_AND_CLICK
+    ) {
+      notification.addEventListener('click', (e) => {
+        const element = e.target as HTMLElement;
+        const menuWasClicked =
+          element.classList.contains(
+            'notificationapi-notification-menu-button'
+          ) ||
+          element.classList.contains('notificationapi-notification-menu') ||
+          element.closest('.notificationapi-notification-menu-button') ||
+          element.closest('.notificationapi-notification-menu');
+
+        if (!menuWasClicked) {
+          notification.classList.remove('unseen');
+          this.setInAppUnread(this.state.unread - 1);
+          this.sendWSMessage({
+            route: 'inapp_web/unread_clear',
+            payload: {
+              notificationId: n.id
+            }
+          });
+        }
+      });
     }
 
     return notification;
