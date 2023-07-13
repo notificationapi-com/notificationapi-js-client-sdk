@@ -13,8 +13,10 @@ import {
   WS_NotificationsResponse,
   WS_UnreadCountResponse,
   WS_UserPreferencesPatchRequest,
-  WS_UserPreferencesResponse
+  WS_UserPreferencesResponse,
+  WS_EnvironmentDataResponse
 } from './interfaces';
+import { subscribeWebPushUser } from './subscribeWebPushUser';
 import timeAgo from './utils/timeAgo';
 
 const defaultWebSocket = 'wss://ws.notificationapi.com';
@@ -111,6 +113,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notifications: (message: WS_NotificationsResponse) => void;
     newNotifications: (message: WS_NewNotificationsResponse) => void;
     unreadCount: (message: WS_UnreadCountResponse) => void;
+    webPushSettings: (message: WS_EnvironmentDataResponse) => void;
   };
 
   destroy = (): void => {
@@ -129,7 +132,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       unread: 0,
       oldestNotificationsDate: '',
       currentPage: 0,
-      pageSize: 999999
+      pageSize: 999999,
+      webPushSetting: {
+        applicationServerKey: '',
+        askForWebPushPermission: false
+      }
     };
 
     this.websocketHandlers = {
@@ -162,6 +169,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       unreadCount: (message: WS_UnreadCountResponse) => {
         this.setInAppUnread(message.payload.count);
+      },
+      webPushSettings: (message: WS_EnvironmentDataResponse) => {
+        this.setWebpushSettings(
+          message.payload.applicationServerKey,
+          message.payload.askForWebPushPermission
+        );
       }
     };
 
@@ -187,10 +200,35 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
           : ''
       }`;
-      this.websocket = new WebSocket(websocketAddress);
+      const ws = new WebSocket(websocketAddress);
+      this.websocket = ws;
     }
   }
+  askForWebPushPermission = (): void => {
+    this.sendWSMessage({
+      route: 'environment/data'
+    });
 
+    if (this.websocket) {
+      const ws = this.websocket;
+      ws.addEventListener('message', (m: MessageEvent) => {
+        const body = JSON.parse(m.data);
+        if (!body || !body.route) {
+          return;
+        }
+        if (body.route === 'environment/data') {
+          const message = body as WS_EnvironmentDataResponse;
+          this.websocketHandlers.webPushSettings(message);
+          subscribeWebPushUser(
+            this.state.webPushSetting.applicationServerKey,
+            encodeURIComponent(this.state.initOptions.clientId),
+            encodeURIComponent(this.state.initOptions.userId),
+            this.state.initOptions.userIdHash
+          );
+        }
+      });
+    }
+  };
   showInApp = (options: InAppOptions): void => {
     this.state.inappOptions = options;
 
@@ -640,7 +678,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       }
     }
   }
-
+  setWebpushSettings(
+    applicationServerKey: string,
+    askForWebPushPermission: boolean
+  ): void {
+    this.state.webPushSetting.applicationServerKey = applicationServerKey;
+    this.state.webPushSetting.askForWebPushPermission = askForWebPushPermission;
+  }
   addNotificationsToState(notifications: InappNotification[]): void {
     // filter existing
     const newNotifications = notifications.filter((n) => {
