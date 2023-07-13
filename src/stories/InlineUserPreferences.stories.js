@@ -19,7 +19,7 @@ const Component = ({ ...args }) => {
     page += `<script>
       window.notificationapi.renderPreferences(${JSON.stringify(
         args.preferences
-      )});
+      )},false);
     </script>`;
   }
 

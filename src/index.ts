@@ -171,6 +171,9 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         this.setInAppUnread(message.payload.count);
       },
       webPushSettings: (message: WS_EnvironmentDataResponse) => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          this.setWebpushSettings(message.payload.applicationServerKey, false);
+        }
         this.setWebpushSettings(
           message.payload.applicationServerKey,
           message.payload.askForWebPushPermission
@@ -553,7 +556,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
           if (body.route === 'user_preferences/preferences') {
             const message = body as WS_UserPreferencesResponse;
-            this.renderPreferences(message.payload.userPreferences);
+            this.renderPreferences(
+              message.payload.userPreferences,
+              this.state.webPushSetting.askForWebPushPermission
+            );
+          }
+          if (body.route === 'environment/data') {
+            const message = body as WS_EnvironmentDataResponse;
+            this.websocketHandlers.webPushSettings(message);
           }
         });
       }
@@ -564,6 +574,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     // Request user preferences every time render is run to get the latest
     this.sendWSMessage({
       route: 'user_preferences/get_preferences'
+    });
+    // Request environment/data every time render is run to get the latest
+    this.sendWSMessage({
+      route: 'environment/data'
     });
   }
 
@@ -907,7 +921,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     return notification;
   }
 
-  renderPreferences(preferences: Preference[]): void {
+  renderPreferences(
+    preferences: Preference[],
+    askForWebPushPermission: boolean
+  ): void {
     if (!this.elements.preferencesPopup) return;
 
     // remove loading
@@ -923,6 +940,20 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       popup.appendChild(empty);
       this.elements.preferencesEmpty = empty;
       return;
+    }
+
+    // create and insert the message at the top only if askForWebPushPermission is true
+    if (askForWebPushPermission) {
+      const message = document.createElement('div');
+      message.innerHTML =
+        'You have some push notifications. Click here if you want to receive them on this browser.';
+      message.classList.add('notificationapi-preferences-message');
+      popup.appendChild(message);
+
+      // Add click event listener to the message
+      message.addEventListener('click', () => {
+        this.askForWebPushPermission();
+      });
     }
 
     // render grid

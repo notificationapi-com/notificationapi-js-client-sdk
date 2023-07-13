@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import {
   NotificationAPIClientInterface,
+  WS_EnvironmentDataRequest,
+  WS_EnvironmentDataResponse,
   WS_UnreadCountResponse,
   WS_UserPreferencesPatchRequest,
   WS_UserPreferencesRequest,
@@ -177,7 +179,11 @@ describe('websocket send & receives', () => {
     const req1: WS_UserPreferencesRequest = {
       route: 'user_preferences/get_preferences'
     };
+    const req2: WS_EnvironmentDataRequest = {
+      route: 'environment/data'
+    };
     await expect(server).toReceiveMessage(req1);
+    await expect(server).toReceiveMessage(req2);
   });
 
   test('given malformed message, doesnt break', async () => {
@@ -202,7 +208,24 @@ describe('websocket send & receives', () => {
       }
     };
     server.send(res);
-    expect(mock).toHaveBeenCalledWith(res.payload.userPreferences);
+    expect(mock).toHaveBeenCalledWith(res.payload.userPreferences, false);
+  });
+  test('given environment, calls setWebpushSettings function with correct parameters', async () => {
+    const mock = jest.spyOn(notificationapi, 'setWebpushSettings');
+    notificationapi.showUserPreferences();
+    const res: WS_EnvironmentDataResponse = {
+      route: 'environment/data',
+      payload: {
+        logo: 'mocked_logo',
+        applicationServerKey: 'mocked_applicationServerKey',
+        askForWebPushPermission: true
+      }
+    };
+    server.send(res);
+    expect(mock).toHaveBeenCalledWith(
+      res.payload.applicationServerKey,
+      res.payload.askForWebPushPermission
+    );
   });
 
   test('given other messages, does not call renderPreferences', async () => {
@@ -221,7 +244,8 @@ describe('websocket send & receives', () => {
   test('given preference, clicking toggle changes the toggle and sends correct patch request', async () => {
     notificationapi.showUserPreferences();
     await server.nextMessage;
-    notificationapi.renderPreferences([emailInAppPreference]);
+    await server.nextMessage;
+    notificationapi.renderPreferences([emailInAppPreference], false);
     $(
       '.notificationapi-preferences-toggle[data-channel="EMAIL"] input'
     ).trigger('click');
@@ -274,18 +298,21 @@ describe('websocket send & receives', () => {
   test('given preference, clicking subtoggle changes the subtoggle and sends correct patch request', async () => {
     notificationapi.showUserPreferences();
     await server.nextMessage;
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            }
+          ]
+        }
+      ],
+      false
+    );
     $(
       '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input'
     ).trigger('click');
@@ -305,11 +332,15 @@ describe('websocket send & receives', () => {
         }
       ]
     };
+    const req_environment: WS_EnvironmentDataRequest = {
+      route: 'environment/data'
+    };
     expect(
       $(
         '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input:not(:checked)'
       )
     ).toHaveLength(1);
+    await expect(server).toReceiveMessage(req_environment);
     await expect(server).toReceiveMessage(req1);
     $(
       '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input'
@@ -340,13 +371,13 @@ describe('websocket send & receives', () => {
 
 describe('renderPreferences', () => {
   test('before showUserPreferences(), does not throw', async () => {
-    notificationapi.renderPreferences([]);
+    notificationapi.renderPreferences([], false);
     expect(spy.mock.calls).toEqual([]);
   });
 
   test('given no preferences, removes loading & renders empty state', async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([]);
+    notificationapi.renderPreferences([], false);
     expect($('.notification-loading')).toHaveLength(0);
     expect(
       $(
@@ -357,8 +388,8 @@ describe('renderPreferences', () => {
 
   test('given empty preferences repeatedly, removes loading & shows one empty state', async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([]);
-    notificationapi.renderPreferences([]);
+    notificationapi.renderPreferences([], false);
+    notificationapi.renderPreferences([], false);
     expect($('.notification-loading')).toHaveLength(0);
     expect(
       $(
@@ -369,13 +400,16 @@ describe('renderPreferences', () => {
 
   test('given preference without channel, removes loading & shows empty state)', async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        notificationId: 'test-notificationId',
-        title: 'test-title',
-        settings: []
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          notificationId: 'test-notificationId',
+          title: 'test-title',
+          settings: []
+        }
+      ],
+      false
+    );
     expect($('.notification-loading')).toHaveLength(0);
     expect(
       $(
@@ -384,22 +418,65 @@ describe('renderPreferences', () => {
     ).toHaveLength(1);
   });
 
-  test('given preference, adds grid to popup', async () => {
+  test('given preference, adds grid to popup', () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([emailInAppPreference]);
+    notificationapi.renderPreferences([emailInAppPreference], false);
     expect(
       $(
         '.notificationapi-preferences-popup > .notificationapi-preferences-grid'
       )
     ).toHaveLength(1);
   });
+  test('given preference, adds grid to popup, no askForWebPushPermission', () => {
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([emailInAppPreference], false);
+    expect(
+      $(
+        '.notificationapi-preferences-popup > .notificationapi-preferences-grid'
+      )
+    ).toHaveLength(1);
+    expect(
+      $(
+        '.notificationapi-preferences-popup > .notificationapi-preferences-message'
+      )
+    ).toHaveLength(0);
+  });
+  test('given preference, adds grid to popup, with askForWebPushPermission adds web push permission message', () => {
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([emailInAppPreference], true);
+    expect(
+      $(
+        '.notificationapi-preferences-popup > .notificationapi-preferences-grid'
+      )
+    ).toHaveLength(1);
+    expect(
+      $(
+        '.notificationapi-preferences-popup > .notificationapi-preferences-message'
+      )
+    ).toHaveLength(1);
+  });
+  test('the web push permission message is clicked and askForWebPushPermission is called', () => {
+    // Create a spy for the method
+    const mockAskForWebPushPermission = jest.spyOn(
+      notificationapi,
+      'askForWebPushPermission'
+    );
+
+    // Run your methods
+    notificationapi.showUserPreferences();
+    notificationapi.renderPreferences([emailInAppPreference], true);
+    $('.notificationapi-preferences-message').trigger('click');
+
+    // Expect the spy to have been called
+    expect(mockAskForWebPushPermission).toHaveBeenCalled();
+  });
 
   test(`given email/inapp and inapp/sms preference, adds email/inapp/sms headers to grid`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      emailInAppPreference,
-      inappSMSPreference
-    ]);
+    notificationapi.renderPreferences(
+      [emailInAppPreference, inappSMSPreference],
+      false
+    );
     expect(
       $(
         '.notificationapi-preferences-grid > .notificationapi-preferences-channel'
@@ -424,10 +501,10 @@ describe('renderPreferences', () => {
 
   test(`given two simple preferences, adds titles and toggles based on channel state to grid`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      emailInAppPreference,
-      inappSMSPreference
-    ]);
+    notificationapi.renderPreferences(
+      [emailInAppPreference, inappSMSPreference],
+      false
+    );
     expect(
       $(
         '.notificationapi-preferences-grid > .notificationapi-preferences-title'
@@ -468,9 +545,10 @@ describe('renderPreferences', () => {
 
   test('does not show expand button if subNotificationPreferences is empty', () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      { ...emailInAppPreference, subNotificationPreferences: [] }
-    ]);
+    notificationapi.renderPreferences(
+      [{ ...emailInAppPreference, subNotificationPreferences: [] }],
+      false
+    );
     expect(
       $(
         '.notificationapi-preferences-grid > .notificationapi-preferences-expand'
@@ -480,23 +558,26 @@ describe('renderPreferences', () => {
 
   test(`given a complex preference, adds expand button, subtitles and subtoggles to grid`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          },
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId2',
-            title: 'subtitle2'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            },
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId2',
+              title: 'subtitle2'
+            }
+          ]
+        }
+      ],
+      false
+    );
 
     expect(
       $(
@@ -543,18 +624,21 @@ describe('renderPreferences', () => {
 
   test(`subtitles and subtoggles are .closed by default`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            }
+          ]
+        }
+      ],
+      false
+    );
 
     expect($('.notificationapi-preferences-subtitle.closed')).toHaveLength(1);
     expect($('.notificationapi-preferences-subtoggle.closed')).toHaveLength(2);
@@ -562,38 +646,41 @@ describe('renderPreferences', () => {
 
   test(`after expand is clicked, relevant subtitles and subtoggles lose .closed`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          },
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId2',
-            title: 'subtitle2'
-          }
-        ]
-      },
-      {
-        ...inappSMSPreference,
-        subNotificationPreferences: [
-          {
-            ...inappSMSPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle3'
-          },
-          {
-            ...inappSMSPreference,
-            subNotificationId: 'subNotificationId2',
-            title: 'subtitle4'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            },
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId2',
+              title: 'subtitle2'
+            }
+          ]
+        },
+        {
+          ...inappSMSPreference,
+          subNotificationPreferences: [
+            {
+              ...inappSMSPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle3'
+            },
+            {
+              ...inappSMSPreference,
+              subNotificationId: 'subNotificationId2',
+              title: 'subtitle4'
+            }
+          ]
+        }
+      ],
+      false
+    );
 
     $(
       '.notificationapi-preferences-expand[data-notificationId="notificationId1"]'
@@ -622,18 +709,21 @@ describe('renderPreferences', () => {
 
   test('subtoggles are active for enabled notifications and inactive for disabled notifications', async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            }
+          ]
+        }
+      ],
+      false
+    );
 
     expect(
       $('.notificationapi-preferences-subtoggle input:disabled')
@@ -645,18 +735,21 @@ describe('renderPreferences', () => {
 
   test('clicking toggle changes the disabled state of subtoggles', async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([
-      {
-        ...emailInAppPreference,
-        subNotificationPreferences: [
-          {
-            ...emailInAppPreference,
-            subNotificationId: 'subNotificationId1',
-            title: 'subtitle1'
-          }
-        ]
-      }
-    ]);
+    notificationapi.renderPreferences(
+      [
+        {
+          ...emailInAppPreference,
+          subNotificationPreferences: [
+            {
+              ...emailInAppPreference,
+              subNotificationId: 'subNotificationId1',
+              title: 'subtitle1'
+            }
+          ]
+        }
+      ],
+      false
+    );
 
     $(
       '.notificationapi-preferences-toggle[data-channel="EMAIL"] input'
@@ -681,12 +774,12 @@ describe('renderPreferences', () => {
 
   test(`given preferences repeatedly, removes old preferences and renders new preferences`, async () => {
     notificationapi.showUserPreferences();
-    notificationapi.renderPreferences([emailInAppPreference]);
+    notificationapi.renderPreferences([emailInAppPreference], false);
     expect($('.notificationapi-preferences-title')[0].innerHTML).toEqual(
       'title1'
     );
 
-    notificationapi.renderPreferences([inappSMSPreference]);
+    notificationapi.renderPreferences([inappSMSPreference], false);
     expect($('.notificationapi-preferences-title')[0].innerHTML).toEqual(
       'title2'
     );

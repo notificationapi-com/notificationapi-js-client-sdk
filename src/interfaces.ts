@@ -21,7 +21,14 @@ export interface NotificationAPIClientInterface {
   openInAppPopup: () => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
-  renderPreferences: (preferences: Preference[]) => void;
+  setWebpushSettings(
+    applicationServerKey: string,
+    askForWebPushPermission: boolean
+  ): void;
+  renderPreferences: (
+    preferences: Preference[],
+    askForWebPushPermission: boolean
+  ) => void;
   destroy: () => void;
   websocket?: WebSocket;
   elements: {
