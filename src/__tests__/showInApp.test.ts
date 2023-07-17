@@ -185,6 +185,41 @@ describe('defaults', () => {
   });
 });
 
+describe('Ask for web push notification permission', () => {
+  let notificationAPI: NotificationAPI;
+  let askForWebPushPermissionSpy: jest.SpyInstance<void, []>;
+  beforeEach(() => {
+    notificationapi.showInApp({
+      root: 'root'
+    });
+    askForWebPushPermissionSpy = jest.spyOn(
+      notificationapi,
+      'askForWebPushPermission'
+    );
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    if (notificationAPI) notificationAPI.destroy();
+  });
+  test('on Allow click', () => {
+    expect($('.opt-in-container')[0].style.display).toEqual('');
+    $('.allow-button').trigger('click');
+    expect($('.opt-in-container')[0].style.display).toEqual('none');
+    expect(askForWebPushPermissionSpy).toHaveBeenCalledWith();
+  });
+  test('on No thanks button click', () => {
+    expect($('.opt-in-container')[0].style.display).toEqual('');
+    $('.no-thanks-button').trigger('click');
+    expect($('.opt-in-container')[0].style.display).toEqual('none');
+  });
+  test('on hide button click', () => {
+    expect($('.opt-in-container')[0].style.display).toEqual('');
+    $('.hide-button').trigger('click');
+    expect($('.opt-in-container')[0].style.display).toEqual('none');
+  });
+});
+
 describe('inline mode', () => {
   test('inline mode: adds a notification popup to the container with .inline', () => {
     notificationapi.showInApp({

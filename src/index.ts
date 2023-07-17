@@ -356,6 +356,64 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     headerHeading.innerHTML = 'Notifications';
     this.elements.header.appendChild(headerHeading);
 
+    // check if askForWebPushPermission in both state and local storage is false
+    const notificationapiLocalStorageSettings = JSON.parse(
+      localStorage.getItem('notificationapi') || '{}'
+    );
+    if (
+      !this.state.webPushSettings.askForWebPushPermission &&
+      !notificationapiLocalStorageSettings.askForWebPushPermission
+    ) {
+      // add opt-in message
+      const optInContainer = document.createElement('div');
+      optInContainer.classList.add('opt-in-container');
+
+      const optInMessage = document.createElement('div');
+      optInMessage.innerHTML = 'Do you want to receive push notifications?';
+      optInMessage.classList.add('opt-in-message');
+      optInContainer.appendChild(optInMessage);
+
+      const allowButton = document.createElement('button');
+      allowButton.innerHTML = 'Allow';
+      allowButton.classList.add('allow-button');
+      allowButton.addEventListener('click', () => {
+        this.askForWebPushPermission();
+        // Set askForWebPushPermission to false in local storage on No Thanks click
+        notificationapiLocalStorageSettings.askForWebPushPermission = false;
+        localStorage.setItem(
+          'notificationapi',
+          JSON.stringify(notificationapiLocalStorageSettings)
+        );
+        optInContainer.style.display = 'none';
+      });
+      optInContainer.appendChild(allowButton);
+
+      const noThanksButton = document.createElement('button');
+      noThanksButton.innerHTML = 'No thanks';
+      noThanksButton.classList.add('no-thanks-button');
+      noThanksButton.addEventListener('click', () => {
+        // Set askForWebPushPermission to false in local storage on No Thanks click
+        notificationapiLocalStorageSettings.askForWebPushPermission = false;
+        localStorage.setItem(
+          'notificationapi',
+          JSON.stringify(notificationapiLocalStorageSettings)
+        );
+        optInContainer.style.display = 'none';
+      });
+      optInContainer.appendChild(noThanksButton);
+      // add hide button
+      const hideButton = document.createElement('button');
+      hideButton.innerHTML = '>';
+      hideButton.style.transform = 'rotate(90deg)';
+      hideButton.classList.add('hide-button');
+      hideButton.style.float = 'right'; // this positions the button on the right
+      hideButton.addEventListener('click', () => {
+        optInContainer.style.display = 'none';
+      });
+      optInContainer.appendChild(hideButton);
+      this.elements.header.appendChild(optInContainer);
+    }
+
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
     headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
@@ -935,7 +993,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const message = document.createElement('button');
       message.innerHTML =
         'Click here to receive our push notifications through the browser.';
-      message.classList.add('notificationapi-preferences-message');
+      message.classList.add(
+        'notificationapi-preferences-grid',
+        'notificationapi-preferences-web-push-opt-in'
+      );
       popup.appendChild(message);
 
       // Add click event listener to the message

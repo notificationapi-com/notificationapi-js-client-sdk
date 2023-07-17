@@ -435,12 +435,7 @@ describe('renderPreferences', () => {
     notificationapi.renderPreferences([emailInAppPreference], true);
     expect(
       $(
-        '.notificationapi-preferences-popup > .notificationapi-preferences-grid'
-      )
-    ).toHaveLength(1);
-    expect(
-      $(
-        '.notificationapi-preferences-popup > .notificationapi-preferences-message'
+        '.notificationapi-preferences-popup > .notificationapi-preferences-web-push-opt-in'
       )
     ).toHaveLength(1);
   });
@@ -454,7 +449,7 @@ describe('renderPreferences', () => {
     // Run your methods
     notificationapi.showUserPreferences();
     notificationapi.renderPreferences([emailInAppPreference], true);
-    $('.notificationapi-preferences-message').trigger('click');
+    $('.notificationapi-preferences-web-push-opt-in').trigger('click');
 
     // Expect the spy to have been called
     expect(mockAskForWebPushPermission).toHaveBeenCalled();
