@@ -71,6 +71,7 @@ beforeEach(() => {
 afterEach(() => {
   WS.clean();
   spy.mockRestore();
+  jest.restoreAllMocks();
   if (notificationapi) notificationapi.destroy();
 });
 
@@ -166,6 +167,7 @@ describe('websocket send & receives', () => {
   });
 
   test('given WS is not open, requests user_preferences after it is opened', async () => {
+    await server.nextMessage; // environment/data request
     notificationapi.showUserPreferences();
     const req1: WS_UserPreferencesRequest = {
       route: 'user_preferences/get_preferences'
@@ -175,15 +177,12 @@ describe('websocket send & receives', () => {
 
   test('given WS is open, requests user_preferences', async () => {
     await server.connected; // ensuring WS is open
+    await server.nextMessage; // environment/data request
     notificationapi.showUserPreferences();
     const req1: WS_UserPreferencesRequest = {
       route: 'user_preferences/get_preferences'
     };
-    const req2: WS_EnvironmentDataRequest = {
-      route: 'environment/data'
-    };
     await expect(server).toReceiveMessage(req1);
-    await expect(server).toReceiveMessage(req2);
   });
 
   test('given malformed message, doesnt break', async () => {
@@ -209,23 +208,6 @@ describe('websocket send & receives', () => {
     };
     server.send(res);
     expect(mock).toHaveBeenCalledWith(res.payload.userPreferences, false);
-  });
-  test('given environment, calls setWebpushSettings function with correct parameters', async () => {
-    const mock = jest.spyOn(notificationapi, 'setWebpushSettings');
-    notificationapi.showUserPreferences();
-    const res: WS_EnvironmentDataResponse = {
-      route: 'environment/data',
-      payload: {
-        logo: 'mocked_logo',
-        applicationServerKey: 'mocked_applicationServerKey',
-        askForWebPushPermission: true
-      }
-    };
-    server.send(res);
-    expect(mock).toHaveBeenCalledWith(
-      res.payload.applicationServerKey,
-      res.payload.askForWebPushPermission
-    );
   });
 
   test('given other messages, does not call renderPreferences', async () => {
@@ -297,6 +279,16 @@ describe('websocket send & receives', () => {
 
   test('given preference, clicking subtoggle changes the subtoggle and sends correct patch request', async () => {
     notificationapi.showUserPreferences();
+    await expect(server).toReceiveMessage({ route: 'environment/data' });
+    const res: WS_EnvironmentDataResponse = {
+      route: 'environment/data',
+      payload: {
+        logo: '',
+        applicationServerKey: '',
+        askForWebPushPermission: true
+      }
+    };
+    server.send(res);
     await server.nextMessage;
     notificationapi.renderPreferences(
       [
@@ -317,7 +309,7 @@ describe('websocket send & receives', () => {
       '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input'
     ).trigger('click');
 
-    const req1: WS_UserPreferencesPatchRequest = {
+    const req: WS_UserPreferencesPatchRequest = {
       route: 'user_preferences/patch_preferences',
       payload: [
         {
@@ -332,16 +324,13 @@ describe('websocket send & receives', () => {
         }
       ]
     };
-    const req_environment: WS_EnvironmentDataRequest = {
-      route: 'environment/data'
-    };
+
     expect(
       $(
         '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input:not(:checked)'
       )
     ).toHaveLength(1);
-    await expect(server).toReceiveMessage(req_environment);
-    await expect(server).toReceiveMessage(req1);
+    await expect(server).toReceiveMessage(req);
     $(
       '.notificationapi-preferences-subtoggle[data-channel="EMAIL"] input'
     ).trigger('click');
@@ -783,5 +772,82 @@ describe('renderPreferences', () => {
     expect($('.notificationapi-preferences-title')[0].innerHTML).toEqual(
       'title2'
     );
+  });
+});
+describe('When askForWebPushPermission is called', () => {
+  const req: WS_EnvironmentDataRequest = {
+    route: 'environment/data'
+  };
+  describe('When return data form websocket api has the correct schema', () => {
+    test('askForWebPushPermission calls subscribeWebPushUser from serviceWorkerRegistration with correct applicationServerKey', async () => {
+      const subscribeWebPushUserSpy = jest.spyOn(
+        notificationapi,
+        'subscribeWebPushUser'
+      );
+
+      notificationapi.askForWebPushPermission();
+      await server.connected;
+      const message: WS_EnvironmentDataResponse = {
+        route: 'environment/data',
+        payload: {
+          logo: '',
+          applicationServerKey: 'applicationServerKey',
+          askForWebPushPermission: true
+        }
+      };
+      server.send(message);
+
+      expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
+        message.payload.applicationServerKey,
+        encodeURIComponent(clientId),
+        encodeURIComponent(userId),
+        undefined // replace with actual userIdHash if known
+      );
+    });
+  });
+  describe('When return data form websocket api does not have the correct schema', () => {
+    test('askForWebPushPermission does not call subscribeWebPushUser', async () => {
+      const subscribeWebPushUserSpy = jest.spyOn(
+        notificationapi,
+        'subscribeWebPushUser'
+      );
+
+      notificationapi.askForWebPushPermission();
+      await server.connected;
+      const message = {
+        payload: {
+          logo: '',
+          applicationServerKey: 'applicationServerKey',
+          askForWebPushPermission: true
+        }
+      };
+      server.send(message);
+      await expect(server).toReceiveMessage(req);
+
+      expect(subscribeWebPushUserSpy).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('When webPushSettings handler is triggered', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let originalNotification: any;
+
+  beforeEach(() => {
+    // Save original Notification
+    originalNotification = global.Notification;
+
+    // Mock the global Notification object
+    Object.defineProperty(global, 'Notification', {
+      value: {
+        permission: 'granted'
+      },
+      writable: true
+    });
+  });
+
+  afterEach(() => {
+    // Reset global.Notification to its original value
+    global.Notification = originalNotification;
   });
 });

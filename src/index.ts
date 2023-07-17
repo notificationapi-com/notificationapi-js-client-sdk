@@ -16,11 +16,11 @@ import {
   WS_UserPreferencesResponse,
   WS_EnvironmentDataResponse
 } from './interfaces';
-import { subscribeWebPushUser } from './subscribeWebPushUser';
 import timeAgo from './utils/timeAgo';
+import { PushSubscription } from './interfaces';
 
+const defaultRestAPIUrl = 'https://api.notificationapi.com';
 const defaultWebSocket = 'wss://ws.notificationapi.com';
-
 const NOTIFICATION_REQUEST_COUNT = 50;
 const PAGE_SIZE = 5;
 
@@ -133,7 +133,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       oldestNotificationsDate: '',
       currentPage: 0,
       pageSize: 999999,
-      webPushSetting: {
+      webPushSettings: {
         applicationServerKey: '',
         askForWebPushPermission: false
       }
@@ -172,11 +172,19 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       webPushSettings: (message: WS_EnvironmentDataResponse) => {
         if ('Notification' in window && Notification.permission === 'granted') {
-          this.setWebpushSettings(message.payload.applicationServerKey, false);
+          this.state.webPushSettings.applicationServerKey =
+            message.payload.applicationServerKey;
+          this.state.webPushSettings.askForWebPushPermission = false;
         }
-        this.setWebpushSettings(
-          message.payload.applicationServerKey,
-          message.payload.askForWebPushPermission
+        this.state.webPushSettings.applicationServerKey =
+          message.payload.applicationServerKey;
+        this.state.webPushSettings.askForWebPushPermission =
+          message.payload.askForWebPushPermission;
+        this.subscribeWebPushUser(
+          this.state.webPushSettings.applicationServerKey,
+          encodeURIComponent(this.state.initOptions.clientId),
+          encodeURIComponent(this.state.initOptions.userId),
+          this.state.initOptions.userIdHash
         );
       }
     };
@@ -203,15 +211,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           ? '&userIdHash=' + encodeURIComponent(options.userIdHash)
           : ''
       }`;
-      const ws = new WebSocket(websocketAddress);
-      this.websocket = ws;
+      this.websocket = new WebSocket(websocketAddress);
+      this.sendWSMessage({
+        route: 'environment/data'
+      });
     }
   }
   askForWebPushPermission = (): void => {
-    this.sendWSMessage({
-      route: 'environment/data'
-    });
-
     if (this.websocket) {
       const ws = this.websocket;
       ws.addEventListener('message', (m: MessageEvent) => {
@@ -222,12 +228,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         if (body.route === 'environment/data') {
           const message = body as WS_EnvironmentDataResponse;
           this.websocketHandlers.webPushSettings(message);
-          subscribeWebPushUser(
-            this.state.webPushSetting.applicationServerKey,
-            encodeURIComponent(this.state.initOptions.clientId),
-            encodeURIComponent(this.state.initOptions.userId),
-            this.state.initOptions.userIdHash
-          );
         }
       });
     }
@@ -553,12 +553,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           if (!body || !body.route) {
             return;
           }
-
           if (body.route === 'user_preferences/preferences') {
             const message = body as WS_UserPreferencesResponse;
             this.renderPreferences(
               message.payload.userPreferences,
-              this.state.webPushSetting.askForWebPushPermission
+              this.state.webPushSettings.askForWebPushPermission
             );
           }
           if (body.route === 'environment/data') {
@@ -574,10 +573,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     // Request user preferences every time render is run to get the latest
     this.sendWSMessage({
       route: 'user_preferences/get_preferences'
-    });
-    // Request environment/data every time render is run to get the latest
-    this.sendWSMessage({
-      route: 'environment/data'
     });
   }
 
@@ -691,13 +686,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         this.elements.unread.innerHTML = '+99';
       }
     }
-  }
-  setWebpushSettings(
-    applicationServerKey: string,
-    askForWebPushPermission: boolean
-  ): void {
-    this.state.webPushSetting.applicationServerKey = applicationServerKey;
-    this.state.webPushSetting.askForWebPushPermission = askForWebPushPermission;
   }
   addNotificationsToState(notifications: InappNotification[]): void {
     // filter existing
@@ -942,11 +930,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       return;
     }
 
-    // create and insert the message at the top only if askForWebPushPermission is true
+    // create and insert the button at the top only if askForWebPushPermission is true
     if (askForWebPushPermission) {
-      const message = document.createElement('div');
+      const message = document.createElement('button');
       message.innerHTML =
-        'You have some push notifications. Click here if you want to receive them on this browser.';
+        'Click here to receive our push notifications through the browser.';
       message.classList.add('notificationapi-preferences-message');
       popup.appendChild(message);
 
@@ -1137,6 +1125,51 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       });
     }
   }
+  subscribeWebPushUser = (
+    applicationServerKey: string,
+    clientId: string,
+    userId: string,
+    hashUserId?: string
+  ): void => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/notificationapi-service-worker.js')
+        .then(async (registration) => {
+          Notification.requestPermission().then(async (permission) => {
+            if (permission === 'granted') {
+              await registration.pushManager
+                .subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey
+                })
+                .then(async (res) => {
+                  const url = `${defaultRestAPIUrl}/${clientId}/users/${userId}`;
+                  const body = {
+                    webPushTokens: [
+                      {
+                        sub: {
+                          endpoint: res.toJSON().endpoint as string,
+                          keys: res.toJSON().keys as PushSubscription['keys']
+                        }
+                      }
+                    ]
+                  };
+                  const headers = {
+                    'content-type': 'application/json',
+                    Authorization:
+                      'Basic ' + btoa(`${clientId}:${userId}:${hashUserId}`)
+                  };
+                  await fetch(url, {
+                    body: JSON.stringify(body),
+                    headers: headers,
+                    method: 'POST'
+                  });
+                });
+            }
+          });
+        });
+    }
+  };
 
   async websocketMessageReceived(route: string): Promise<unknown> {
     const ws = await this.websocketOpened();
@@ -1157,10 +1190,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         const ws = this.websocket;
         if (ws.readyState == ws.OPEN) {
           resolve(ws);
-        } else {
-          ws.addEventListener('open', () => {
-            resolve(ws);
-          });
         }
       }
     });

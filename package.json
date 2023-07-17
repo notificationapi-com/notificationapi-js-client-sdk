@@ -51,7 +51,6 @@
     "cypress": "^10.4.0",
     "eslint": "^7.11.0",
     "eslint-plugin-security": "^1.5.0",
-    "fetch-mock-jest": "^1.5.1",
     "jest": "^26.5.3",
     "jest-websocket-mock": "^2.2.0",
     "jquery": "^3.5.1",

@@ -1,20 +1,17 @@
 // subscribeWebPushUser.test.ts
-import { subscribeWebPushUser } from '../subscribeWebPushUser';
-import { Client } from '../utils/client';
-
-jest.mock('../utils/client');
-
+import NotificationAPI from '../index';
+import { NotificationAPIClientInterface } from '../interfaces';
+// Mocking the fetch API
+global.fetch = jest.fn();
+const clientId = 'envId@';
+const userId = 'userId@';
 describe('subscribeWebPushUser', () => {
   let mockPushManagerSubscribe: jest.Mock;
   let mockServiceWorkerRegister: jest.Mock;
-  let mockClientPost: jest.Mock;
-
+  let notificationapi: NotificationAPIClientInterface;
   beforeEach(() => {
     jest.clearAllMocks();
     jest.resetModules();
-
-    mockClientPost = jest.fn();
-    jest.spyOn(Client.prototype, 'post').mockImplementation(mockClientPost);
 
     mockPushManagerSubscribe = jest.fn();
     mockServiceWorkerRegister = jest.fn().mockResolvedValue({
@@ -33,6 +30,13 @@ describe('subscribeWebPushUser', () => {
     global.Notification = {
       requestPermission: jest.fn().mockResolvedValue('granted')
     } as any;
+
+    (global.fetch as jest.Mock).mockReset();
+    notificationapi = new NotificationAPI({
+      clientId,
+      userId,
+      websocket: 'ws://localhost:1234'
+    });
   });
 
   it('should subscribe web push user', async () => {
@@ -42,38 +46,49 @@ describe('subscribeWebPushUser', () => {
     const mockHashUserId = 'mockHashUserId';
     const mockEndpoint = 'mockEndpoint';
     const mockKeys = { auth: 'auth', p256dh: 'p256dh' };
-
+    const headers = {
+      'content-type': 'application/json',
+      Authorization:
+        'Basic ' + btoa(`${mockClientId}:${mockUserId}:${mockHashUserId}`)
+    };
+    const body = {
+      webPushTokens: [
+        {
+          sub: {
+            endpoint: mockEndpoint,
+            keys: mockKeys
+          }
+        }
+      ]
+    };
+    const url = `https://api.notificationapi.com/${mockClientId}/users/${mockUserId}`;
     mockPushManagerSubscribe.mockResolvedValue({
       toJSON: () => ({
         endpoint: mockEndpoint,
         keys: mockKeys
       })
     });
-
-    subscribeWebPushUser(
+    (global.fetch as jest.Mock).mockResolvedValue({ status: 200 });
+    notificationapi.subscribeWebPushUser(
       mockAppServerKey,
       mockClientId,
       mockUserId,
       mockHashUserId
     );
-
     // Add this to flush all microtasks before making assertions.
     await new Promise((resolve) => setImmediate(resolve));
 
-    expect(mockServiceWorkerRegister).toBeCalledWith('/notificationapi-sw.js');
+    expect(mockServiceWorkerRegister).toBeCalledWith(
+      '/notificationapi-service-worker.js'
+    );
     expect(mockPushManagerSubscribe).toBeCalledWith({
       userVisibleOnly: true,
       applicationServerKey: mockAppServerKey
     });
-    expect(mockClientPost).toBeCalledWith({
-      webPushTokens: [
-        {
-          sub: {
-            endpoint: 'mockEndpoint',
-            keys: { auth: 'auth', p256dh: 'p256dh' }
-          }
-        }
-      ]
+    expect(global.fetch as jest.Mock).toHaveBeenCalledWith(url, {
+      body: JSON.stringify(body),
+      headers: headers,
+      method: 'POST'
     });
   });
   it('should not subscribe web push user if permission not granted', async () => {
@@ -87,7 +102,7 @@ describe('subscribeWebPushUser', () => {
       .fn()
       .mockResolvedValue('denied');
 
-    subscribeWebPushUser(
+    notificationapi.subscribeWebPushUser(
       mockAppServerKey,
       mockClientId,
       mockUserId,
@@ -97,8 +112,10 @@ describe('subscribeWebPushUser', () => {
     // Add this to flush all microtasks before making assertions.
     await new Promise((resolve) => setImmediate(resolve));
 
-    expect(mockServiceWorkerRegister).toBeCalledWith('/notificationapi-sw.js');
+    expect(mockServiceWorkerRegister).toBeCalledWith(
+      '/notificationapi-service-worker.js'
+    );
     expect(mockPushManagerSubscribe).not.toHaveBeenCalled();
-    expect(mockClientPost).not.toHaveBeenCalled();
+    expect(global.fetch as jest.Mock).not.toHaveBeenCalled();
   });
 });

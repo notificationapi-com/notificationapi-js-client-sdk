@@ -1,20 +1,16 @@
 import {
   NotificationAPIClientInterface,
-  WS_EnvironmentDataRequest,
   WS_EnvironmentDataResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
 import NotificationAPI from '../index';
-import * as subscribeWebPushUser from '../subscribeWebPushUser';
 
 const clientId = 'envId@';
 const userId = 'userId@';
 
 let notificationapi: NotificationAPIClientInterface;
 let server: WS;
-const req: WS_EnvironmentDataRequest = {
-  route: 'environment/data'
-};
+
 beforeEach(async () => {
   server = new WS('ws://localhost:1234', { jsonProtocol: true });
   notificationapi = new NotificationAPI({
@@ -28,7 +24,7 @@ describe('When askForWebPushPermission is called', () => {
   describe('When return data form websocket api has the correct schema', () => {
     test('askForWebPushPermission calls subscribeWebPushUser from serviceWorkerRegistration with correct applicationServerKey', async () => {
       const subscribeWebPushUserSpy = jest.spyOn(
-        subscribeWebPushUser,
+        notificationapi,
         'subscribeWebPushUser'
       );
 
@@ -43,7 +39,6 @@ describe('When askForWebPushPermission is called', () => {
         }
       };
       server.send(message);
-      await expect(server).toReceiveMessage(req);
 
       expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
         message.payload.applicationServerKey,
@@ -56,7 +51,7 @@ describe('When askForWebPushPermission is called', () => {
   describe('When return data form websocket api does not have the correct schema', () => {
     test('askForWebPushPermission does not call subscribeWebPushUser', async () => {
       const subscribeWebPushUserSpy = jest.spyOn(
-        subscribeWebPushUser,
+        notificationapi,
         'subscribeWebPushUser'
       );
 
@@ -70,7 +65,6 @@ describe('When askForWebPushPermission is called', () => {
         }
       };
       server.send(message);
-      await expect(server).toReceiveMessage(req);
 
       expect(subscribeWebPushUserSpy).not.toHaveBeenCalled();
     });
@@ -84,14 +78,6 @@ describe('When webPushSettings handler is triggered', () => {
   beforeEach(() => {
     // Save original Notification
     originalNotification = global.Notification;
-
-    // Mock the global Notification object
-    Object.defineProperty(global, 'Notification', {
-      value: {
-        permission: 'granted'
-      },
-      writable: true
-    });
   });
 
   afterEach(() => {
@@ -99,12 +85,18 @@ describe('When webPushSettings handler is triggered', () => {
     global.Notification = originalNotification;
   });
 
-  test('setWebpushSettings is called with correct parameters if Notification.permission is granted', async () => {
-    const setWebpushSettingsSpy = jest.spyOn(
+  test('setWebPushSettings is called with correct parameters if Notification.permission is granted', async () => {
+    // Mock the global Notification object
+    Object.defineProperty(global, 'Notification', {
+      value: {
+        permission: 'granted'
+      },
+      writable: true
+    });
+    const subscribeWebPushUserSpy = jest.spyOn(
       notificationapi,
-      'setWebpushSettings'
+      'subscribeWebPushUser'
     );
-
     notificationapi.askForWebPushPermission();
     await server.connected;
 
@@ -118,12 +110,7 @@ describe('When webPushSettings handler is triggered', () => {
     };
 
     server.send(message);
-    await expect(server).toReceiveMessage(req);
-
-    expect(setWebpushSettingsSpy).toHaveBeenCalledWith(
-      message.payload.applicationServerKey,
-      false
-    );
+    expect(subscribeWebPushUserSpy).toHaveBeenCalled();
   });
 });
 

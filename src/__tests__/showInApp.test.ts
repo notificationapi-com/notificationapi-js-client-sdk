@@ -223,6 +223,7 @@ describe('popup interactions', () => {
   });
 
   test('when button is clicked, unread badge is removed and requests clearing unread', async () => {
+    await server.nextMessage; // environment/data request
     notificationapi.showInApp({
       root: 'root'
     });
@@ -328,7 +329,7 @@ describe('popup interactions', () => {
     });
     await server.nextMessage; // unread request
     await server.nextMessage; // notifications request
-
+    await server.nextMessage; // environment/data request
     fiftyNotifs[49] = {
       ...testNotification,
       id: '49',
@@ -382,7 +383,7 @@ describe('popup interactions', () => {
     );
 
     await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
-    expect(server.messages).toHaveLength(4);
+    expect(server.messages).toHaveLength(5);
   });
 
   test('after receiving <50 notifications, scrolling does not trigger requetsing more', async () => {
@@ -391,6 +392,7 @@ describe('popup interactions', () => {
     });
     await server.nextMessage; // unread request
     await server.nextMessage; // notifications request
+    await server.nextMessage; // environment/data request
     const res: WS_NotificationsResponse = {
       route: 'inapp_web/notifications',
       payload: {
@@ -404,7 +406,7 @@ describe('popup interactions', () => {
       new CustomEvent('scroll')
     );
     await new Promise((resolve) => setTimeout(resolve, 1000)); // wait 1s
-    expect(server.messages).toHaveLength(3);
+    expect(server.messages).toHaveLength(4);
     expect($('.notificationapi-nomore')).toHaveLength(1);
   });
 });
@@ -673,6 +675,7 @@ describe('Handling WS_NotificationsResponse', () => {
 
 describe('websocket send & receives', () => {
   test('given WS is not open, requests for unread count and notifications after it is opened', async () => {
+    await server.nextMessage; // environment/data request
     notificationapi.showInApp({
       root: 'root'
     });
@@ -691,6 +694,7 @@ describe('websocket send & receives', () => {
 
   test('given WS is open, requests for unread count and notifications', async () => {
     await server.connected; // ensuring WS is open
+    await server.nextMessage; // environment/data request
     notificationapi.showInApp({
       root: 'root'
     });
@@ -973,6 +977,7 @@ describe('paginated', () => {
     });
     await server.nextMessage; // unread
     await server.nextMessage; // notifications
+    await server.nextMessage; // environment/data request
     notificationapi.websocketHandlers.notifications({
       route: 'inapp_web/notifications',
       payload: {
@@ -1030,6 +1035,7 @@ describe('setAsReadMode', () => {
         });
         await server.nextMessage;
         await server.nextMessage;
+        await server.nextMessage; // environment/data request
         notificationapi.websocketHandlers.unreadCount({
           route: 'inapp_web/unread_count',
           payload: {

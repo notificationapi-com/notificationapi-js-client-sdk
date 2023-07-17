@@ -19,12 +19,14 @@ export interface NotificationAPIClientInterface {
     subNotificationId?: string
   ) => void;
   openInAppPopup: () => void;
+  subscribeWebPushUser: (
+    applicationServerKey: string,
+    clientId: string,
+    userId: string,
+    hashUserId?: string
+  ) => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
-  setWebpushSettings(
-    applicationServerKey: string,
-    askForWebPushPermission: boolean
-  ): void;
   renderPreferences: (
     preferences: Preference[],
     askForWebPushPermission: boolean
@@ -59,7 +61,7 @@ export interface NotificationAPIClientInterface {
     lastResponseNotificationsCount?: number;
     inappOptions?: InAppOptions;
     initOptions: InitOptions;
-    webPushSetting: WebPushSettings;
+    webPushSettings: WebPushSettings;
   };
   websocketHandlers: {
     notifications: (message: WS_NotificationsResponse) => void;

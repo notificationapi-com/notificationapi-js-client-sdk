@@ -66,6 +66,12 @@ ComplexPreferenceState.args = {
           channel: 'INAPP_WEB',
           channelName: 'In-App',
           state: false
+        },
+
+        {
+          channel: 'PUSH',
+          channelName: 'PUSH',
+          state: false
         }
       ]
     },
