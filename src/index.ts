@@ -403,8 +403,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       optInContainer.appendChild(noThanksButton);
       // add hide button
       const hideButton = document.createElement('button');
-      hideButton.innerHTML = '>';
-      hideButton.style.transform = 'rotate(90deg)';
+      hideButton.innerHTML = `
+      <svg viewBox="0 0 512 512">
+    <title>Hide</title>
+    <path d="M256,64C150,64,64,150,64,256s86,192,192,192,192-86,192-192S362,64,256,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/>
+    <polyline points="400 176 256 352 112 176" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/>
+</svg>
+  `;
       hideButton.classList.add('hide-button');
       hideButton.style.float = 'right'; // this positions the button on the right
       hideButton.addEventListener('click', () => {
