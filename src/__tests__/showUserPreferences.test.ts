@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import {
   NotificationAPIClientInterface,
-  WS_EnvironmentDataRequest,
   WS_EnvironmentDataResponse,
   WS_UnreadCountResponse,
   WS_UserPreferencesPatchRequest,
@@ -770,17 +769,12 @@ describe('renderPreferences', () => {
   });
 });
 describe('When askForWebPushPermission is called', () => {
-  const req: WS_EnvironmentDataRequest = {
-    route: 'environment/data'
-  };
   describe('When return data form websocket api has the correct schema', () => {
     test('askForWebPushPermission calls subscribeWebPushUser from serviceWorkerRegistration with correct applicationServerKey', async () => {
       const subscribeWebPushUserSpy = jest.spyOn(
         notificationapi,
         'subscribeWebPushUser'
       );
-
-      notificationapi.askForWebPushPermission();
       await server.connected;
       const message: WS_EnvironmentDataResponse = {
         route: 'environment/data',
@@ -791,6 +785,7 @@ describe('When askForWebPushPermission is called', () => {
         }
       };
       server.send(message);
+      notificationapi.askForWebPushPermission();
 
       expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
         message.payload.applicationServerKey,
@@ -798,28 +793,6 @@ describe('When askForWebPushPermission is called', () => {
         encodeURIComponent(userId),
         undefined // replace with actual userIdHash if known
       );
-    });
-  });
-  describe('When return data form websocket api does not have the correct schema', () => {
-    test('askForWebPushPermission does not call subscribeWebPushUser', async () => {
-      const subscribeWebPushUserSpy = jest.spyOn(
-        notificationapi,
-        'subscribeWebPushUser'
-      );
-
-      notificationapi.askForWebPushPermission();
-      await server.connected;
-      const message = {
-        payload: {
-          logo: '',
-          applicationServerKey: 'applicationServerKey',
-          askForWebPushPermission: true
-        }
-      };
-      server.send(message);
-      await expect(server).toReceiveMessage(req);
-
-      expect(subscribeWebPushUserSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -27,8 +27,6 @@ describe('When askForWebPushPermission is called', () => {
         notificationapi,
         'subscribeWebPushUser'
       );
-
-      notificationapi.askForWebPushPermission();
       await server.connected;
       const message: WS_EnvironmentDataResponse = {
         route: 'environment/data',
@@ -39,6 +37,7 @@ describe('When askForWebPushPermission is called', () => {
         }
       };
       server.send(message);
+      notificationapi.askForWebPushPermission();
 
       expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
         message.payload.applicationServerKey,
@@ -46,27 +45,6 @@ describe('When askForWebPushPermission is called', () => {
         encodeURIComponent(userId),
         undefined // replace with actual userIdHash if known
       );
-    });
-  });
-  describe('When return data form websocket api does not have the correct schema', () => {
-    test('askForWebPushPermission does not call subscribeWebPushUser', async () => {
-      const subscribeWebPushUserSpy = jest.spyOn(
-        notificationapi,
-        'subscribeWebPushUser'
-      );
-
-      notificationapi.askForWebPushPermission();
-      await server.connected;
-      const message = {
-        payload: {
-          logo: '',
-          applicationServerKey: 'applicationServerKey',
-          askForWebPushPermission: true
-        }
-      };
-      server.send(message);
-
-      expect(subscribeWebPushUserSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -177,16 +177,7 @@
   padding: 40px 20px;
   text-align: center;
 }
-.notificationapi-popup .notificationapi-web-push-opt-in {
-  padding: 10px;
-  background-color: #d0e9f6; /* light blue */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  color: #333;
-  font-size: 14px;
-  margin-bottom: 10px;
-  cursor: pointer; /* Changes the cursor on hover to indicate it's clickable */
-}
+
 .notificationapi-popup .notificationapi-nomore {
   padding: 10px 20px;
   text-align: center;
@@ -769,16 +760,10 @@
   text-shadow: 0 0 0.25em rgba(255, 255, 255, 0.3);
 }
 .notificationapi-preferences-web-push-opt-in {
-  padding: 10px;
-  background-color: #d0e9f6; /* light blue */
-  border: 1px solid #ddd;
-  border-radius: 5px;
   color: #333;
-  font-size: 14px;
-  margin-bottom: 10px;
-  cursor: pointer; /* Changes the cursor on hover to indicate it's clickable */
+  cursor: pointer; /* Keeps the pointer cursor for the hyperlink */
 }
-.opt-in-container {
+.notificationapi-opt-in-container {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -788,50 +773,27 @@
   border: 1px solid #dddddd;
   border-radius: 5px;
   background-color: #f8f8f8;
-  margin: 10px 0;
 }
 
-.allow-button,
-.no-thanks-button {
+.notificationapi-allow-button,
+.notificationapi-no-thanks-button {
+  background-color: transparent; /* No background */
+  color: #777; /* Gray color */
+  text-decoration: underline; /* Makes it appear like a hyperlink */
   border: none;
   border-radius: 5px;
   padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
-  margin: 5px;
-  text-align: center; /* This will center the text within the buttons */
+  margin-top: 8px;
+  text-align: center;
 }
 
-.allow-button {
-  background-color: #4caf50; /* Green */
-  color: white;
+.notificationapi-allow-button:hover,
+.notificationapi-no-thanks-button:hover {
+  color: #0000ff; /* Blue color on hover */
 }
 
-.no-thanks-button {
-  background-color: #f44336; /* Red */
-  color: white;
-}
-.hide-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: 1px solid #999; /* border color */
-  background-color: transparent;
-  color: #999;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 50%;
-  width: 20px; /* reduced size */
-  height: 20px; /* reduced size */
-  padding: 5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  line-height: 0.8; /* Adjust line height for centering */
-}
-
-.hide-button:hover {
-  border-color: #333;
-  color: #333;
+.notificationapi-no-thanks-button {
+  margin-left: 7px;
 }

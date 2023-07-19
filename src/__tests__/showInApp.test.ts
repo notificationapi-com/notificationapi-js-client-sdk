@@ -9,7 +9,8 @@ import {
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountRequest,
-  WS_UnreadCountResponse
+  WS_UnreadCountResponse,
+  WS_EnvironmentDataResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
 import NotificationAPI from '../index';
@@ -188,7 +189,20 @@ describe('defaults', () => {
 describe('Ask for web push notification permission', () => {
   let notificationAPI: NotificationAPI;
   let askForWebPushPermissionSpy: jest.SpyInstance<void, []>;
+
   beforeEach(() => {
+    const settings = { askForWebPushPermission: true };
+    Storage.prototype.getItem = jest.fn(() => JSON.stringify(settings));
+    server.connected;
+    const res: WS_EnvironmentDataResponse = {
+      route: 'environment/data',
+      payload: {
+        logo: 'string',
+        applicationServerKey: 'string',
+        askForWebPushPermission: true
+      }
+    };
+    server.send(res);
     notificationapi.showInApp({
       root: 'root'
     });
@@ -203,23 +217,50 @@ describe('Ask for web push notification permission', () => {
     if (notificationAPI) notificationAPI.destroy();
   });
   test('on Allow click', () => {
-    expect($('.opt-in-container')[0].style.display).toEqual('');
-    $('.allow-button').trigger('click');
-    expect($('.opt-in-container')[0].style.display).toEqual('none');
+    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual('');
+    $('.notificationapi-allow-button').trigger('click');
+    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
+      'none'
+    );
     expect(askForWebPushPermissionSpy).toHaveBeenCalledWith();
   });
   test('on No thanks button click', () => {
-    expect($('.opt-in-container')[0].style.display).toEqual('');
-    $('.no-thanks-button').trigger('click');
-    expect($('.opt-in-container')[0].style.display).toEqual('none');
-  });
-  test('on hide button click', () => {
-    expect($('.opt-in-container')[0].style.display).toEqual('');
-    $('.hide-button').trigger('click');
-    expect($('.opt-in-container')[0].style.display).toEqual('none');
+    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual('');
+    $('.notificationapi-no-thanks-button').trigger('click');
+    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
+      'none'
+    );
   });
 });
 
+describe('Ask for web push notification permission: false askForWebPushPermission', () => {
+  let notificationAPI: NotificationAPI;
+  Storage.prototype.getItem = jest.fn(() => null);
+  beforeEach(() => {
+    server.connected;
+    const res: WS_EnvironmentDataResponse = {
+      route: 'environment/data',
+      payload: {
+        logo: 'string',
+        applicationServerKey: 'string',
+        askForWebPushPermission: false
+      }
+    };
+    server.send(res);
+    notificationapi.showInApp({
+      root: 'root'
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    if (notificationAPI) notificationAPI.destroy();
+  });
+
+  test('no notificationapi-opt-in-container', () => {
+    expect($('.notificationapi-opt-in-container').length).toEqual(0);
+  });
+});
 describe('inline mode', () => {
   test('inline mode: adds a notification popup to the container with .inline', () => {
     notificationapi.showInApp({

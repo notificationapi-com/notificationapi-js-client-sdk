@@ -31,6 +31,10 @@ export interface NotificationAPIClientInterface {
     preferences: Preference[],
     askForWebPushPermission: boolean
   ) => void;
+  renderWebPushOptIn: (
+    notificationapiLocalStorageSettings: { askForWebPushPermission: boolean },
+    askForWebPushPermission: boolean
+  ) => void;
   destroy: () => void;
   websocket?: WebSocket;
   elements: {

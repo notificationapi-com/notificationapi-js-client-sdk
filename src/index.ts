@@ -113,7 +113,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notifications: (message: WS_NotificationsResponse) => void;
     newNotifications: (message: WS_NewNotificationsResponse) => void;
     unreadCount: (message: WS_UnreadCountResponse) => void;
-    webPushSettings: (message: WS_EnvironmentDataResponse) => void;
   };
 
   destroy = (): void => {
@@ -169,23 +168,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       unreadCount: (message: WS_UnreadCountResponse) => {
         this.setInAppUnread(message.payload.count);
-      },
-      webPushSettings: (message: WS_EnvironmentDataResponse) => {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          this.state.webPushSettings.applicationServerKey =
-            message.payload.applicationServerKey;
-          this.state.webPushSettings.askForWebPushPermission = false;
-        }
-        this.state.webPushSettings.applicationServerKey =
-          message.payload.applicationServerKey;
-        this.state.webPushSettings.askForWebPushPermission =
-          message.payload.askForWebPushPermission;
-        this.subscribeWebPushUser(
-          this.state.webPushSettings.applicationServerKey,
-          encodeURIComponent(this.state.initOptions.clientId),
-          encodeURIComponent(this.state.initOptions.userId),
-          this.state.initOptions.userIdHash
-        );
       }
     };
 
@@ -212,25 +194,42 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           : ''
       }`;
       this.websocket = new WebSocket(websocketAddress);
-      this.sendWSMessage({
-        route: 'environment/data'
-      });
-    }
-  }
-  askForWebPushPermission = (): void => {
-    if (this.websocket) {
-      const ws = this.websocket;
-      ws.addEventListener('message', (m: MessageEvent) => {
+      // update environment data
+      this.websocket.addEventListener('message', (m: MessageEvent) => {
         const body = JSON.parse(m.data);
         if (!body || !body.route) {
           return;
         }
         if (body.route === 'environment/data') {
           const message = body as WS_EnvironmentDataResponse;
-          this.websocketHandlers.webPushSettings(message);
+          if (
+            'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            this.state.webPushSettings.applicationServerKey =
+              message.payload.applicationServerKey;
+            this.state.webPushSettings.askForWebPushPermission = false;
+          } else {
+            this.state.webPushSettings.applicationServerKey =
+              message.payload.applicationServerKey;
+            this.state.webPushSettings.askForWebPushPermission =
+              message.payload.askForWebPushPermission;
+          }
         }
       });
+
+      this.sendWSMessage({
+        route: 'environment/data'
+      });
     }
+  }
+  askForWebPushPermission = (): void => {
+    this.subscribeWebPushUser(
+      this.state.webPushSettings.applicationServerKey,
+      encodeURIComponent(this.state.initOptions.clientId),
+      encodeURIComponent(this.state.initOptions.userId),
+      this.state.initOptions.userIdHash
+    );
   };
   showInApp = (options: InAppOptions): void => {
     this.state.inappOptions = options;
@@ -351,73 +350,21 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       this.closeInAppPopup();
     });
     this.elements.header.appendChild(headerCloseButton);
-
     const headerHeading = document.createElement('h1');
     headerHeading.innerHTML = 'Notifications';
     this.elements.header.appendChild(headerHeading);
-
     // check if askForWebPushPermission in both state and local storage is false
-    const notificationapiLocalStorageSettings = JSON.parse(
-      localStorage.getItem('notificationapi') || '{}'
+    const notificationapiLocalStorageSettings: {
+      askForWebPushPermission: boolean;
+    } = JSON.parse(
+      localStorage.getItem('notificationapi') ||
+        '{"askForWebPushPermission":true}'
     );
-    if (
-      !this.state.webPushSettings.askForWebPushPermission &&
-      !notificationapiLocalStorageSettings.askForWebPushPermission
-    ) {
-      // add opt-in message
-      const optInContainer = document.createElement('div');
-      optInContainer.classList.add('opt-in-container');
 
-      const optInMessage = document.createElement('div');
-      optInMessage.innerHTML = 'Do you want to receive push notifications?';
-      optInMessage.classList.add('opt-in-message');
-      optInContainer.appendChild(optInMessage);
-
-      const allowButton = document.createElement('button');
-      allowButton.innerHTML = 'Allow';
-      allowButton.classList.add('allow-button');
-      allowButton.addEventListener('click', () => {
-        this.askForWebPushPermission();
-        // Set askForWebPushPermission to false in local storage on No Thanks click
-        notificationapiLocalStorageSettings.askForWebPushPermission = false;
-        localStorage.setItem(
-          'notificationapi',
-          JSON.stringify(notificationapiLocalStorageSettings)
-        );
-        optInContainer.style.display = 'none';
-      });
-      optInContainer.appendChild(allowButton);
-
-      const noThanksButton = document.createElement('button');
-      noThanksButton.innerHTML = 'No thanks';
-      noThanksButton.classList.add('no-thanks-button');
-      noThanksButton.addEventListener('click', () => {
-        // Set askForWebPushPermission to false in local storage on No Thanks click
-        notificationapiLocalStorageSettings.askForWebPushPermission = false;
-        localStorage.setItem(
-          'notificationapi',
-          JSON.stringify(notificationapiLocalStorageSettings)
-        );
-        optInContainer.style.display = 'none';
-      });
-      optInContainer.appendChild(noThanksButton);
-      // add hide button
-      const hideButton = document.createElement('button');
-      hideButton.innerHTML = `
-      <svg viewBox="0 0 512 512">
-    <title>Hide</title>
-    <path d="M256,64C150,64,64,150,64,256s86,192,192,192,192-86,192-192S362,64,256,64Z" style="fill:none;stroke:#000;stroke-miterlimit:10;stroke-width:32px"/>
-    <polyline points="400 176 256 352 112 176" style="fill:none;stroke:#000;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"/>
-</svg>
-  `;
-      hideButton.classList.add('hide-button');
-      hideButton.style.float = 'right'; // this positions the button on the right
-      hideButton.addEventListener('click', () => {
-        optInContainer.style.display = 'none';
-      });
-      optInContainer.appendChild(hideButton);
-      this.elements.header.appendChild(optInContainer);
-    }
+    this.renderWebPushOptIn(
+      notificationapiLocalStorageSettings,
+      this.state.webPushSettings.askForWebPushPermission
+    );
 
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
@@ -622,10 +569,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
               message.payload.userPreferences,
               this.state.webPushSettings.askForWebPushPermission
             );
-          }
-          if (body.route === 'environment/data') {
-            const message = body as WS_EnvironmentDataResponse;
-            this.websocketHandlers.webPushSettings(message);
           }
         });
       }
@@ -995,13 +938,9 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
     // create and insert the button at the top only if askForWebPushPermission is true
     if (askForWebPushPermission) {
-      const message = document.createElement('button');
-      message.innerHTML =
-        'Click here to receive our push notifications through the browser.';
-      message.classList.add(
-        'notificationapi-preferences-grid',
-        'notificationapi-preferences-web-push-opt-in'
-      );
+      const message = document.createElement('p');
+      message.innerHTML = `<a href="#" >Click here</a> to give us the necessary browser permissions to send you push notifications.`;
+      message.classList.add('notificationapi-preferences-web-push-opt-in');
       popup.appendChild(message);
 
       // Add click event listener to the message
@@ -1178,6 +1117,58 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         });
       }
     });
+  }
+
+  renderWebPushOptIn(
+    notificationapiLocalStorageSettings: { askForWebPushPermission: boolean },
+    askForWebPushPermission: boolean
+  ): void {
+    if (
+      !this.elements.header ||
+      !notificationapiLocalStorageSettings.askForWebPushPermission ||
+      !askForWebPushPermission
+    ) {
+      return;
+    }
+
+    // add opt-in message
+    const optInContainer = document.createElement('div');
+    optInContainer.classList.add('notificationapi-opt-in-container');
+
+    const optInMessage = document.createElement('div');
+    optInMessage.innerHTML = 'Do you want to receive push notifications?';
+    optInMessage.classList.add('notificationapi-opt-in-message');
+    optInContainer.appendChild(optInMessage);
+
+    const allowButton = document.createElement('button');
+    allowButton.innerHTML = 'Yes';
+    allowButton.classList.add('notificationapi-allow-button');
+    allowButton.addEventListener('click', () => {
+      this.askForWebPushPermission();
+      // Set askForWebPushPermission to false in local storage on No Thanks click
+      notificationapiLocalStorageSettings.askForWebPushPermission = false;
+      localStorage.setItem(
+        'notificationapi',
+        JSON.stringify(notificationapiLocalStorageSettings)
+      );
+      optInContainer.style.display = 'none';
+    });
+    optInContainer.appendChild(allowButton);
+
+    const noThanksButton = document.createElement('button');
+    noThanksButton.innerHTML = 'No, thanks';
+    noThanksButton.classList.add('notificationapi-no-thanks-button');
+    noThanksButton.addEventListener('click', () => {
+      // Set askForWebPushPermission to false in local storage on No Thanks click
+      notificationapiLocalStorageSettings.askForWebPushPermission = false;
+      localStorage.setItem(
+        'notificationapi',
+        JSON.stringify(notificationapiLocalStorageSettings)
+      );
+      optInContainer.style.display = 'none';
+    });
+    optInContainer.appendChild(noThanksButton);
+    this.elements.header.appendChild(optInContainer);
   }
 
   sendWSMessage(request: WS_ANY_VALID_REQUEST): void {
