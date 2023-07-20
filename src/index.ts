@@ -578,7 +578,18 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const title = document.createElement('h1');
       title.innerHTML = 'Notification Preferences';
       popup.appendChild(title);
+      // create and insert the button at the top only if askForWebPushPermission is true
+      if (this.state.webPushSettings.askForWebPushPermission) {
+        const message = document.createElement('p');
+        message.innerHTML = `<a href="#" >Click here</a> to give us the necessary browser permissions to send you push notifications.`;
+        message.classList.add('notificationapi-preferences-web-push-opt-in');
+        popup.appendChild(message);
 
+        // Add click event listener to the message
+        message.addEventListener('click', () => {
+          this.askForWebPushPermission();
+        });
+      }
       // render loading state
       const loading = document.createElement('div');
       loading.classList.add('notificationapi-loading');
@@ -598,10 +609,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           }
           if (body.route === 'user_preferences/preferences') {
             const message = body as WS_UserPreferencesResponse;
-            this.renderPreferences(
-              message.payload.userPreferences,
-              this.state.webPushSettings.askForWebPushPermission
-            );
+            this.renderPreferences(message.payload.userPreferences);
           }
         });
       }
@@ -948,10 +956,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     return notification;
   }
 
-  renderPreferences(
-    preferences: Preference[],
-    askForWebPushPermission: boolean
-  ): void {
+  renderPreferences(preferences: Preference[]): void {
     if (!this.elements.preferencesPopup) return;
 
     // remove loading
@@ -967,19 +972,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       popup.appendChild(empty);
       this.elements.preferencesEmpty = empty;
       return;
-    }
-
-    // create and insert the button at the top only if askForWebPushPermission is true
-    if (askForWebPushPermission) {
-      const message = document.createElement('p');
-      message.innerHTML = `<a href="#" >Click here</a> to give us the necessary browser permissions to send you push notifications.`;
-      message.classList.add('notificationapi-preferences-web-push-opt-in');
-      popup.appendChild(message);
-
-      // Add click event listener to the message
-      message.addEventListener('click', () => {
-        this.askForWebPushPermission();
-      });
     }
 
     // render grid
