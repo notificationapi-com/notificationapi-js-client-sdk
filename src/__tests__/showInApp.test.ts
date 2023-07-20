@@ -191,7 +191,7 @@ describe('Ask for web push notification permission', () => {
   let askForWebPushPermissionSpy: jest.SpyInstance<void, []>;
 
   beforeEach(() => {
-    const settings = { askForWebPushPermission: true };
+    const settings = true;
     Storage.prototype.getItem = jest.fn(() => JSON.stringify(settings));
     server.connected;
     const res: WS_EnvironmentDataResponse = {
@@ -233,7 +233,7 @@ describe('Ask for web push notification permission', () => {
   });
 });
 
-describe('Ask for web push notification permission: false askForWebPushPermission', () => {
+describe('Does not ask for web push notification permission when askForWebPushPermission is false ', () => {
   let notificationAPI: NotificationAPI;
   Storage.prototype.getItem = jest.fn(() => null);
   beforeEach(() => {
@@ -244,6 +244,39 @@ describe('Ask for web push notification permission: false askForWebPushPermissio
         logo: 'string',
         applicationServerKey: 'string',
         askForWebPushPermission: false
+      }
+    };
+    server.send(res);
+    notificationapi.showInApp({
+      root: 'root'
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    if (notificationAPI) notificationAPI.destroy();
+  });
+
+  test('no notificationapi-opt-in-container', () => {
+    expect($('.notificationapi-opt-in-container').length).toEqual(0);
+  });
+});
+describe('Does not ask for web push notification permission when it is already granted', () => {
+  let notificationAPI: NotificationAPI;
+  Storage.prototype.getItem = jest.fn(() => null);
+  beforeEach(() => {
+    global.Notification = {
+      permission: 'granted',
+      requestPermission: jest.fn()
+    } as unknown as jest.Mocked<typeof Notification>;
+
+    server.connected;
+    const res: WS_EnvironmentDataResponse = {
+      route: 'environment/data',
+      payload: {
+        logo: 'string',
+        applicationServerKey: 'string',
+        askForWebPushPermission: true
       }
     };
     server.send(res);

@@ -1,99 +1,132 @@
+// subscribeWebPushUser.test.ts
+import NotificationAPI from '../index';
 import {
   NotificationAPIClientInterface,
   WS_EnvironmentDataResponse
 } from '../interfaces';
 import WS from 'jest-websocket-mock';
-import NotificationAPI from '../index';
-
+// Mocking the fetch API
+global.fetch = jest.fn();
 const clientId = 'envId@';
 const userId = 'userId@';
-
-let notificationapi: NotificationAPIClientInterface;
-let server: WS;
-
-beforeEach(async () => {
-  server = new WS('ws://localhost:1234', { jsonProtocol: true });
-  notificationapi = new NotificationAPI({
-    clientId,
-    userId,
-    websocket: 'ws://localhost:1234'
-  });
-});
-
-describe('When askForWebPushPermission is called', () => {
-  describe('When return data form websocket api has the correct schema', () => {
-    test('askForWebPushPermission calls subscribeWebPushUser from serviceWorkerRegistration with correct applicationServerKey', async () => {
-      const subscribeWebPushUserSpy = jest.spyOn(
-        notificationapi,
-        'subscribeWebPushUser'
-      );
-      await server.connected;
-      const message: WS_EnvironmentDataResponse = {
-        route: 'environment/data',
-        payload: {
-          logo: '',
-          applicationServerKey: 'applicationServerKey',
-          askForWebPushPermission: true
-        }
-      };
-      server.send(message);
-      notificationapi.askForWebPushPermission();
-
-      expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
-        message.payload.applicationServerKey,
-        encodeURIComponent(clientId),
-        encodeURIComponent(userId),
-        undefined // replace with actual userIdHash if known
-      );
-    });
-  });
-});
-
-describe('When webPushSettings handler is triggered', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let originalNotification: any;
-
+const mockAppServerKey = 'mockAppServerKey';
+const mockHashUserId = 'mockHashUserId';
+const mockEndpoint = 'mockEndpoint';
+const mockKeys = { auth: 'auth', p256dh: 'p256dh' };
+const headers = {
+  'content-type': 'application/json',
+  Authorization:
+    'Basic ' +
+    btoa(
+      `${encodeURIComponent(clientId)}:${encodeURIComponent(
+        userId
+      )}:${encodeURIComponent(mockHashUserId)}`
+    )
+};
+const body = {
+  webPushTokens: [
+    {
+      sub: {
+        endpoint: mockEndpoint,
+        keys: mockKeys
+      }
+    }
+  ]
+};
+const url = `https://api.notificationapi.com/${encodeURIComponent(
+  clientId
+)}/users/${encodeURIComponent(userId)}`;
+describe('askForWebPushPermission', () => {
+  let mockPushManagerSubscribe: jest.Mock;
+  let mockServiceWorkerRegister: jest.Mock;
+  let notificationapi: NotificationAPIClientInterface;
   beforeEach(() => {
-    // Save original Notification
-    originalNotification = global.Notification;
-  });
+    const server = new WS('ws://localhost:1234', { jsonProtocol: true });
 
-  afterEach(() => {
-    // Reset global.Notification to its original value
-    global.Notification = originalNotification;
-  });
-
-  test('setWebPushSettings is called with correct parameters if Notification.permission is granted', async () => {
-    // Mock the global Notification object
-    Object.defineProperty(global, 'Notification', {
-      value: {
-        permission: 'granted'
-      },
-      writable: true
-    });
-    const subscribeWebPushUserSpy = jest.spyOn(
-      notificationapi,
-      'subscribeWebPushUser'
-    );
-    notificationapi.askForWebPushPermission();
-    await server.connected;
-
-    const message: WS_EnvironmentDataResponse = {
+    const res: WS_EnvironmentDataResponse = {
       route: 'environment/data',
       payload: {
-        logo: '',
-        applicationServerKey: 'applicationServerKey',
+        logo: 'string',
+        applicationServerKey: mockAppServerKey,
         askForWebPushPermission: true
       }
     };
 
-    server.send(message);
-    expect(subscribeWebPushUserSpy).toHaveBeenCalled();
-  });
-});
+    jest.clearAllMocks();
+    jest.resetModules();
 
-afterEach(() => {
-  jest.restoreAllMocks();
-  WS.clean();
-  if (notificationapi) notificationapi.destroy();
+    mockPushManagerSubscribe = jest.fn();
+    mockServiceWorkerRegister = jest.fn().mockResolvedValue({
+      pushManager: {
+        subscribe: mockPushManagerSubscribe
+      }
+    });
+
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: {
+        register: mockServiceWorkerRegister
+      },
+      configurable: true
+    });
+
+    global.Notification = {
+      requestPermission: jest.fn().mockResolvedValue('granted')
+    } as any;
+
+    (global.fetch as jest.Mock).mockReset();
+    notificationapi = new NotificationAPI({
+      clientId,
+      userId,
+      userIdHash: mockHashUserId,
+      websocket: 'ws://localhost:1234'
+    });
+    server.connected;
+    server.send(res);
+  });
+  afterEach(() => {
+    WS.clean();
+    if (notificationapi) notificationapi.destroy();
+  });
+  it('should subscribe web push user', async () => {
+    mockPushManagerSubscribe.mockResolvedValue({
+      toJSON: () => ({
+        endpoint: mockEndpoint,
+        keys: mockKeys
+      })
+    });
+    (global.fetch as jest.Mock).mockResolvedValue({ status: 200 });
+    notificationapi.askForWebPushPermission();
+    // Add this to flush all microtasks before making assertions.
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(mockServiceWorkerRegister).toBeCalledWith(
+      '/notificationapi-service-worker.js'
+    );
+    expect(mockPushManagerSubscribe).toBeCalledWith({
+      userVisibleOnly: true,
+      applicationServerKey: mockAppServerKey
+    });
+    expect(global.fetch as jest.Mock).toHaveBeenCalledWith(url, {
+      body: JSON.stringify(body),
+      headers: headers,
+      method: 'POST'
+    });
+  });
+  it('should not subscribe web push user if permission not granted', async () => {
+    // Mock Notification.requestPermission to return 'denied'
+    global.Notification.requestPermission = jest
+      .fn()
+      .mockResolvedValue('denied');
+
+    notificationapi.askForWebPushPermission();
+
+    // Add this to flush all microtasks before making assertions.
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(mockServiceWorkerRegister).toBeCalledWith(
+      '/notificationapi-service-worker.js'
+    );
+    expect(mockPushManagerSubscribe).not.toHaveBeenCalled();
+    expect(global.fetch as jest.Mock).not.toHaveBeenCalled();
+  });
 });

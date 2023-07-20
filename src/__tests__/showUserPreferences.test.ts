@@ -768,34 +768,6 @@ describe('renderPreferences', () => {
     );
   });
 });
-describe('When askForWebPushPermission is called', () => {
-  describe('When return data form websocket api has the correct schema', () => {
-    test('askForWebPushPermission calls subscribeWebPushUser from serviceWorkerRegistration with correct applicationServerKey', async () => {
-      const subscribeWebPushUserSpy = jest.spyOn(
-        notificationapi,
-        'subscribeWebPushUser'
-      );
-      await server.connected;
-      const message: WS_EnvironmentDataResponse = {
-        route: 'environment/data',
-        payload: {
-          logo: '',
-          applicationServerKey: 'applicationServerKey',
-          askForWebPushPermission: true
-        }
-      };
-      server.send(message);
-      notificationapi.askForWebPushPermission();
-
-      expect(subscribeWebPushUserSpy).toHaveBeenCalledWith(
-        message.payload.applicationServerKey,
-        encodeURIComponent(clientId),
-        encodeURIComponent(userId),
-        undefined // replace with actual userIdHash if known
-      );
-    });
-  });
-});
 
 describe('When webPushSettings handler is triggered', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

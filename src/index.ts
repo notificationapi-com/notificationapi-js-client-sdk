@@ -202,19 +202,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         }
         if (body.route === 'environment/data') {
           const message = body as WS_EnvironmentDataResponse;
-          if (
-            'Notification' in window &&
-            Notification.permission === 'granted'
-          ) {
-            this.state.webPushSettings.applicationServerKey =
-              message.payload.applicationServerKey;
-            this.state.webPushSettings.askForWebPushPermission = false;
-          } else {
-            this.state.webPushSettings.applicationServerKey =
-              message.payload.applicationServerKey;
-            this.state.webPushSettings.askForWebPushPermission =
-              message.payload.askForWebPushPermission;
-          }
+          this.state.webPushSettings.applicationServerKey =
+            message.payload.applicationServerKey;
+          this.state.webPushSettings.askForWebPushPermission =
+            'Notification' in window && Notification.permission === 'granted'
+              ? false
+              : message.payload.askForWebPushPermission;
         }
       });
 
@@ -224,12 +217,56 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     }
   }
   askForWebPushPermission = (): void => {
-    this.subscribeWebPushUser(
-      this.state.webPushSettings.applicationServerKey,
-      encodeURIComponent(this.state.initOptions.clientId),
-      encodeURIComponent(this.state.initOptions.userId),
-      this.state.initOptions.userIdHash
-    );
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/notificationapi-service-worker.js')
+        .then(async (registration) => {
+          Notification.requestPermission().then(async (permission) => {
+            if (permission === 'granted') {
+              await registration.pushManager
+                .subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey:
+                    this.state.webPushSettings.applicationServerKey
+                })
+                .then(async (res) => {
+                  const url = `${defaultRestAPIUrl}/${encodeURIComponent(
+                    this.state.initOptions.clientId
+                  )}/users/${encodeURIComponent(
+                    this.state.initOptions.userId
+                  )}`;
+                  const body = {
+                    webPushTokens: [
+                      {
+                        sub: {
+                          endpoint: res.toJSON().endpoint as string,
+                          keys: res.toJSON().keys as PushSubscription['keys']
+                        }
+                      }
+                    ]
+                  };
+                  const headers = {
+                    'content-type': 'application/json',
+                    Authorization:
+                      'Basic ' +
+                      btoa(
+                        `${encodeURIComponent(
+                          this.state.initOptions.clientId
+                        )}:${encodeURIComponent(
+                          this.state.initOptions.userId
+                        )}:${this.state.initOptions.userIdHash}`
+                      )
+                  };
+                  await fetch(url, {
+                    body: JSON.stringify(body),
+                    headers: headers,
+                    method: 'POST'
+                  });
+                });
+            }
+          });
+        });
+    }
   };
   showInApp = (options: InAppOptions): void => {
     this.state.inappOptions = options;
@@ -354,15 +391,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     headerHeading.innerHTML = 'Notifications';
     this.elements.header.appendChild(headerHeading);
     // check if askForWebPushPermission in both state and local storage is false
-    const notificationapiLocalStorageSettings: {
-      askForWebPushPermission: boolean;
-    } = JSON.parse(
-      localStorage.getItem('notificationapi') ||
-        '{"askForWebPushPermission":true}'
+    const localStorageAskForWebPushPermission: boolean = JSON.parse(
+      localStorage.getItem('askForWebPushPermission') || 'true'
     );
-
     this.renderWebPushOptIn(
-      notificationapiLocalStorageSettings,
+      localStorageAskForWebPushPermission,
       this.state.webPushSettings.askForWebPushPermission
     );
 
@@ -1120,12 +1153,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   }
 
   renderWebPushOptIn(
-    notificationapiLocalStorageSettings: { askForWebPushPermission: boolean },
+    localStorageAskForWebPushPermission: boolean,
     askForWebPushPermission: boolean
   ): void {
     if (
       !this.elements.header ||
-      !notificationapiLocalStorageSettings.askForWebPushPermission ||
+      !localStorageAskForWebPushPermission ||
       !askForWebPushPermission
     ) {
       return;
@@ -1145,12 +1178,8 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     allowButton.classList.add('notificationapi-allow-button');
     allowButton.addEventListener('click', () => {
       this.askForWebPushPermission();
-      // Set askForWebPushPermission to false in local storage on No Thanks click
-      notificationapiLocalStorageSettings.askForWebPushPermission = false;
-      localStorage.setItem(
-        'notificationapi',
-        JSON.stringify(notificationapiLocalStorageSettings)
-      );
+      // Set askForWebPushPermission to false in local storage on Yes click
+      localStorage.setItem('askForWebPushPermission', 'false');
       optInContainer.style.display = 'none';
     });
     optInContainer.appendChild(allowButton);
@@ -1160,11 +1189,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     noThanksButton.classList.add('notificationapi-no-thanks-button');
     noThanksButton.addEventListener('click', () => {
       // Set askForWebPushPermission to false in local storage on No Thanks click
-      notificationapiLocalStorageSettings.askForWebPushPermission = false;
-      localStorage.setItem(
-        'notificationapi',
-        JSON.stringify(notificationapiLocalStorageSettings)
-      );
+      localStorage.setItem('askForWebPushPermission', 'false');
       optInContainer.style.display = 'none';
     });
     optInContainer.appendChild(noThanksButton);
@@ -1182,51 +1207,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       });
     }
   }
-  subscribeWebPushUser = (
-    applicationServerKey: string,
-    clientId: string,
-    userId: string,
-    hashUserId?: string
-  ): void => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/notificationapi-service-worker.js')
-        .then(async (registration) => {
-          Notification.requestPermission().then(async (permission) => {
-            if (permission === 'granted') {
-              await registration.pushManager
-                .subscribe({
-                  userVisibleOnly: true,
-                  applicationServerKey
-                })
-                .then(async (res) => {
-                  const url = `${defaultRestAPIUrl}/${clientId}/users/${userId}`;
-                  const body = {
-                    webPushTokens: [
-                      {
-                        sub: {
-                          endpoint: res.toJSON().endpoint as string,
-                          keys: res.toJSON().keys as PushSubscription['keys']
-                        }
-                      }
-                    ]
-                  };
-                  const headers = {
-                    'content-type': 'application/json',
-                    Authorization:
-                      'Basic ' + btoa(`${clientId}:${userId}:${hashUserId}`)
-                  };
-                  await fetch(url, {
-                    body: JSON.stringify(body),
-                    headers: headers,
-                    method: 'POST'
-                  });
-                });
-            }
-          });
-        });
-    }
-  };
 
   async websocketMessageReceived(route: string): Promise<unknown> {
     const ws = await this.websocketOpened();

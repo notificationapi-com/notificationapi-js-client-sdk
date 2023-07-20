@@ -9,8 +9,6 @@ self.addEventListener('push', (event) => {
   const icon = data.icon;
   const tag = data.tag;
 
-  // Log the URL of each client this service worker controls
-
   event.waitUntil(
     self.registration.showNotification(title, {
       body: message,

@@ -19,12 +19,6 @@ export interface NotificationAPIClientInterface {
     subNotificationId?: string
   ) => void;
   openInAppPopup: () => void;
-  subscribeWebPushUser: (
-    applicationServerKey: string,
-    clientId: string,
-    userId: string,
-    hashUserId?: string
-  ) => void;
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
   renderPreferences: (
@@ -32,7 +26,7 @@ export interface NotificationAPIClientInterface {
     askForWebPushPermission: boolean
   ) => void;
   renderWebPushOptIn: (
-    notificationapiLocalStorageSettings: { askForWebPushPermission: boolean },
+    localStorageAskForWebPushPermission: boolean,
     askForWebPushPermission: boolean
   ) => void;
   destroy: () => void;
