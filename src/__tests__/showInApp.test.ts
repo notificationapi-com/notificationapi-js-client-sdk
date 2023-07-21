@@ -186,7 +186,7 @@ describe('defaults', () => {
   });
 });
 
-describe('Ask for web push notification permission', () => {
+describe('When askForWebPushPermission and localStorage is set true', () => {
   let notificationAPI: NotificationAPI;
   let askForWebPushPermissionSpy: jest.SpyInstance<void, []>;
 
@@ -194,6 +194,9 @@ describe('Ask for web push notification permission', () => {
     const settings = true;
     Storage.prototype.getItem = jest.fn(() => JSON.stringify(settings));
     server.connected;
+    notificationapi.showInApp({
+      root: 'root'
+    });
     const res: WS_EnvironmentDataResponse = {
       route: 'environment/data',
       payload: {
@@ -203,9 +206,6 @@ describe('Ask for web push notification permission', () => {
       }
     };
     server.send(res);
-    notificationapi.showInApp({
-      root: 'root'
-    });
     askForWebPushPermissionSpy = jest.spyOn(
       notificationapi,
       'askForWebPushPermission'
@@ -216,28 +216,43 @@ describe('Ask for web push notification permission', () => {
     jest.restoreAllMocks();
     if (notificationAPI) notificationAPI.destroy();
   });
-  test('on Allow click', () => {
+  test('opt-in message is displayed', () => {
     expect($('.notificationapi-opt-in-container')[0].style.display).toEqual('');
-    $('.notificationapi-allow-button').trigger('click');
-    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
-      'none'
-    );
-    expect(askForWebPushPermissionSpy).toHaveBeenCalledWith();
   });
-  test('on No thanks button click', () => {
-    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual('');
-    $('.notificationapi-no-thanks-button').trigger('click');
-    expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
-      'none'
-    );
+  describe('When opt-in YES is clicked,', () => {
+    test('opt-in message is not displayed ', () => {
+      $('.notificationapi-allow-button').trigger('click');
+      expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
+        'none'
+      );
+    });
+    test(' askForWebPushPermission function is called', () => {
+      $('.notificationapi-allow-button').trigger('click');
+
+      expect(askForWebPushPermissionSpy).toHaveBeenCalledWith();
+    });
+  });
+  describe('When No thanks button click', () => {
+    test('opt-in message is not displayed ', () => {
+      expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
+        ''
+      );
+      $('.notificationapi-no-thanks-button').trigger('click');
+      expect($('.notificationapi-opt-in-container')[0].style.display).toEqual(
+        'none'
+      );
+    });
   });
 });
 
-describe('Does not ask for web push notification permission when askForWebPushPermission is false ', () => {
+describe('When askForWebPushPermission and localStorage is not set', () => {
   let notificationAPI: NotificationAPI;
-  Storage.prototype.getItem = jest.fn(() => null);
   beforeEach(() => {
+    Storage.prototype.getItem = jest.fn(() => null);
     server.connected;
+    notificationapi.showInApp({
+      root: 'root'
+    });
     const res: WS_EnvironmentDataResponse = {
       route: 'environment/data',
       payload: {
@@ -247,9 +262,6 @@ describe('Does not ask for web push notification permission when askForWebPushPe
       }
     };
     server.send(res);
-    notificationapi.showInApp({
-      root: 'root'
-    });
   });
 
   afterEach(() => {
@@ -261,10 +273,10 @@ describe('Does not ask for web push notification permission when askForWebPushPe
     expect($('.notificationapi-opt-in-container').length).toEqual(0);
   });
 });
-describe('Does not ask for web push notification permission when it is already granted', () => {
+describe('When the notification permission is already granted', () => {
   let notificationAPI: NotificationAPI;
-  Storage.prototype.getItem = jest.fn(() => null);
   beforeEach(() => {
+    Storage.prototype.getItem = jest.fn(() => 'true');
     global.Notification = {
       permission: 'granted',
       requestPermission: jest.fn()

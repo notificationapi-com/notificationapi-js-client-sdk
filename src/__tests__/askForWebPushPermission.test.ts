@@ -87,7 +87,7 @@ describe('askForWebPushPermission', () => {
     WS.clean();
     if (notificationapi) notificationapi.destroy();
   });
-  it('should subscribe web push user', async () => {
+  it('When permission is granted, should subscribe web push user', async () => {
     mockPushManagerSubscribe.mockResolvedValue({
       toJSON: () => ({
         endpoint: mockEndpoint,
@@ -112,7 +112,7 @@ describe('askForWebPushPermission', () => {
       method: 'POST'
     });
   });
-  it('should not subscribe web push user if permission not granted', async () => {
+  it('When permission is not granted, should not subscribe web push user ', async () => {
     // Mock Notification.requestPermission to return 'denied'
     global.Notification.requestPermission = jest
       .fn()

@@ -204,10 +204,18 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           const message = body as WS_EnvironmentDataResponse;
           this.state.webPushSettings.applicationServerKey =
             message.payload.applicationServerKey;
-          this.state.webPushSettings.askForWebPushPermission =
-            'Notification' in window && Notification.permission === 'granted'
-              ? false
-              : message.payload.askForWebPushPermission;
+          if (
+            'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            this.state.webPushSettings.askForWebPushPermission = false;
+          } else {
+            this.state.webPushSettings.askForWebPushPermission =
+              message.payload.askForWebPushPermission;
+            this.state.webPushSettings.askForWebPushPermission
+              ? this.renderWebPushOptIn()
+              : null;
+          }
         }
       });
 
@@ -390,14 +398,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     const headerHeading = document.createElement('h1');
     headerHeading.innerHTML = 'Notifications';
     this.elements.header.appendChild(headerHeading);
-    // check if askForWebPushPermission in both state and local storage is false
-    const localStorageAskForWebPushPermission: boolean = JSON.parse(
-      localStorage.getItem('askForWebPushPermission') || 'true'
-    );
-    this.renderWebPushOptIn(
-      localStorageAskForWebPushPermission,
-      this.state.webPushSettings.askForWebPushPermission
-    );
 
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
@@ -1144,15 +1144,11 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     });
   }
 
-  renderWebPushOptIn(
-    localStorageAskForWebPushPermission: boolean,
-    askForWebPushPermission: boolean
-  ): void {
-    if (
-      !this.elements.header ||
-      !localStorageAskForWebPushPermission ||
-      !askForWebPushPermission
-    ) {
+  renderWebPushOptIn(): void {
+    const localStorageAskForWebPushPermission: boolean = JSON.parse(
+      localStorage.getItem('askForWebPushPermission') || 'true'
+    );
+    if (!this.elements.header || !localStorageAskForWebPushPermission) {
       return;
     }
 

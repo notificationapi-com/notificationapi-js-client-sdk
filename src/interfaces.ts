@@ -22,10 +22,7 @@ export interface NotificationAPIClientInterface {
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
   renderPreferences: (preferences: Preference[]) => void;
-  renderWebPushOptIn: (
-    localStorageAskForWebPushPermission: boolean,
-    askForWebPushPermission: boolean
-  ) => void;
+  renderWebPushOptIn: () => void;
   destroy: () => void;
   websocket?: WebSocket;
   elements: {
