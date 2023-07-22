@@ -778,15 +778,12 @@
 .notificationapi-allow-button,
 .notificationapi-no-thanks-button {
   background-color: transparent; /* No background */
-  color: #777; /* Gray color */
   text-decoration: underline; /* Makes it appear like a hyperlink */
   border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
   font-size: 14px;
   cursor: pointer;
   margin-top: 8px;
-  text-align: center;
+  text-align: left;
 }
 
 .notificationapi-allow-button:hover,
@@ -795,5 +792,5 @@
 }
 
 .notificationapi-no-thanks-button {
-  margin-left: 7px;
+  margin-left: 10px;
 }
