@@ -70,7 +70,13 @@ ComplexPreferenceState.args = {
 
         {
           channel: 'PUSH',
-          channelName: 'PUSH',
+          channelName: 'Push',
+          state: false
+        },
+
+        {
+          channel: 'WEB_PUSH',
+          channelName: 'Web Push',
           state: false
         }
       ]
