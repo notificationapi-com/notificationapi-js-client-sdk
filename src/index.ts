@@ -581,7 +581,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       // create and insert the button at the top only if askForWebPushPermission is true
       if (this.state.webPushSettings.askForWebPushPermission) {
         const message = document.createElement('p');
-        message.innerHTML = `<a href="#" >Click here</a> to give us the necessary browser permissions to send you push notifications.`;
+        message.innerHTML = `<a href="#" class="click-here" >Click here</a> to give us the necessary browser permissions to send you push notifications.`;
         message.classList.add('notificationapi-preferences-web-push-opt-in');
         popup.appendChild(message);
 

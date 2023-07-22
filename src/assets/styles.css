@@ -761,6 +761,8 @@
 }
 .notificationapi-preferences-web-push-opt-in {
   color: #333;
+}
+.notificationapi-preferences-web-push-opt-in .click-here {
   cursor: pointer; /* Keeps the pointer cursor for the hyperlink */
 }
 .notificationapi-opt-in-container {
