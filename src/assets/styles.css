@@ -460,12 +460,18 @@
 
 .notificationapi-preferences-toggle {
   margin-top: 16px;
+  min-width: 60px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .notificationapi-preferences-toggle,
 .notificationapi-preferences-subtoggle {
   width: 60px;
   text-align: center;
+  min-width: 60px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .notificationapi-preferences-expand {
