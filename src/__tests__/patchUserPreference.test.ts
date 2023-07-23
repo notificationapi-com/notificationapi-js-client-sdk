@@ -29,6 +29,7 @@ afterEach(() => {
 });
 
 test('sends a user_preferences/patch message', async () => {
+  await server.nextMessage; // environment/data request
   notificationapi.patchUserPreference('notificationId', 'channel', false);
   const request: WS_UserPreferencesPatchRequest = {
     route: 'user_preferences/patch_preferences',
@@ -48,6 +49,7 @@ test('sends a user_preferences/patch message', async () => {
 });
 
 test('sends a user_preferences/patch message with subNotificationId', async () => {
+  await server.nextMessage; // environment/data request
   notificationapi.patchUserPreference(
     'notificationId',
     'channel',

@@ -1,11 +1,15 @@
 export interface User {
   id: string;
   email?: string;
+  number?: string;
+  pushTokens?: PushToken[];
+  webPushTokens?: WebPushToken[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NotificationAPIClientInterface {
   showInApp: (options: InAppOptions) => void;
+  askForWebPushPermission: () => void;
   showUserPreferences: (options?: UserPreferencesOptions) => void;
   getUserPreferences: () => Promise<Preference[]>;
   patchUserPreference: (
@@ -18,6 +22,7 @@ export interface NotificationAPIClientInterface {
   closeInAppPopup: () => void;
   setInAppUnread: (count: number) => void;
   renderPreferences: (preferences: Preference[]) => void;
+  renderWebPushOptIn: () => void;
   destroy: () => void;
   websocket?: WebSocket;
   elements: {
@@ -48,6 +53,7 @@ export interface NotificationAPIClientInterface {
     lastResponseNotificationsCount?: number;
     inappOptions?: InAppOptions;
     initOptions: InitOptions;
+    webPushSettings: WebPushSettings;
   };
   websocketHandlers: {
     notifications: (message: WS_NotificationsResponse) => void;
@@ -68,7 +74,10 @@ export interface InitOptions {
   userIdHash?: string;
   websocket?: string | false;
 }
-
+export interface WebPushSettings {
+  applicationServerKey: string;
+  askForWebPushPermission: boolean;
+}
 export interface InAppOptions {
   root: string;
   inline?: boolean;
@@ -166,7 +175,17 @@ export interface WS_UserPreferencesResponse {
     userPreferences: Preference[];
   };
 }
-
+export interface WS_EnvironmentDataRequest {
+  route: 'environment/data';
+}
+export interface WS_EnvironmentDataResponse {
+  route: 'environment/data';
+  payload: {
+    logo: string;
+    applicationServerKey: string;
+    askForWebPushPermission: boolean;
+  };
+}
 export interface WS_UserPreferencesPatchRequest {
   route: 'user_preferences/patch_preferences';
   payload: {
@@ -182,4 +201,33 @@ export type WS_ANY_VALID_REQUEST =
   | WS_UnreadCountRequest
   | WS_UserPreferencesRequest
   | WS_UserPreferencesRequest
-  | WS_UserPreferencesPatchRequest;
+  | WS_UserPreferencesPatchRequest
+  | WS_EnvironmentDataRequest;
+
+export interface PushToken {
+  type: PushProviders;
+  token: string;
+  device: Device;
+}
+export enum PushProviders {
+  FCM = 'FCM',
+  APN = 'APN'
+}
+export interface Device {
+  app_id?: string;
+  ad_id?: string;
+  device_id: string;
+  platform?: string;
+  manufacturer?: string;
+  model?: string;
+}
+export interface PushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+export interface WebPushToken {
+  sub: PushSubscription;
+}
