@@ -11,7 +11,8 @@ describe('Service Worker', () => {
       title: 'Test Title',
       message: 'Test message',
       icon: 'images/test.png',
-      tag: 'test-tag'
+      tag: 'test-tag',
+      url: 'https://example.com' // Add this line
     };
 
     mockEvent = {
@@ -71,7 +72,10 @@ describe('Service Worker', () => {
     expect(mockShowNotification).toHaveBeenCalledWith(data.title, {
       body: data.message,
       tag: data.tag,
-      icon: data.icon
+      icon: data.icon,
+      data: {
+        url: data.url // Expect 'data' object with 'url' property in the notification options
+      }
     });
   });
 
@@ -90,5 +94,40 @@ describe('Service Worker', () => {
 
     expect(mockEvent.data.json).not.toHaveBeenCalled();
     expect(mockShowNotification).not.toHaveBeenCalled();
+  });
+  it('should handle notificationclick event', async () => {
+    // Mock the window.clients object with the openWindow method
+    const openWindowMock = jest.fn();
+
+    Object.defineProperty(window, 'clients', {
+      get: () => ({
+        openWindow: openWindowMock
+      })
+    });
+
+    const notificationClickEvent = {
+      notification: {
+        close: jest.fn(),
+        data: {
+          url: 'https://example.com'
+        }
+      },
+      waitUntil: jest.fn()
+    };
+
+    addEventListenerMock = jest.spyOn(window, 'addEventListener');
+    require('../assets/service-worker.js');
+
+    // The index may vary based on how many times 'addEventListener' is called
+    // In the provided service worker code, 'push' is added before 'notificationclick',
+    // so 'notificationclick' should be at index 1
+    const notificationClickHandler = addEventListenerMock.mock.calls[1][1];
+
+    await notificationClickHandler(notificationClickEvent);
+
+    expect(notificationClickEvent.notification.close).toHaveBeenCalled();
+    expect(openWindowMock).toHaveBeenCalledWith(
+      notificationClickEvent.notification.data.url
+    );
   });
 });
