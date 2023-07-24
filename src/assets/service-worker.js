@@ -26,8 +26,9 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close(); // close the notification
   var url = event.notification.data.url; // get the URL from the notification data
-
-  event.waitUntil(
-    clients.openWindow(url) // open the URL in a new window
-  );
+  if (url) {
+    event.waitUntil(
+      clients.openWindow(url) // open the URL in a new window
+    );
+  }
 });

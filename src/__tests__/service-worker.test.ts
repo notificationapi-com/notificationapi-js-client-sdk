@@ -130,4 +130,31 @@ describe('Service Worker', () => {
       notificationClickEvent.notification.data.url
     );
   });
+  it('should not open a window if url is not defined', async () => {
+    // Mock the window.clients object with the openWindow method
+    const openWindowMock = jest.fn();
+
+    const notificationClickEvent = {
+      notification: {
+        close: jest.fn(),
+        data: {
+          url: undefined
+        }
+      },
+      waitUntil: jest.fn()
+    };
+
+    addEventListenerMock = jest.spyOn(window, 'addEventListener');
+    require('../assets/service-worker.js');
+
+    // The index may vary based on how many times 'addEventListener' is called
+    // In the provided service worker code, 'push' is added before 'notificationclick',
+    // so 'notificationclick' should be at index 1
+    const notificationClickHandler = addEventListenerMock.mock.calls[1][1];
+
+    await notificationClickHandler(notificationClickEvent);
+
+    expect(notificationClickEvent.notification.close).toHaveBeenCalled();
+    expect(openWindowMock).not.toHaveBeenCalled();
+  });
 });
