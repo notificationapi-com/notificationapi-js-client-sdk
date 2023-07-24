@@ -54,6 +54,7 @@ export interface NotificationAPIClientInterface {
     inappOptions?: InAppOptions;
     initOptions: InitOptions;
     webPushSettings: WebPushSettings;
+    restBaseURL: string;
   };
   websocketHandlers: {
     notifications: (message: WS_NotificationsResponse) => void;
@@ -73,6 +74,7 @@ export interface InitOptions {
   userId: string;
   userIdHash?: string;
   websocket?: string | false;
+  restBaseURL?: string;
 }
 export interface WebPushSettings {
   applicationServerKey: string;

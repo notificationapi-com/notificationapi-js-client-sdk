@@ -135,7 +135,8 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       webPushSettings: {
         applicationServerKey: '',
         askForWebPushPermission: false
-      }
+      },
+      restBaseURL: options.restBaseURL ?? defaultRestAPIUrl
     };
 
     this.websocketHandlers = {
@@ -238,7 +239,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
                     this.state.webPushSettings.applicationServerKey
                 })
                 .then(async (res) => {
-                  const url = `${defaultRestAPIUrl}/${encodeURIComponent(
+                  const url = `${this.state.restBaseURL}/${encodeURIComponent(
                     this.state.initOptions.clientId
                   )}/users/${encodeURIComponent(
                     this.state.initOptions.userId
