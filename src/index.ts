@@ -421,7 +421,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     });
     this.elements.header.appendChild(headerPreferencesButton);
 
-    if (options.markAsReadMode !== MarkAsReadModes.AUTOMATIC) {
+    if (
+      options.markAsReadMode &&
+      options.markAsReadMode !== MarkAsReadModes.AUTOMATIC
+    ) {
       const headerReadAllButton = document.createElement('button');
       headerReadAllButton.classList.add('notificationapi-readAll-button');
       headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
@@ -709,8 +712,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       route: 'inapp_web/unread_clear'
     });
 
+    // In AUTOMATIC mode, don't remove the unseen class so users can differentiate what's new and what's old
     if (
       this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode &&
       this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC &&
       this.elements.popupInner
     ) {
@@ -923,6 +928,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     // notification menu button
     if (
       this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode &&
       this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC
     ) {
       const menuButton = document.createElement('button');
