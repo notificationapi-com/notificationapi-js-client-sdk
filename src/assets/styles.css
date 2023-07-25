@@ -79,6 +79,7 @@
 
 .notificationapi-popup.inline {
   width: 100%;
+  min-width: 230px;
 }
 
 .notificationapi-popup * {
@@ -584,10 +585,6 @@
   grid-row: 11/11;
 }
 
-.notificationapi-preferences-loading {
-  margin: 40px auto 40px auto;
-}
-
 /* Loading animation */
 .notificationapi-loading {
   text-align: center;
@@ -757,9 +754,10 @@
     transform: rotate(360deg);
   }
 }
-.notificationapi-preferences-popup .spinner {
+.notificationapi-preferences-popup .spinner,
+.notificationapi-container .spinner {
   display: inline-block;
-  font-size: 4em;
+  font-size: 3em;
   height: 1em;
   line-height: 1;
   margin: 0.5em;

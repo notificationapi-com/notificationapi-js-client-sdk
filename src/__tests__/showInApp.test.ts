@@ -571,7 +571,7 @@ describe('setUnread', () => {
 });
 
 describe('Handling WS_NotificationsResponse', () => {
-  test('before showInApp, does not throw', () => {
+  test('happening before showInApp, does not throw', () => {
     notificationapi = new NotificationAPI({
       clientId,
       userId,
@@ -586,15 +586,16 @@ describe('Handling WS_NotificationsResponse', () => {
     expect(spy.mock.calls).toEqual([]);
   });
 
-  test('defaults to empty state (no notifications)', () => {
+  test('defaults to loading state, no notifications or empty message', () => {
     notificationapi.showInApp({
       root: 'root'
     });
-    expect($('.notificationapi-empty')).toHaveLength(1);
+    expect($('.notificationapi-loading')).toHaveLength(1);
+    expect($('.notificationapi-empty')).toHaveLength(0);
     expect($('.notificationapi-notification')).toHaveLength(0);
   });
 
-  test('given 0 notifications, adds no notifications and shows empty', () => {
+  test('given 0 notifications, adds no notifications and shows empty, removes loading', () => {
     notificationapi.showInApp({
       root: 'root'
     });
@@ -606,12 +607,20 @@ describe('Handling WS_NotificationsResponse', () => {
     });
     expect($('.notificationapi-empty')).toHaveLength(1);
     expect($('.notificationapi-notification')).toHaveLength(0);
+    expect($('.notificationapi-loading')).toHaveLength(0);
   });
 
-  test('given any, removes empty state div', () => {
+  test('after showing empty, given any notifications, removes empty', () => {
     notificationapi.showInApp({
       root: 'root'
     });
+    notificationapi.websocketHandlers.notifications({
+      route: 'inapp_web/notifications',
+      payload: {
+        notifications: []
+      }
+    });
+    expect($('.notificationapi-empty')).toHaveLength(1);
     notificationapi.websocketHandlers.notifications({
       route: 'inapp_web/notifications',
       payload: {

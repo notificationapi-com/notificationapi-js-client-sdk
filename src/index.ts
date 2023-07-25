@@ -143,6 +143,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       notifications: (message: WS_NotificationsResponse) => {
         const notifications = message.payload.notifications;
         this.state.lastResponseNotificationsCount = notifications.length;
+
+        if (this.elements.notificationsLoading) {
+          this.elements.notificationsLoading.remove();
+          delete this.elements.notificationsLoading;
+        }
+
         this.addNotificationsToState(notifications);
 
         if (
@@ -162,6 +168,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       newNotifications: (message: WS_NewNotificationsResponse) => {
         const beforeCount = this.state.notifications.length;
+
+        if (this.elements.notificationsLoading) {
+          this.elements.notificationsLoading.remove();
+          delete this.elements.notificationsLoading;
+        }
+
         this.addNotificationsToState(message.payload.notifications);
         this.renderNotifications();
         const afterCount = this.state.notifications.length;
@@ -423,12 +435,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
 
-    // render default empty state
-    const empty = document.createElement('div');
-    empty.classList.add('notificationapi-empty');
-    empty.innerHTML = "You don't have any notifications!";
-    popupInner.appendChild(empty);
-    this.elements.empty = empty;
+    // render default loading state
+    const loading = document.createElement('div');
+    loading.classList.add('notificationapi-loading');
+    const icon = document.createElement('span');
+    icon.classList.add('icon-spinner8', 'spinner');
+    loading.appendChild(icon);
+    popupInner.appendChild(loading);
+    this.elements.notificationsLoading = loading;
 
     // render footer
     this.elements.footer = document.createElement('div');
@@ -736,6 +750,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       }
     }
   }
+
   addNotificationsToState(notifications: InappNotification[]): void {
     // filter existing
     const newNotifications = notifications.filter((n) => {
@@ -756,6 +771,19 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     if (this.state.notifications.length > 0)
       this.state.oldestNotificationsDate =
         this.state.notifications[this.state.notifications.length - 1].date;
+
+    if (
+      this.state.notifications.length === 0 &&
+      !this.elements.empty &&
+      !this.elements.notificationsLoading &&
+      this.elements.header
+    ) {
+      const empty = document.createElement('div');
+      empty.classList.add('notificationapi-empty');
+      empty.innerHTML = "You don't have any notifications!";
+      this.elements.header.after(empty);
+      this.elements.empty = empty;
+    }
 
     if (newNotifications.length > 0 && this.elements.empty) {
       this.elements.empty.remove();

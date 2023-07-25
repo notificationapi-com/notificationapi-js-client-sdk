@@ -19,15 +19,28 @@ const Template = ({ ...args }) => {
               args.initOptions
             )});
             notificationapi.showInApp(${JSON.stringify(args.inappOptions)})
-            notificationapi.websocketHandlers.notifications(${JSON.stringify(
-              args.wsNotificationsResponse
-            )});
+            if(${args.wsNotificationsResponse ? 'true' : 'false'}) 
+              notificationapi.websocketHandlers.notifications(${JSON.stringify(args.wsNotificationsResponse)});
           </script>
 `;
 };
 
 const clientId = 'test';
 const userId = 'test';
+
+export const Loading = Template.bind({});
+Loading.args = {
+  initOptions: {
+    clientId,
+    userId,
+    websocket: false
+  },
+  inappOptions: {
+    root: 'our-root',
+    inline: true,
+    paginated: true
+  },
+};
 
 export const Empty = Template.bind({});
 Empty.args = {

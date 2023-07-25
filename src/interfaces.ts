@@ -33,6 +33,7 @@ export interface NotificationAPIClientInterface {
     button?: HTMLButtonElement;
     root?: HTMLElement;
     empty?: HTMLDivElement;
+    notificationsLoading?: HTMLDivElement;
     header?: HTMLDivElement;
     preferencesContainer?: HTMLDivElement;
     preferencesPopup?: HTMLDivElement;
