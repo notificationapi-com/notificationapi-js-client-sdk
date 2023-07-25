@@ -343,7 +343,7 @@
 
 .notificationapi-preferences-container {
   z-index: 2147483647;
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   right: 0;
