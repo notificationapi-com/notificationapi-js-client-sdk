@@ -610,7 +610,7 @@ describe('Handling WS_NotificationsResponse', () => {
     expect($('.notificationapi-loading')).toHaveLength(0);
   });
 
-  test('after showing empty, given any notifications, removes empty', () => {
+  test('after showing empty, given any notifications, adds notification and removes empty/loading', () => {
     notificationapi.showInApp({
       root: 'root'
     });
@@ -621,6 +621,8 @@ describe('Handling WS_NotificationsResponse', () => {
       }
     });
     expect($('.notificationapi-empty')).toHaveLength(1);
+    expect($('.notificationapi-loading')).toHaveLength(0);
+    expect($('.notificationapi-notification')).toHaveLength(0);
     notificationapi.websocketHandlers.notifications({
       route: 'inapp_web/notifications',
       payload: {
@@ -628,6 +630,8 @@ describe('Handling WS_NotificationsResponse', () => {
       }
     });
     expect($('.notificationapi-empty')).toHaveLength(0);
+    expect($('.notificationapi-loading')).toHaveLength(0);
+    expect($('.notificationapi-notification')).toHaveLength(1);
   });
 
   test('given 2, adds 2 notifications', () => {

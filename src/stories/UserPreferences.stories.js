@@ -12,15 +12,11 @@ const Component = ({ ...args }) => {
               args.initOptions
             )});
             window.notificationapi.showUserPreferences();
+            if(${args.wsUserPreferencesResponse ? 'true' : 'false'}) 
+              window.notificationapi.websocketHandlers.userPreferences(${JSON.stringify(
+                args.wsUserPreferencesResponse
+              )});
           </script>`;
-
-  if (args.preferences) {
-    page += `<script>
-      window.notificationapi.renderPreferences(${JSON.stringify(
-        args.preferences
-      )});
-    </script>`;
-  }
 
   return page;
 };
@@ -32,7 +28,7 @@ LoadingState.args = {
   initOptions: {
     clientId,
     userId,
-    websocket: 'ws://localhost'
+    websocket: false
   }
 };
 export const EmptyState = Component.bind({});
@@ -40,9 +36,14 @@ EmptyState.args = {
   initOptions: {
     clientId,
     userId,
-    websocket: 'ws://localhost'
+    websocket: false
   },
-  preferences: []
+  wsUserPreferencesResponse: {
+    route: 'user_preferences/preferences',
+    payload: {
+      userPreferences: []
+    }
+  }
 };
 
 export const ComplexPreferenceState = Component.bind({});
@@ -50,73 +51,15 @@ ComplexPreferenceState.args = {
   initOptions: {
     clientId,
     userId,
-    websocket: 'ws://localhost'
+    websocket: false
   },
-  preferences: [
-    {
-      notificationId: 'notificationId1',
-      title: 'Welcome Notification',
-      settings: [
+  wsUserPreferencesResponse: {
+    route: 'user_preferences/preferences',
+    payload: {
+      userPreferences: [
         {
-          channel: 'EMAIL',
-          channelName: 'Email',
-          state: true
-        },
-        {
-          channel: 'INAPP_WEB',
-          channelName: 'In-App',
-          state: false
-        },
-
-        {
-          channel: 'PUSH',
-          channelName: 'Push',
-          state: false
-        },
-
-        {
-          channel: 'WEB_PUSH',
-          channelName: 'Web Push',
-          state: false
-        }
-      ]
-    },
-    {
-      notificationId: 'notificationId2',
-      title: 'New account created',
-      settings: [
-        {
-          channel: 'EMAIL',
-          channelName: 'Email',
-          state: false
-        },
-        {
-          channel: 'SMS',
-          channelName: 'SMS',
-          state: true
-        }
-      ]
-    },
-    {
-      notificationId: 'notificationId3',
-      title: 'Reminders',
-      settings: [
-        {
-          channel: 'EMAIL',
-          channelName: 'Email',
-          state: true
-        },
-        {
-          channel: 'INAPP_WEB',
-          channelName: 'In-App',
-          state: true
-        }
-      ],
-      subNotificationPreferences: [
-        {
-          notificationId: 'notificationId3',
-          subNotificationId: 'subNotificationId1',
-          title: 'Monthly Reminder',
+          notificationId: 'notificationId1',
+          title: 'Welcome Notification',
           settings: [
             {
               channel: 'EMAIL',
@@ -127,81 +70,144 @@ ComplexPreferenceState.args = {
               channel: 'INAPP_WEB',
               channelName: 'In-App',
               state: false
+            },
+
+            {
+              channel: 'PUSH',
+              channelName: 'Push',
+              state: false
+            },
+
+            {
+              channel: 'WEB_PUSH',
+              channelName: 'Web Push',
+              state: false
+            }
+          ]
+        },
+        {
+          notificationId: 'notificationId2',
+          title: 'New account created',
+          settings: [
+            {
+              channel: 'EMAIL',
+              channelName: 'Email',
+              state: false
+            },
+            {
+              channel: 'SMS',
+              channelName: 'SMS',
+              state: true
             }
           ]
         },
         {
           notificationId: 'notificationId3',
-          subNotificationId: 'subNotificationId2',
-          title: 'Weekly Reminder',
+          title: 'Reminders',
           settings: [
             {
               channel: 'EMAIL',
               channelName: 'Email',
-              state: false
+              state: true
             },
             {
               channel: 'INAPP_WEB',
               channelName: 'In-App',
               state: true
             }
-          ]
-        }
-      ]
-    },
-    {
-      notificationId: 'notificationId4',
-      title: 'Threshold Passed Very Looong Loooooong Tet',
-      settings: [
-        {
-          channel: 'EMAIL',
-          channelName: 'Email',
-          state: true
-        },
-        {
-          channel: 'INAPP_WEB',
-          channelName: 'In-App',
-          state: true
-        }
-      ],
-      subNotificationPreferences: [
-        {
-          notificationId: 'notificationId4',
-          subNotificationId: 'subNotificationId1',
-          title: 'Threshold > 100',
-          settings: [
+          ],
+          subNotificationPreferences: [
             {
-              channel: 'EMAIL',
-              channelName: 'Email',
-              state: true
+              notificationId: 'notificationId3',
+              subNotificationId: 'subNotificationId1',
+              title: 'Monthly Reminder',
+              settings: [
+                {
+                  channel: 'EMAIL',
+                  channelName: 'Email',
+                  state: true
+                },
+                {
+                  channel: 'INAPP_WEB',
+                  channelName: 'In-App',
+                  state: false
+                }
+              ]
             },
             {
-              channel: 'INAPP_WEB',
-              channelName: 'In-App',
-              state: false
+              notificationId: 'notificationId3',
+              subNotificationId: 'subNotificationId2',
+              title: 'Weekly Reminder',
+              settings: [
+                {
+                  channel: 'EMAIL',
+                  channelName: 'Email',
+                  state: false
+                },
+                {
+                  channel: 'INAPP_WEB',
+                  channelName: 'In-App',
+                  state: true
+                }
+              ]
             }
           ]
         },
         {
           notificationId: 'notificationId4',
-          subNotificationId: 'subNotificationId2',
-          title: 'Threshold > Very loong loooong loooooong text',
+          title: 'Threshold Passed Very Looong Loooooong Tet',
           settings: [
             {
               channel: 'EMAIL',
               channelName: 'Email',
-              state: false
+              state: true
             },
             {
               channel: 'INAPP_WEB',
               channelName: 'In-App',
               state: true
+            }
+          ],
+          subNotificationPreferences: [
+            {
+              notificationId: 'notificationId4',
+              subNotificationId: 'subNotificationId1',
+              title: 'Threshold > 100',
+              settings: [
+                {
+                  channel: 'EMAIL',
+                  channelName: 'Email',
+                  state: true
+                },
+                {
+                  channel: 'INAPP_WEB',
+                  channelName: 'In-App',
+                  state: false
+                }
+              ]
+            },
+            {
+              notificationId: 'notificationId4',
+              subNotificationId: 'subNotificationId2',
+              title: 'Threshold > Very loong loooong loooooong text',
+              settings: [
+                {
+                  channel: 'EMAIL',
+                  channelName: 'Email',
+                  state: false
+                },
+                {
+                  channel: 'INAPP_WEB',
+                  channelName: 'In-App',
+                  state: true
+                }
+              ]
             }
           ]
         }
       ]
     }
-  ]
+  }
 };
 export const Real = Component.bind({});
 Real.args = {

@@ -113,6 +113,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notifications: (message: WS_NotificationsResponse) => void;
     newNotifications: (message: WS_NewNotificationsResponse) => void;
     unreadCount: (message: WS_UnreadCountResponse) => void;
+    userPreferences: (message: WS_UserPreferencesResponse) => void;
   };
 
   destroy = (): void => {
@@ -181,6 +182,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       unreadCount: (message: WS_UnreadCountResponse) => {
         this.setInAppUnread(message.payload.count);
+      },
+      userPreferences: (message: WS_UserPreferencesResponse) => {
+        if (this.elements.preferencesLoading) {
+          this.elements.preferencesLoading.remove();
+          delete this.elements.preferencesLoading;
+        }
+
+        this.renderPreferences(message.payload.userPreferences);
       }
     };
 
@@ -628,7 +637,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           }
           if (body.route === 'user_preferences/preferences') {
             const message = body as WS_UserPreferencesResponse;
-            this.renderPreferences(message.payload.userPreferences);
+            this.websocketHandlers.userPreferences(message);
           }
         });
       }
@@ -994,10 +1003,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
   renderPreferences(preferences: Preference[]): void {
     if (!this.elements.preferencesPopup) return;
-
-    // remove loading
-    this.elements.preferencesLoading?.remove();
-    this.elements.preferencesLoading = undefined;
 
     const popup = this.elements.preferencesPopup;
     const validPreferences = preferences.filter((p) => p.settings.length > 0);

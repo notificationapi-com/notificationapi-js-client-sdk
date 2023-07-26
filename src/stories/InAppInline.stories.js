@@ -20,7 +20,9 @@ const Template = ({ ...args }) => {
             )});
             notificationapi.showInApp(${JSON.stringify(args.inappOptions)})
             if(${args.wsNotificationsResponse ? 'true' : 'false'}) 
-              notificationapi.websocketHandlers.notifications(${JSON.stringify(args.wsNotificationsResponse)});
+              notificationapi.websocketHandlers.notifications(${JSON.stringify(
+                args.wsNotificationsResponse
+              )});
           </script>
 `;
 };
