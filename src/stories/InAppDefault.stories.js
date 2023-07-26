@@ -18,10 +18,11 @@ const Template = ({ ...args }) => {
             notificationapi = new NotificationAPI(${JSON.stringify(
               args.initOptions
             )});
-            notificationapi.showInApp(${JSON.stringify(args.inappOptions)})
-            notificationapi.websocketHandlers.notifications(${JSON.stringify(
-              args.wsNotificationsResponse
-            )});
+            notificationapi.showInApp(${JSON.stringify(args.inappOptions)});
+            if(${args.wsNotificationsResponse ? 'true' : 'false'}) 
+              notificationapi.websocketHandlers.notifications(${JSON.stringify(
+                args.wsNotificationsResponse
+              )});
           </script>
 `;
 };
@@ -54,6 +55,18 @@ let notifications = [
 
 const clientId = 'test';
 const userId = 'test';
+
+export const Loading = Template.bind({});
+Loading.args = {
+  initOptions: {
+    clientId,
+    userId,
+    websocket: false
+  },
+  inappOptions: {
+    root: 'our-root'
+  }
+};
 
 export const Empty = Template.bind({});
 Empty.args = {

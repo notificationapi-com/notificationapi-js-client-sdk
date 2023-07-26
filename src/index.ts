@@ -113,6 +113,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     notifications: (message: WS_NotificationsResponse) => void;
     newNotifications: (message: WS_NewNotificationsResponse) => void;
     unreadCount: (message: WS_UnreadCountResponse) => void;
+    userPreferences: (message: WS_UserPreferencesResponse) => void;
   };
 
   destroy = (): void => {
@@ -143,6 +144,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       notifications: (message: WS_NotificationsResponse) => {
         const notifications = message.payload.notifications;
         this.state.lastResponseNotificationsCount = notifications.length;
+
+        if (this.elements.notificationsLoading) {
+          this.elements.notificationsLoading.remove();
+          delete this.elements.notificationsLoading;
+        }
+
         this.addNotificationsToState(notifications);
 
         if (
@@ -162,6 +169,12 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       newNotifications: (message: WS_NewNotificationsResponse) => {
         const beforeCount = this.state.notifications.length;
+
+        if (this.elements.notificationsLoading) {
+          this.elements.notificationsLoading.remove();
+          delete this.elements.notificationsLoading;
+        }
+
         this.addNotificationsToState(message.payload.notifications);
         this.renderNotifications();
         const afterCount = this.state.notifications.length;
@@ -169,6 +182,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       unreadCount: (message: WS_UnreadCountResponse) => {
         this.setInAppUnread(message.payload.count);
+      },
+      userPreferences: (message: WS_UserPreferencesResponse) => {
+        if (this.elements.preferencesLoading) {
+          this.elements.preferencesLoading.remove();
+          delete this.elements.preferencesLoading;
+        }
+
+        this.renderPreferences(message.payload.userPreferences);
       }
     };
 
@@ -409,7 +430,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     });
     this.elements.header.appendChild(headerPreferencesButton);
 
-    if (options.markAsReadMode !== MarkAsReadModes.AUTOMATIC) {
+    if (
+      options.markAsReadMode &&
+      options.markAsReadMode !== MarkAsReadModes.AUTOMATIC
+    ) {
       const headerReadAllButton = document.createElement('button');
       headerReadAllButton.classList.add('notificationapi-readAll-button');
       headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
@@ -423,12 +447,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     this.elements.header.classList.add('notificationapi-header');
     popupInner.appendChild(this.elements.header);
 
-    // render default empty state
-    const empty = document.createElement('div');
-    empty.classList.add('notificationapi-empty');
-    empty.innerHTML = "You don't have any notifications!";
-    popupInner.appendChild(empty);
-    this.elements.empty = empty;
+    // render default loading state
+    const loading = document.createElement('div');
+    loading.classList.add('notificationapi-loading');
+    const icon = document.createElement('span');
+    icon.classList.add('icon-spinner8', 'spinner');
+    loading.appendChild(icon);
+    popupInner.appendChild(loading);
+    this.elements.notificationsLoading = loading;
 
     // render footer
     this.elements.footer = document.createElement('div');
@@ -611,7 +637,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           }
           if (body.route === 'user_preferences/preferences') {
             const message = body as WS_UserPreferencesResponse;
-            this.renderPreferences(message.payload.userPreferences);
+            this.websocketHandlers.userPreferences(message);
           }
         });
       }
@@ -695,8 +721,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       route: 'inapp_web/unread_clear'
     });
 
+    // In AUTOMATIC mode, don't remove the unseen class so users can differentiate what's new and what's old
     if (
       this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode &&
       this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC &&
       this.elements.popupInner
     ) {
@@ -736,6 +764,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       }
     }
   }
+
   addNotificationsToState(notifications: InappNotification[]): void {
     // filter existing
     const newNotifications = notifications.filter((n) => {
@@ -756,6 +785,19 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     if (this.state.notifications.length > 0)
       this.state.oldestNotificationsDate =
         this.state.notifications[this.state.notifications.length - 1].date;
+
+    if (
+      this.state.notifications.length === 0 &&
+      !this.elements.empty &&
+      !this.elements.notificationsLoading &&
+      this.elements.header
+    ) {
+      const empty = document.createElement('div');
+      empty.classList.add('notificationapi-empty');
+      empty.innerHTML = "You don't have any notifications!";
+      this.elements.header.after(empty);
+      this.elements.empty = empty;
+    }
 
     if (newNotifications.length > 0 && this.elements.empty) {
       this.elements.empty.remove();
@@ -895,6 +937,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     // notification menu button
     if (
       this.state.inappOptions &&
+      this.state.inappOptions.markAsReadMode &&
       this.state.inappOptions.markAsReadMode !== MarkAsReadModes.AUTOMATIC
     ) {
       const menuButton = document.createElement('button');
@@ -960,10 +1003,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
   renderPreferences(preferences: Preference[]): void {
     if (!this.elements.preferencesPopup) return;
-
-    // remove loading
-    this.elements.preferencesLoading?.remove();
-    this.elements.preferencesLoading = undefined;
 
     const popup = this.elements.preferencesPopup;
     const validPreferences = preferences.filter((p) => p.settings.length > 0);
