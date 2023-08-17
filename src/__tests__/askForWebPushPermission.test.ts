@@ -20,7 +20,7 @@ const headers = {
     btoa(
       `${encodeURIComponent(clientId)}:${encodeURIComponent(
         userId
-      )}:${encodeURIComponent(mockHashUserId)}`
+      )}:${mockHashUserId}`
     )
 };
 const body = {

@@ -14,7 +14,8 @@ import {
   WS_UnreadCountResponse,
   WS_UserPreferencesPatchRequest,
   WS_UserPreferencesResponse,
-  WS_EnvironmentDataResponse
+  WS_EnvironmentDataResponse,
+  UserParams
 } from './interfaces';
 import timeAgo from './utils/timeAgo';
 import { PushSubscription } from './interfaces';
@@ -246,6 +247,38 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       });
     }
   }
+
+  identify = async (user: UserParams): Promise<void> => {
+    if (user.id && user.id !== this.state.initOptions.userId) {
+      console.error(
+        `The userId "${user.id}" does not match the userId "${this.state.initOptions.userId}" provided in the init options. Cancelling action to prevent mistakes.`
+      );
+      return;
+    }
+    const url = `${this.state.restBaseURL}/${encodeURIComponent(
+      this.state.initOptions.clientId
+    )}/users/${encodeURIComponent(this.state.initOptions.userId)}`;
+
+    const authToken =
+      'Basic ' +
+      btoa(
+        `${encodeURIComponent(
+          this.state.initOptions.clientId
+        )}:${encodeURIComponent(this.state.initOptions.userId)}:${
+          this.state.initOptions.userIdHash ?? ''
+        }`
+      );
+
+    await fetch(url, {
+      body: JSON.stringify(user),
+      headers: {
+        'content-type': 'application/json',
+        Authorization: authToken
+      },
+      method: 'POST'
+    });
+  };
+
   askForWebPushPermission = (): void => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -260,11 +293,6 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
                     this.state.webPushSettings.applicationServerKey
                 })
                 .then(async (res) => {
-                  const url = `${this.state.restBaseURL}/${encodeURIComponent(
-                    this.state.initOptions.clientId
-                  )}/users/${encodeURIComponent(
-                    this.state.initOptions.userId
-                  )}`;
                   const body = {
                     webPushTokens: [
                       {
@@ -275,29 +303,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
                       }
                     ]
                   };
-                  const headers = {
-                    'content-type': 'application/json',
-                    Authorization:
-                      'Basic ' +
-                      btoa(
-                        `${encodeURIComponent(
-                          this.state.initOptions.clientId
-                        )}:${encodeURIComponent(
-                          this.state.initOptions.userId
-                        )}:${this.state.initOptions.userIdHash}`
-                      )
-                  };
-                  await fetch(url, {
-                    body: JSON.stringify(body),
-                    headers: headers,
-                    method: 'POST'
-                  });
+                  await this.identify(body);
                 });
             }
           });
         });
     }
   };
+
   showInApp = (options: InAppOptions): void => {
     this.state.inappOptions = options;
 
