@@ -249,23 +249,22 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   }
 
   identify = async (user: UserParams): Promise<void> => {
-    if (user.id && user.id !== this.state.initOptions.userId) {
+    const { clientId, userId, userIdHash } = this.state.initOptions;
+    if (user.id && user.id !== userId) {
       console.error(
-        `The userId "${user.id}" does not match the userId "${this.state.initOptions.userId}" provided in the init options. Cancelling action to prevent mistakes.`
+        `The userId "${user.id}" does not match the userId "${userId}" provided in the init options. Cancelling action to prevent mistakes.`
       );
       return;
     }
     const url = `${this.state.restBaseURL}/${encodeURIComponent(
-      this.state.initOptions.clientId
-    )}/users/${encodeURIComponent(this.state.initOptions.userId)}`;
+      clientId
+    )}/users/${encodeURIComponent(userId)}`;
 
     const authToken =
       'Basic ' +
       btoa(
-        `${encodeURIComponent(
-          this.state.initOptions.clientId
-        )}:${encodeURIComponent(this.state.initOptions.userId)}:${
-          this.state.initOptions.userIdHash ?? ''
+        `${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:${
+          userIdHash ?? ''
         }`
       );
 
