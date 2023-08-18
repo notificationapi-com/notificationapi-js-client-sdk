@@ -21,6 +21,7 @@ beforeEach(() => {
 
 afterEach(() => {
   spy.mockRestore();
+  fetchMock.mockClear();
   if (notificationapi) notificationapi.destroy();
 });
 
@@ -38,19 +39,14 @@ describe('when identify is called', () => {
   });
 
   describe('makes an API request', () => {
+    beforeEach(() => {
+      notificationapi.identify({ email: 'something' });
+    });
     it('exactly once', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock).toBeCalledTimes(1);
     });
 
     it('to the right url', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock.mock.calls[0][0]).toEqual(
         `https://api.notificationapi.com/${encodeURIComponent(
           clientId
@@ -59,28 +55,16 @@ describe('when identify is called', () => {
     });
 
     it('with POST method', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock.mock.calls[0][1]['method']).toEqual('POST');
     });
 
     it('with json content-type in header', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock.mock.calls[0][1]['headers']['content-type']).toEqual(
         'application/json'
       );
     });
 
     it('with the right auth header', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock.mock.calls[0][1]['headers']['Authorization']).toEqual(
         'Basic ' +
           btoa(`${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:`)
@@ -88,10 +72,6 @@ describe('when identify is called', () => {
     });
 
     it('with the function params as the body', async () => {
-      notificationapi.identify({
-        email: 'something'
-      });
-
       expect(fetchMock.mock.calls[0][1]['body']).toEqual(
         JSON.stringify({ email: 'something' })
       );
