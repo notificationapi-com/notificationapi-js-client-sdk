@@ -37,62 +37,64 @@ describe('when identify is called', () => {
     ]);
   });
 
-  it('sends 1 API request', async () => {
-    notificationapi.identify({
-      email: 'something'
+  describe('makes an API request', () => {
+    it('exactly once', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
+
+      expect(fetchMock).toBeCalledTimes(1);
     });
 
-    expect(fetchMock).toBeCalledTimes(1);
-  });
+    it('to the right url', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
 
-  it('sends API request to the right url', async () => {
-    notificationapi.identify({
-      email: 'something'
+      expect(fetchMock.mock.calls[0][0]).toEqual(
+        `https://api.notificationapi.com/${encodeURIComponent(
+          clientId
+        )}/users/${encodeURIComponent(userId)}`
+      );
     });
 
-    expect(fetchMock.mock.calls[0][0]).toEqual(
-      `https://api.notificationapi.com/${encodeURIComponent(
-        clientId
-      )}/users/${encodeURIComponent(userId)}`
-    );
-  });
+    it('with POST method', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
 
-  it('sends POST request', async () => {
-    notificationapi.identify({
-      email: 'something'
+      expect(fetchMock.mock.calls[0][1]['method']).toEqual('POST');
     });
 
-    expect(fetchMock.mock.calls[0][1]['method']).toEqual('POST');
-  });
+    it('with json content-type in header', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
 
-  it('asks for json in header', async () => {
-    notificationapi.identify({
-      email: 'something'
+      expect(fetchMock.mock.calls[0][1]['headers']['content-type']).toEqual(
+        'application/json'
+      );
     });
 
-    expect(fetchMock.mock.calls[0][1]['headers']['content-type']).toEqual(
-      'application/json'
-    );
-  });
+    it('with the right auth header', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
 
-  it('sends adds auth header correctly', async () => {
-    notificationapi.identify({
-      email: 'something'
+      expect(fetchMock.mock.calls[0][1]['headers']['Authorization']).toEqual(
+        'Basic ' +
+          btoa(`${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:`)
+      );
     });
 
-    expect(fetchMock.mock.calls[0][1]['headers']['Authorization']).toEqual(
-      'Basic ' +
-        btoa(`${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:`)
-    );
-  });
+    it('with the function params as the body', async () => {
+      notificationapi.identify({
+        email: 'something'
+      });
 
-  it('passes the request params as body', async () => {
-    notificationapi.identify({
-      email: 'something'
+      expect(fetchMock.mock.calls[0][1]['body']).toEqual(
+        JSON.stringify({ email: 'something' })
+      );
     });
-
-    expect(fetchMock.mock.calls[0][1]['body']).toEqual(
-      JSON.stringify({ email: 'something' })
-    );
   });
 });
