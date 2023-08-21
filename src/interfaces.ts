@@ -6,8 +6,11 @@ export interface User {
   webPushTokens?: WebPushToken[];
 }
 
+export type UserParams = Partial<User>;
+
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NotificationAPIClientInterface {
+  identify(user: UserParams): Promise<void>;
   showInApp: (options: InAppOptions) => void;
   askForWebPushPermission: () => void;
   showUserPreferences: (options?: UserPreferencesOptions) => void;
