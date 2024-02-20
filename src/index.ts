@@ -15,16 +15,25 @@ import {
   WS_UserPreferencesPatchRequest,
   WS_UserPreferencesResponse,
   WS_EnvironmentDataResponse,
-  UserParams
+  UserParams,
+  TranslationObject,
+  SupportedLanguages
 } from './interfaces';
 import timeAgo from './utils/timeAgo';
 import { PushSubscription } from './interfaces';
+import i18n from 'i18next';
 
 const defaultRestAPIUrl = 'https://api.notificationapi.com';
 const defaultWebSocket = 'wss://ws.notificationapi.com';
 const NOTIFICATION_REQUEST_COUNT = 50;
+const supportedLanguages: SupportedLanguages[] = [
+  'en-US',
+  'es-ES',
+  'fr-FR',
+  'it-IT',
+  'pt-BR'
+];
 const PAGE_SIZE = 5;
-
 function position(
   popup: HTMLDivElement,
   popupInner: HTMLDivElement,
@@ -140,6 +149,18 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       },
       restBaseURL: options.restBaseURL ?? defaultRestAPIUrl
     };
+    const translationsObject: TranslationObject =
+      supportedLanguages.reduce<TranslationObject>((acc, language) => {
+        acc[language] = {
+          translation: require(`./assets/i18n/${language}.json`)
+        };
+        return acc;
+      }, {} as TranslationObject);
+    i18n.init({
+      resources: translationsObject,
+      lng: this.state.initOptions.language,
+      fallbackLng: 'en-US'
+    });
 
     this.websocketHandlers = {
       notifications: (message: WS_NotificationsResponse) => {
@@ -160,7 +181,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         ) {
           if (this.state.inappOptions && !this.state.inappOptions.paginated) {
             const noMore = document.createElement('div');
-            noMore.innerHTML = 'No more notifications to load';
+            noMore.innerHTML = i18n.t('no_more_notifications');
             noMore.classList.add('notificationapi-nomore');
             this.elements.popupInner.append(noMore);
           }
@@ -430,13 +451,13 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     });
     this.elements.header.appendChild(headerCloseButton);
     const headerHeading = document.createElement('h1');
-    headerHeading.innerHTML = 'Notifications';
+    headerHeading.innerHTML = i18n.t('notifications');
     this.elements.header.appendChild(headerHeading);
 
     const headerPreferencesButton = document.createElement('button');
     headerPreferencesButton.classList.add('notificationapi-preferences-button');
     headerPreferencesButton.innerHTML = '<span class="icon-cog"></span>';
-    headerPreferencesButton.title = 'Notification Settings';
+    headerPreferencesButton.title = i18n.t('notification_settings');
     headerPreferencesButton.addEventListener('click', () => {
       this.showUserPreferences();
     });
@@ -449,7 +470,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       const headerReadAllButton = document.createElement('button');
       headerReadAllButton.classList.add('notificationapi-readAll-button');
       headerReadAllButton.innerHTML = '<span class="icon-check"></span>';
-      headerReadAllButton.title = 'Mark all as read';
+      headerReadAllButton.title = i18n.t('mark_all_as_read');
       headerReadAllButton.addEventListener('click', () => {
         this.readAll();
       });
@@ -615,12 +636,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
       // create title
       const title = document.createElement('h1');
-      title.innerHTML = 'Notification Preferences';
+      title.innerHTML = i18n.t('notification_preferences');
       popup.appendChild(title);
       // create and insert the button at the top only if askForWebPushPermission is true
       if (this.state.webPushSettings.askForWebPushPermission) {
         const message = document.createElement('p');
-        message.innerHTML = `<a href="#" class="click-here">Click here</a> to give us the necessary browser permissions to send you push notifications.`;
+        message.innerHTML = `<a href="#" class="click-here">${i18n.t(
+          'click_here'
+        )}</a> ${i18n.t('necessary_permissions_push_notifications')}`;
         message.classList.add('notificationapi-preferences-web-push-opt-in');
         popup.appendChild(message);
 
@@ -806,7 +829,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     ) {
       const empty = document.createElement('div');
       empty.classList.add('notificationapi-empty');
-      empty.innerHTML = "You don't have any notifications!";
+      empty.innerHTML = i18n.t('no_notifications');
       this.elements.header.after(empty);
       this.elements.empty = empty;
     }
@@ -936,7 +959,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
     const date = document.createElement('p');
     date.classList.add('notificationapi-notification-date');
-    date.innerHTML = timeAgo(Date.now() - new Date(n.date).getTime());
+    date.innerHTML = timeAgo(Date.now() - new Date(n.date).getTime(), i18n);
 
     notificationMetaContainer.appendChild(date);
 
@@ -962,8 +985,9 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         menu.classList.add('notificationapi-notification-menu');
         const item = document.createElement('button');
         item.classList.add('notificationapi-notification-menu-item');
-        item.innerHTML =
-          '<span class="icon-check"></span><span class="notificationapi-notification-menu-item-text">Mark as read</span>';
+        item.innerHTML = `<span class="icon-check"></span><span class="notificationapi-notification-menu-item-text">${i18n.t(
+          'mark_as_read'
+        )}</span>`;
         item.addEventListener('click', (e) => {
           e.preventDefault();
           notification.classList.remove('unseen');
@@ -1021,7 +1045,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     if (validPreferences.length === 0 && !this.elements.preferencesEmpty) {
       const empty = document.createElement('div');
       empty.classList.add('notificationapi-preferences-empty');
-      empty.innerHTML = 'There are no notifications to configure.';
+      empty.innerHTML = i18n.t('there_are_no_notifications_to_configure');
       popup.appendChild(empty);
       this.elements.preferencesEmpty = empty;
       return;
@@ -1111,7 +1135,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
         pref.subNotificationPreferences.length > 0
       ) {
         const expand = document.createElement('button');
-        expand.innerHTML = 'expand';
+        expand.innerHTML = i18n.t('expand');
         expand.setAttribute('data-notificationId', pref.notificationId);
         const col = Object.keys(channels).length + 2;
         expand.classList.add(
@@ -1210,12 +1234,14 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     optInContainer.classList.add('notificationapi-opt-in-container');
 
     const optInMessage = document.createElement('div');
-    optInMessage.innerHTML = 'Do you want to receive push notifications?';
+    optInMessage.innerHTML = i18n.t(
+      'do_you_want_to_receive_push_notifications'
+    );
     optInMessage.classList.add('notificationapi-opt-in-message');
     optInContainer.appendChild(optInMessage);
 
     const allowButton = document.createElement('button');
-    allowButton.innerHTML = 'Yes';
+    allowButton.innerHTML = i18n.t('yes');
     allowButton.classList.add('notificationapi-allow-button');
     allowButton.addEventListener('click', () => {
       this.askForWebPushPermission();
@@ -1226,7 +1252,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     optInContainer.appendChild(allowButton);
 
     const noThanksButton = document.createElement('button');
-    noThanksButton.innerHTML = 'No, thanks';
+    noThanksButton.innerHTML = i18n.t('no_thanks');
     noThanksButton.classList.add('notificationapi-no-thanks-button');
     noThanksButton.addEventListener('click', () => {
       // Set askForWebPushPermission to false in local storage on No Thanks click

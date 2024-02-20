@@ -72,13 +72,25 @@ export enum MarkAsReadModes {
   MANUAL = 'MANUAL', // notifications are set to read manually by the user
   MANUAL_AND_CLICK = 'MANUAL_AND_CLICK' // notifications are set to read manually by the user and also when user clicks the notification
 }
+export type SupportedLanguages =
+  | 'en-US'
+  | 'es-ES'
+  | 'fr-FR'
+  | 'it-IT'
+  | 'pt-BR';
 
+export type TranslationObject = {
+  [K in SupportedLanguages]: {
+    translation: Record<string, string>;
+  };
+};
 export interface InitOptions {
   clientId: string;
   userId: string;
   userIdHash?: string;
   websocket?: string | false;
   restBaseURL?: string;
+  language?: SupportedLanguages;
 }
 export interface WebPushSettings {
   applicationServerKey: string;
