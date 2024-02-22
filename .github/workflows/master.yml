@@ -67,7 +67,6 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: steps.publish.outputs.type != 'none' && always()
 
-
   DeployExamplesLive:
     name: DeployExamplesLive
     needs: Release
@@ -108,7 +107,7 @@ jobs:
         working-directory: examples/${{matrix.example}}
         run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          npm run
+          npm run deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -131,4 +130,4 @@ jobs:
           # pass GitHub token to allow accurately detecting a build vs a re-run build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
-          CYPRESS_TESTING_MODE: "LIVE"
+          CYPRESS_TESTING_MODE: 'LIVE'
