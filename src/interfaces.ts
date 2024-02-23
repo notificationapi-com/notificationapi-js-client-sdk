@@ -81,7 +81,7 @@ export type SupportedLanguages =
 
 export type TranslationObject = {
   [K in SupportedLanguages]: {
-    translation: Record<string, string>;
+    translation: string;
   };
 };
 export interface InitOptions {
