@@ -1,27 +1,27 @@
+import i18n from 'i18next';
 import {
-  InappNotification,
   InAppOptions,
+  InappNotification,
   InitOptions,
+  MarkAsReadModes,
   NotificationAPIClientInterface,
   PopupPosition,
   Preference,
-  MarkAsReadModes,
+  PushSubscription,
+  SupportedLanguages,
+  TranslationObject,
+  UserParams,
   UserPreferencesOptions,
   WS_ANY_VALID_REQUEST,
+  WS_EnvironmentDataResponse,
   WS_NewNotificationsResponse,
   WS_NotificationsRequest,
   WS_NotificationsResponse,
   WS_UnreadCountResponse,
   WS_UserPreferencesPatchRequest,
-  WS_UserPreferencesResponse,
-  WS_EnvironmentDataResponse,
-  UserParams,
-  TranslationObject,
-  SupportedLanguages
+  WS_UserPreferencesResponse
 } from './interfaces';
 import timeAgo from './utils/timeAgo';
-import { PushSubscription } from './interfaces';
-import i18n from 'i18next';
 
 const defaultRestAPIUrl = 'https://api.notificationapi.com';
 const defaultWebSocket = 'wss://ws.notificationapi.com';
@@ -152,7 +152,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     const translationsObject: TranslationObject =
       supportedLanguages.reduce<TranslationObject>((acc, language) => {
         acc[language] = {
-          translation: require(`./assets/i18n/${language}.json`)
+          translation: "./assets/i18n/".concat(language, ".json"),
         };
         return acc;
       }, {} as TranslationObject);
