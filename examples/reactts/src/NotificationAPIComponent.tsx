@@ -6,7 +6,7 @@ const NotificationAPIComponent = memo((props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const notificationapi = new NotificationAPI({
-      clientId: '24nojpnrsdc53fkslha0roov05',
+      clientId: '54jas9ae4omlbbq3s0u0d9spui',
       userId: 'sahand'
     });
     notificationapi.showInApp({

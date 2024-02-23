@@ -12,7 +12,7 @@ const Component = ({ ...args }) => {
               args.initOptions
             )});
             window.notificationapi.showUserPreferences();
-            if(${args.wsUserPreferencesResponse ? 'true' : 'false'}) 
+            if(${args.wsUserPreferencesResponse ? 'true' : 'false'})
               window.notificationapi.websocketHandlers.userPreferences(${JSON.stringify(
                 args.wsUserPreferencesResponse
               )});
@@ -212,7 +212,7 @@ ComplexPreferenceState.args = {
 export const Real = Component.bind({});
 Real.args = {
   initOptions: {
-    clientId: '24nojpnrsdc53fkslha0roov05',
+    clientId: '54jas9ae4omlbbq3s0u0d9spui',
     userId: '123'
   }
 };
