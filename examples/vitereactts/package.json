@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "deploy": "../../node_modules/.bin/gh-pages -d build --dest vitereactts --user \"Automated Action <noreply@notificationapi.com>\"",
+    "deploy": "../../node_modules/.bin/gh-pages -d dist --dest vitereactts --user \"Automated Action <noreply@notificationapi.com>\"",
     "preview": "vite preview"
   },
   "dependencies": {
