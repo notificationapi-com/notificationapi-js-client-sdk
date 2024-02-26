@@ -26,7 +26,7 @@
   "scripts": {
     "clean": "rm -rf ./lib ./dist",
     "test": "jest --collectCoverage",
-    "build": "npm run clean && tsc && ./node_modules/.bin/webpack && cp -R src/assets/* dist && cp -R src/assets lib",
+    "build": "npm run clean && tsc && ./node_modules/.bin/webpack && cp -R src/assets/* dist",
     "lint": "eslint . --ext .ts",
     "prettier-check": "prettier --config .prettierrc './**/*.ts' --check",
     "storybook": "start-storybook -p 6006",
