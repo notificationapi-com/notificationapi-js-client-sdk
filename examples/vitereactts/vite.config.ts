@@ -10,5 +10,5 @@ export default defineConfig({
       allow: ['../..']
     }
   },
-  base: '/vitereactts/'
+  base: '/notificationapi-js-client-sdk/vitereactts/'
 });
