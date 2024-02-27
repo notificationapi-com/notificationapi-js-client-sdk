@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "deploy": "npm run build &&../../node_modules/.bin/gh-pages -d .next --dest nextts --user \"Automated Action <noreply@notificationapi.com>\"",
+    "deploy": "npm run build &&../../node_modules/.bin/gh-pages -d out --dest nextts --user \"Automated Action <noreply@notificationapi.com>\"",
     "start": "next start",
     "lint": "next lint"
   },
