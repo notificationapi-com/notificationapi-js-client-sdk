@@ -5,8 +5,8 @@
   "devFiles": [],
   "ampDevFiles": [],
   "lowPriorityFiles": [
-    "static/l6eJqEPFo56QkLaXSeHZZ/_buildManifest.js",
-    "static/l6eJqEPFo56QkLaXSeHZZ/_ssgManifest.js"
+    "static/ItJd7VFTT982XwLCZidys/_buildManifest.js",
+    "static/ItJd7VFTT982XwLCZidys/_ssgManifest.js"
   ],
   "rootMainFiles": [],
   "pages": {
@@ -15,18 +15,18 @@
       "static/chunks/framework-5429a50ba5373c56.js",
       "static/chunks/main-48e59e03cc4ab944.js",
       "static/chunks/991-de1c1eb184f9a044.js",
-      "static/chunks/400-f415bc4860f0884d.js",
+      "static/chunks/75-8ff32e5f82bedc53.js",
       "static/css/6fbe0624664da006.css",
-      "static/chunks/pages/index-031e0de07b1a3f73.js"
+      "static/chunks/pages/index-72abbfd2f3333be5.js"
     ],
     "/NotificationAPIComponent": [
       "static/chunks/webpack-0f1ae235eb7cb7c7.js",
       "static/chunks/framework-5429a50ba5373c56.js",
       "static/chunks/main-48e59e03cc4ab944.js",
       "static/chunks/991-de1c1eb184f9a044.js",
-      "static/chunks/400-f415bc4860f0884d.js",
+      "static/chunks/75-8ff32e5f82bedc53.js",
       "static/css/6fbe0624664da006.css",
-      "static/chunks/pages/NotificationAPIComponent-749e6feb908d54b2.js"
+      "static/chunks/pages/NotificationAPIComponent-227782fe104f5ea5.js"
     ],
     "/_app": [
       "static/chunks/webpack-0f1ae235eb7cb7c7.js",
