@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        example: [reactjs-live, reactts-live, vanillajs-live]
+        example: [reactjs-live, reactts-live, vanillajs-live, vitereactts-live]
     steps:
       - uses: actions/checkout@v3
 

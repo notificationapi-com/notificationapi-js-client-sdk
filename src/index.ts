@@ -22,6 +22,11 @@ import {
 import timeAgo from './utils/timeAgo';
 import { PushSubscription } from './interfaces';
 import i18n from 'i18next';
+import enUS from './assets/i18n/en-US.json';
+import esES from './assets/i18n/es-ES.json';
+import frFR from './assets/i18n/fr-FR.json';
+import itIT from './assets/i18n/it-IT.json';
+import ptBR from './assets/i18n/pt-BR.json';
 
 const defaultRestAPIUrl = 'https://api.notificationapi.com';
 const defaultWebSocket = 'wss://ws.notificationapi.com';
@@ -33,6 +38,15 @@ const supportedLanguages: SupportedLanguages[] = [
   'it-IT',
   'pt-BR'
 ];
+const supportedLanguagesFile: {
+  [l in SupportedLanguages]: Record<string, string>;
+} = {
+  'en-US': enUS,
+  'es-ES': esES,
+  'fr-FR': frFR,
+  'it-IT': itIT,
+  'pt-BR': ptBR
+};
 const PAGE_SIZE = 5;
 function position(
   popup: HTMLDivElement,
@@ -152,7 +166,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     const translationsObject: TranslationObject =
       supportedLanguages.reduce<TranslationObject>((acc, language) => {
         acc[language] = {
-          translation: require(`./assets/i18n/${language}.json`)
+          translation: supportedLanguagesFile[language]
         };
         return acc;
       }, {} as TranslationObject);
