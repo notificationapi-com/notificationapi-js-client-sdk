@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST='{"pages":{"/NotificationAPIComponent":[],"/":[]},"app":{},"appUsingSizeAdjust":false,"pagesUsingSizeAdjust":false}';
