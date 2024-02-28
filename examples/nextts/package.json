@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "export": "next export",
-    "deploy": "gh-pages -d out",
+    "deploy": "gh-pages -d out --user \"Automated Action <noreply@notificationapi.com>\"",
     "predeploy": "npm run build"
   },
   "dependencies": {
