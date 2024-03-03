@@ -70,7 +70,6 @@ jobs:
   DeployExamplesLive:
     name: DeployExamplesLive
     needs: Release
-    if: needs.Release.outputs.releaseType != 'none'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
