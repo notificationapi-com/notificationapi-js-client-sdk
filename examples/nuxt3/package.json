@@ -1,5 +1,5 @@
 {
-  "name": "nuxt",
+  "name": "nuxt3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "gh-pages -d .output --cname www.mywebsite.com --dest nuxt --user \"Automated Action <noreply@notificationapi.com>\""
+    "deploy": "gh-pages -d .output --cname www.mywebsite.com --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
   },
   "dependencies": {
     "nuxt": "^3.10.3",

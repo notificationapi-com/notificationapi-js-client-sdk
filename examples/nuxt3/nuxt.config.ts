@@ -2,6 +2,6 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   app: {
-    baseURL: '/notificationapi-js-client-sdk/nuxt/' // Set the base URL for the application
+    baseURL: '/notificationapi-js-client-sdk/nuxt3/' // Set the base URL for the application
   }
 });
