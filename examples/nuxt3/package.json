@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "gh-pages -d .output --cname www.mywebsite.com --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
+    "deploy": "npm run build && gh-pages -d .output --cname www.mywebsite.com --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
   },
   "dependencies": {
     "nuxt": "^3.10.3",
