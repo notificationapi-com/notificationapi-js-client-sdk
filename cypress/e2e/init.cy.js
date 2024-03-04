@@ -3,7 +3,14 @@
 const baseURL =
   'https://notificationapi-com.github.io/notificationapi-js-client-sdk/';
 
-const URIs = ['vanillajs', 'reactjs', 'reactts', 'vitereactts', 'nextts'];
+const URIs = [
+  'vanillajs',
+  'reactjs',
+  'reactts',
+  'vitereactts',
+  'nextts',
+  'nuxt3'
+];
 
 URIs.forEach((URI) => {
   describe(`init ${URI}`, () => {
