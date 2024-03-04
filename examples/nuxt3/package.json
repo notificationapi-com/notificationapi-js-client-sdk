@@ -2,13 +2,14 @@
   "name": "nuxt3",
   "private": true,
   "type": "module",
+  "homepage": "https://notificationapi-com.github.io/notificationapi-js-client-sdk/nuxt3",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "npm run build && gh-pages -d .output --cname www.mywebsite.com --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
+    "deploy": "npm run build && gh-pages -d .output --nojekyll --cname www.mywebsite.com --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
   },
   "dependencies": {
     "nuxt": "^3.10.3",
