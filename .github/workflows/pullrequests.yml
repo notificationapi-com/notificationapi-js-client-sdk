@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        example: [reactjs, reactts, vanillajs, vitereactts, nextts]
+        example: [reactjs, reactts, vanillajs, vitereactts, nextts, nuxt3]
     steps:
       - uses: actions/checkout@v3
 
