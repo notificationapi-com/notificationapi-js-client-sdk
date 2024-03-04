@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/notificationapi-js-client-sdk/reactjs-live/static/css/main.6a20a03a.css",
+    "main.js": "/notificationapi-js-client-sdk/reactjs-live/static/js/main.bcee322f.js",
+    "static/media/icomoon.svg?yjc9oj": "/notificationapi-js-client-sdk/reactjs-live/static/media/icomoon.dd29f727badc9333c79f.svg",
+    "static/media/icomoon.eot?yjc9oj": "/notificationapi-js-client-sdk/reactjs-live/static/media/icomoon.f832b9ce6a4c7823513d.eot",
+    "static/media/icomoon.woff?yjc9oj": "/notificationapi-js-client-sdk/reactjs-live/static/media/icomoon.baa8c3df47645e50ef7f.woff",
+    "static/media/icomoon.ttf?yjc9oj": "/notificationapi-js-client-sdk/reactjs-live/static/media/icomoon.bbc8a02e138d003f16fa.ttf",
+    "index.html": "/notificationapi-js-client-sdk/reactjs-live/index.html",
+    "main.6a20a03a.css.map": "/notificationapi-js-client-sdk/reactjs-live/static/css/main.6a20a03a.css.map",
+    "main.bcee322f.js.map": "/notificationapi-js-client-sdk/reactjs-live/static/js/main.bcee322f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.6a20a03a.css",
+    "static/js/main.bcee322f.js"
+  ]
+}
