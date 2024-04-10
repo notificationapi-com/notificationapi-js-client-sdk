@@ -132,7 +132,7 @@ describe('when askForWebPushPermission is called', () => {
   });
 });
 
-describe('when restBaseURL is passed and askForWebPushPermission is called', () => {
+describe('when restBaseURL and customServiceWorkerPath are passed and askForWebPushPermission is called', () => {
   const url = `https://ca.api.notificationapi.com/${encodeURIComponent(
     clientId
   )}/users/${encodeURIComponent(userId)}`;
@@ -178,7 +178,9 @@ describe('when restBaseURL is passed and askForWebPushPermission is called', () 
       userId,
       userIdHash: mockHashUserId,
       websocket: 'ws://localhost:1234',
-      restBaseURL: 'https://ca.api.notificationapi.com'
+      restBaseURL: 'https://ca.api.notificationapi.com',
+      customServiceWorkerPath:
+        '/notificationapi-js-client-sdk/reactts/notificationapi-service-worker.js'
     });
     server.connected;
     server.send(res);
@@ -200,7 +202,7 @@ describe('when restBaseURL is passed and askForWebPushPermission is called', () 
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(mockServiceWorkerRegister).toBeCalledWith(
-      '/notificationapi-service-worker.js'
+      '/notificationapi-js-client-sdk/reactts/notificationapi-service-worker.js'
     );
     expect(mockPushManagerSubscribe).toBeCalledWith({
       userVisibleOnly: true,
