@@ -40,7 +40,7 @@ describe('when identify is called', () => {
 
   describe('makes an API request', () => {
     beforeEach(() => {
-      notificationapi.identify({ email: 'something' });
+      notificationapi.identify({ id: userId, email: 'something' });
     });
     it('exactly once', async () => {
       expect(fetchMock).toBeCalledTimes(1);

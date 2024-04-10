@@ -285,9 +285,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
   identify = async (user: UserParams): Promise<void> => {
     const { clientId, userId, userIdHash } = this.state.initOptions;
-    if (user.id && user.id !== userId) {
+    const { id, ...userWithoutId } = user;
+    if (id && id !== userId) {
       console.error(
-        `The userId "${user.id}" does not match the userId "${userId}" provided in the init options. Cancelling action to prevent mistakes.`
+        `The userId "${id}" does not match the userId "${userId}" provided in the init options. Cancelling action to prevent mistakes.`
       );
       return;
     }
@@ -304,7 +305,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
       );
 
     await fetch(url, {
-      body: JSON.stringify(user),
+      body: JSON.stringify(userWithoutId),
       headers: {
         'content-type': 'application/json',
         Authorization: authToken
