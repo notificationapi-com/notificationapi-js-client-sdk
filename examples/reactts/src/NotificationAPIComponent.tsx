@@ -7,7 +7,9 @@ const NotificationAPIComponent = memo((props) => {
   useEffect(() => {
     const notificationapi = new NotificationAPI({
       clientId: '54jas9ae4omlbbq3s0u0d9spui',
-      userId: 'user1'
+      userId: 'user1',
+      customServiceWorkerPath:
+        '/notificationapi-js-client-sdk/reactts/notificationapi-service-worker.js'
     });
     notificationapi.showInApp({
       root: 'container',
