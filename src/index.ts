@@ -316,7 +316,10 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
   askForWebPushPermission = (): void => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/notificationapi-service-worker.js')
+        .register(
+          this.state.initOptions.customServiceWorkerPath ??
+            '/notificationapi-service-worker.js'
+        )
         .then(async (registration) => {
           Notification.requestPermission().then(async (permission) => {
             if (permission === 'granted') {

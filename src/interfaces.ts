@@ -91,6 +91,7 @@ export interface InitOptions {
   websocket?: string | false;
   restBaseURL?: string;
   language?: SupportedLanguages;
+  customServiceWorkerPath?: string;
 }
 export interface WebPushSettings {
   applicationServerKey: string;
