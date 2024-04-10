@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/notificationapi-js-client-sdk/reactts-live/static/css/main.dd42ce92.css",
-    "main.js": "/notificationapi-js-client-sdk/reactts-live/static/js/main.9eac1341.js",
+    "main.js": "/notificationapi-js-client-sdk/reactts-live/static/js/main.00562dbd.js",
     "static/media/icomoon.svg?yjc9oj": "/notificationapi-js-client-sdk/reactts-live/static/media/icomoon.dd29f727badc9333c79f.svg",
     "static/media/icomoon.eot?yjc9oj": "/notificationapi-js-client-sdk/reactts-live/static/media/icomoon.f832b9ce6a4c7823513d.eot",
     "static/media/icomoon.woff?yjc9oj": "/notificationapi-js-client-sdk/reactts-live/static/media/icomoon.baa8c3df47645e50ef7f.woff",
     "static/media/icomoon.ttf?yjc9oj": "/notificationapi-js-client-sdk/reactts-live/static/media/icomoon.bbc8a02e138d003f16fa.ttf",
     "index.html": "/notificationapi-js-client-sdk/reactts-live/index.html",
     "main.dd42ce92.css.map": "/notificationapi-js-client-sdk/reactts-live/static/css/main.dd42ce92.css.map",
-    "main.9eac1341.js.map": "/notificationapi-js-client-sdk/reactts-live/static/js/main.9eac1341.js.map"
+    "main.00562dbd.js.map": "/notificationapi-js-client-sdk/reactts-live/static/js/main.00562dbd.js.map"
   },
   "entrypoints": [
     "static/css/main.dd42ce92.css",
-    "static/js/main.9eac1341.js"
+    "static/js/main.00562dbd.js"
   ]
 }
