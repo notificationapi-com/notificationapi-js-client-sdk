@@ -1040,6 +1040,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
         if (!menuWasClicked && !n.seen) {
           notification.classList.remove('unseen');
+          n.seen = true;
           this.setInAppUnread(this.state.unread - 1);
           this.sendWSMessage({
             route: 'inapp_web/unread_clear',
