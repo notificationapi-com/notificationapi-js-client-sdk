@@ -1343,6 +1343,11 @@ describe('setAsReadMode', () => {
         }
       };
       expect(server).toReceiveMessage(expectedMsg);
+
+      // clicking it again, does not reduce the unread count again:
+      $('.notificationapi-notification-title').trigger('click');
+      expect($('.notificationapi-unread')[0].innerHTML).toEqual('4');
+      expect(notificationapi.state.unread).toEqual(4);
     });
 
     test('clicking a seen notification doesnt do the above', async () => {
