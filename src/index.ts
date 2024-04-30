@@ -1038,7 +1038,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
           element.closest('.notificationapi-notification-menu-button') ||
           element.closest('.notificationapi-notification-menu');
 
-        if (!menuWasClicked) {
+        if (!menuWasClicked && !n.seen) {
           notification.classList.remove('unseen');
           this.setInAppUnread(this.state.unread - 1);
           this.sendWSMessage({
