@@ -1306,7 +1306,7 @@ describe('setAsReadMode', () => {
   });
 
   describe('MANUAL_AND_CLICK', () => {
-    test('clicking the notification reduces unread count, changes then notification ui, sends a unread ws message', async () => {
+    test('clicking an unseen notification reduces unread count, changes the notification ui, sends a unread ws message', async () => {
       notificationapi.showInApp({
         root: 'root',
         markAsReadMode: MarkAsReadModes.MANUAL_AND_CLICK
@@ -1322,13 +1322,57 @@ describe('setAsReadMode', () => {
       notificationapi.websocketHandlers.notifications({
         route: 'inapp_web/notifications',
         payload: {
-          notifications: [testNotificationUnseen]
+          notifications: [
+            {
+              ...testNotificationUnseen,
+              seen: false
+            }
+          ]
         }
       });
       $('.notificationapi-button').trigger('click');
       $('.notificationapi-notification-title').trigger('click');
       expect($('.notificationapi-unread')[0].innerHTML).toEqual('4');
       expect(notificationapi.state.unread).toEqual(4);
+      expect($('.notificationapi-notification-menu')).toHaveLength(0);
+      await server.nextMessage;
+      const expectedMsg: WS_ClearUnreadRequest = {
+        route: 'inapp_web/unread_clear',
+        payload: {
+          notificationId: '4'
+        }
+      };
+      expect(server).toReceiveMessage(expectedMsg);
+    });
+
+    test('clicking a seen notification doesnt do the above', async () => {
+      notificationapi.showInApp({
+        root: 'root',
+        markAsReadMode: MarkAsReadModes.MANUAL_AND_CLICK
+      });
+      await server.nextMessage;
+      await server.nextMessage;
+      notificationapi.websocketHandlers.unreadCount({
+        route: 'inapp_web/unread_count',
+        payload: {
+          count: 5
+        }
+      });
+      notificationapi.websocketHandlers.notifications({
+        route: 'inapp_web/notifications',
+        payload: {
+          notifications: [
+            {
+              ...testNotificationUnseen,
+              seen: true
+            }
+          ]
+        }
+      });
+      $('.notificationapi-button').trigger('click');
+      $('.notificationapi-notification-title').trigger('click');
+      expect($('.notificationapi-unread')[0].innerHTML).toEqual('5');
+      expect(notificationapi.state.unread).toEqual(5);
       expect($('.notificationapi-notification-menu')).toHaveLength(0);
       await server.nextMessage;
       const expectedMsg: WS_ClearUnreadRequest = {
