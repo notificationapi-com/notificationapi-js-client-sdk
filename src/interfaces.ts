@@ -77,6 +77,7 @@ export type SupportedLanguages =
   | 'es-ES'
   | 'fr-FR'
   | 'it-IT'
+  | 'nl-NL'
   | 'pt-BR';
 
 export type TranslationObject = {
