@@ -71,6 +71,8 @@ jobs:
     name: DeployExamplesLive
     needs: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: true
       matrix:
