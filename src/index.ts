@@ -1310,13 +1310,26 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
 
   websocketOpened(): Promise<WebSocket> {
     return new Promise((resolve, reject) => {
-      if (!this.websocket) reject('Websocket is not present.');
-      else {
-        const ws = this.websocket;
-        if (ws.readyState == ws.OPEN) {
-          resolve(ws);
-        }
+      const ws = this.websocket;
+      if (!ws) {
+        reject('Websocket is not present.');
+        return;
       }
+
+      const checkState = () => {
+        if (ws.readyState === ws.OPEN) {
+          resolve(ws);
+        } else if (
+          ws.readyState === ws.CLOSED ||
+          ws.readyState === ws.CLOSING
+        ) {
+          reject('Websocket failed to open.');
+        } else {
+          setTimeout(checkState, 100); // Check again in 100ms
+        }
+      };
+
+      checkState();
     });
   }
 }
