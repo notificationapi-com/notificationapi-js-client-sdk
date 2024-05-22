@@ -35,6 +35,7 @@ describe('given connection is already open', () => {
     await server.connected;
     await server.nextMessage; // environment/data request
   });
+
   test('sends a user_preferences/preferences message', async () => {
     notificationapi.getUserPreferences();
     const request: WS_UserPreferencesRequest = {
@@ -98,14 +99,27 @@ describe('given connection is not open yet', () => {
 });
 
 describe('given no websocket', () => {
-  test('rejects the promise', async () => {
+  test('rejects the promise when websocket is not present', async () => {
     notificationapi = new NotificationAPI({
       clientId: '',
       userId: '',
       websocket: false
     });
-    notificationapi.getUserPreferences().catch((error) => {
-      expect(error).toEqual('Websocket is not present.');
+    await expect(notificationapi.getUserPreferences()).rejects.toEqual(
+      'Websocket is not present.'
+    );
+  });
+  test('rejects the promise when websocket fails to open', async () => {
+    // Mocking a websocket connection that will not open
+    server.error(); // Simulate an error that prevents websocket from opening
+    notificationapi = new NotificationAPI({
+      clientId,
+      userId,
+      websocket: 'ws://localhost:1235'
     });
+    // Wait for the getUserPreferences method to be invoked and handle the rejection
+    await expect(notificationapi.getUserPreferences()).rejects.toEqual(
+      'Websocket failed to open.'
+    );
   });
 });
