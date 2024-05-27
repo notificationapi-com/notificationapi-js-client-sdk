@@ -26,6 +26,7 @@ import enUS from './assets/i18n/en-US.json';
 import esES from './assets/i18n/es-ES.json';
 import frFR from './assets/i18n/fr-FR.json';
 import itIT from './assets/i18n/it-IT.json';
+import nlNL from './assets/i18n/nl-NL.json';
 import ptBR from './assets/i18n/pt-BR.json';
 
 const defaultRestAPIUrl = 'https://api.notificationapi.com';
@@ -36,6 +37,7 @@ const supportedLanguages: SupportedLanguages[] = [
   'es-ES',
   'fr-FR',
   'it-IT',
+  'nl-NL',
   'pt-BR'
 ];
 const supportedLanguagesFile: {
@@ -45,6 +47,7 @@ const supportedLanguagesFile: {
   'es-ES': esES,
   'fr-FR': frFR,
   'it-IT': itIT,
+  'nl-NL': nlNL,
   'pt-BR': ptBR
 };
 const PAGE_SIZE = 5;
