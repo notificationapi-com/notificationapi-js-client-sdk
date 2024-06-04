@@ -299,12 +299,7 @@ class NotificationAPIClient implements NotificationAPIClientInterface {
     )}/users/${encodeURIComponent(userId)}`;
 
     const authToken =
-      'Basic ' +
-      btoa(
-        `${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:${
-          userIdHash ?? ''
-        }`
-      );
+      'Basic ' + btoa(`${clientId}:${userId}:${userIdHash ?? ''}`);
 
     await fetch(url, {
       body: JSON.stringify(user),

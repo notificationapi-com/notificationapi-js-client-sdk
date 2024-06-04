@@ -66,8 +66,7 @@ describe('when identify is called', () => {
 
     it('with the right auth header', async () => {
       expect(fetchMock.mock.calls[0][1]['headers']['Authorization']).toEqual(
-        'Basic ' +
-          btoa(`${encodeURIComponent(clientId)}:${encodeURIComponent(userId)}:`)
+        'Basic ' + btoa(`${clientId}:${userId}:`)
       );
     });
 

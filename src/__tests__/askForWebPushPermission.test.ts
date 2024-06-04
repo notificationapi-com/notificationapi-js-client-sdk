@@ -15,13 +15,7 @@ const mockEndpoint = 'mockEndpoint';
 const mockKeys = { auth: 'auth', p256dh: 'p256dh' };
 const headers = {
   'content-type': 'application/json',
-  Authorization:
-    'Basic ' +
-    btoa(
-      `${encodeURIComponent(clientId)}:${encodeURIComponent(
-        userId
-      )}:${mockHashUserId}`
-    )
+  Authorization: 'Basic ' + btoa(`${clientId}:${userId}:${mockHashUserId}`)
 };
 const body = {
   webPushTokens: [
