@@ -11,6 +11,7 @@ const NotificationAPIComponent = memo((props) => {
       customServiceWorkerPath:
         '/notificationapi-js-client-sdk/reactts/notificationapi-service-worker.js'
     });
+    notificationapi.askForWebPushPermission();
     notificationapi.showInApp({
       root: 'container',
       popupPosition: PopupPosition.BottomRight
