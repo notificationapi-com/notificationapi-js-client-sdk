@@ -1,7 +1,0 @@
-{
-  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "display": "standalone",
-  "start_url": "/",
-  "name": "NotificationAPI Manifest Example",
-  "short_name": "OS Manifest"
-}
