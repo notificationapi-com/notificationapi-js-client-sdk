@@ -12,7 +12,7 @@
     "deploy": "npm run generate && gh-pages --dotfiles -d .output/public --dest nuxt3 --user \"Automated Action <noreply@notificationapi.com>\""
   },
   "dependencies": {
-    "nuxt": "^3.10.3",
+    "nuxt": "^3.15.4",
     "vue": "^3.4.19",
     "vue-router": "^4.3.0",
     "notificationapi-js-client-sdk": "file:../.."
